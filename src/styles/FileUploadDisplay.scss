@@ -1,0 +1,148 @@
+.file-upload-display {
+  &__field {
+    margin-bottom: 20px;
+  }
+
+  &__label {
+    font-family: var(--font-family);
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    color: #8e8e8e;
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  &__container {
+    background: white;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    // padding: 0 16px;
+    // position: relative;
+    // overflow: hidden;
+  }
+
+  &__file-info {
+    // position: absolute;
+    // left: 22px;
+    // top: 23px;
+    // right: 22px;
+    // height: 54px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    gap: 12px;
+    width: 100%;
+  }
+
+  &__file-icon {
+    width: 31px;
+    height: 31px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8e8e8e;
+    font-size: 16px;
+    opacity: 0.5;
+  }
+
+  &__file-name {
+    flex: 1;
+    font-family: var(--font-family);
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16.304px;
+    color: #000000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__dropdown-icon {
+    color: #8e8e8e;
+    font-size: 12px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  &__delete-btn {
+    // position: absolute;
+    // right: 18px;
+    // top: 15px;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8e8e8e;
+    font-size: 12px;
+    padding: 0;
+
+    &:hover {
+      color: #ff4d4f;
+    }
+  }
+}
+
+// Override Ant Design form styles
+.file-upload-display {
+  .ant-form-item-label > label {
+    font-family: var(--font-family);
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    color: #8e8e8e;
+  }
+
+  .ant-form-item-explain-error {
+    font-family: var(--font-family);
+    font-size: 12px;
+    color: #ff4d4f;
+  }
+
+  .ant-form-item-explain-success {
+    font-family: var(--font-family);
+    font-size: 12px;
+    color: #52c41a;
+  }
+}
+
+.multiple-file-upload{
+  &__upload-icon{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 24px;
+    color: #8d8b8b;
+  }
+  &__files-list{
+    border: 2px dashed #b3b3b3;
+    border-radius: 5px;
+    margin: 8px 0;
+  }
+  &__max-files-message{
+    color: #ff4d4f;
+    font-family: var(--font-family);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: normal;
+  }
+
+  .file-upload-display__container{
+    border: none;
+    height: 80px;
+  }
+}

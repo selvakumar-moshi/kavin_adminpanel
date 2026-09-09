@@ -1,0 +1,184 @@
+
+.toast-messages {
+  position: fixed;
+  bottom: 100px;
+  right: -10px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 30%;
+  margin: 10px;
+
+  &__item {
+    font-family: var(--font-family);
+    color: var(--toast-default-text);
+    border: 4px solid #eee;
+    border-radius: 15px 0 0 15px;
+    box-shadow: 0px 1px 16.6px 0px rgba(0, 0, 0, 0.25);
+    background: #fff;
+    animation: slideInRight 0.3s ease-out;
+    overflow: hidden;
+    transition: opacity 0.2s ease-out;
+    max-width: 600px;
+  }
+
+  &__content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 10px;
+    margin-right: 20px;
+    border-radius: 15px 0 0 15px;
+    min-width: inherit;
+    overflow: hidden;
+  }
+
+  &__icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    flex-shrink: 0;
+    
+    .toast-messages__item--success & {
+      // background: var(--toast-success-bg, #52c41a) !important;
+      color: var(--toast-success-text, white);
+    }
+
+    .toast-messages__item--error & {
+      // background: var(--toast-error-bg, #ff4d4f) !important;
+      color: var(--toast-error-text, white);
+    }
+
+    .toast-messages__item--warning & {
+      // background: var(--toast-warning-bg, #faad14) !important;
+      color: var(--toast-warning-text, white);
+    }
+
+    img {
+      height: 50px;
+      padding-right: 30px;
+    }
+  }
+
+  &__text {
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 14px;
+    line-height: normal;
+    color: var(--toast-default-text);
+    margin: 0;
+    flex: 1;
+    word-wrap: break-word;
+  }
+
+  &__close {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #8e8e8e;
+    font-size: 18px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    position: absolute;
+    right: 4px;
+    top: 4px;
+
+    &:hover {
+      background-color: #f5f5f5;
+      color: #666666;
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  }
+}
+
+// Animation keyframes
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .toast-messages {
+    right: 10px;
+    bottom: 80px;
+    left: 10px;
+    max-width: none;
+
+    &__content {
+      gap: 20px;
+      padding: 12px;
+    }
+
+    &__text {
+      font-size: 13px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .toast-messages {
+    &__content {
+      gap: 16px;
+      padding: 10px;
+    }
+
+    &__icon {
+      width: 28px;
+      height: 28px;
+
+      img {
+        height: 40px;
+        padding-right: 20px;
+      }
+    }
+
+    &__text {
+      font-size: 12px;
+    }
+  }
+}
+
+// Override Ant Design message styles if needed
+.ant-message {
+  .toast-messages {
+    position: relative;
+    bottom: auto;
+    right: auto;
+    z-index: auto;
+  }
+}

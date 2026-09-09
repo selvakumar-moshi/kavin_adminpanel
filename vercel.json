@@ -1,0 +1,12 @@
+{
+    "rewrites": [
+      {
+        "source": "/supersales/(.*)",
+        "destination": "/supersales/index.html"
+      },
+      {
+        "source": "/(.*)",
+        "destination": "/index.html"
+      }
+    ]
+  }

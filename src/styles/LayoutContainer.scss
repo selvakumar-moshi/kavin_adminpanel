@@ -1,0 +1,24 @@
+.main-layout {
+  min-height: 100vh;
+}
+
+.inner-layout {
+  background: #f0f2f5;
+}
+
+.content-expanded {
+  margin-left: 200px;
+}
+
+.content-collapsed {
+  margin-left: 80px;
+}
+
+// Responsive styles
+@media (max-width: 768px) {
+  .content-expanded,
+  .content-collapsed {
+    margin: 70px 16px 0 16px !important;
+    padding-left: 16px !important;
+  }
+}

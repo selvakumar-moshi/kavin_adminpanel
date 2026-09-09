@@ -1,0 +1,95 @@
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-family: var(--font-family);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: normal;
+  white-space: nowrap;
+  min-width: fit-content;
+
+  &__text {
+    font-family: var(--font-family);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: normal;
+  }
+
+  &.status-badge--draft {
+    background-color: #E3E3E5;
+    color: #3D3D3D;
+  }
+
+  &.status-badge--active{
+    background: #E1F1FE;
+    color: #313C97;
+  }
+
+  // &.status-badge--verified {
+  //   background-color: #FFF1CB;
+  //   color: #EC6B29;
+  // }
+
+  &.status-badge--published,
+  &.status-badge--verified {
+    background-color: #E9FDF1;
+    color: #33663E;
+  }
+
+  &.status-badge--rejected,
+  &.status-badge--expired {
+    background-color: #F5D5D5;
+    color: #8B0000;
+  }
+}
+
+// Responsive Design
+@media (max-width: 992px) {
+  .status-badge {
+    height: 18px;
+    padding: 0 12px;
+    font-size: 11px;
+    line-height: 11px;
+  }
+}
+
+@media (max-width: 768px) {
+  .status-badge {
+    height: 16px;
+    padding: 0 10px;
+    font-size: 10px;
+    line-height: 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .status-badge {
+    height: 14px;
+    padding: 0 8px;
+    font-size: 9px;
+    line-height: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .status-badge {
+    height: 12px;
+    padding: 0 6px;
+    font-size: 8px;
+    line-height: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .status-badge {
+    height: 10px;
+    padding: 0 4px;
+    font-size: 7px;
+    line-height: 7px;
+  }
+}

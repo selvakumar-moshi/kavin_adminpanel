@@ -1,0 +1,375 @@
+.popup-modal {
+  .ant-modal-content {
+    padding: 0;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .ant-modal-body {
+    padding: 0;
+  }
+
+  // Header Styles
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 40px;
+    border-bottom: 1px solid #efefef;
+    backdrop-filter: blur(8px); /* Adjust blur strength */
+    background-color: rgba(255, 255, 255, 0.7);
+    box-sizing: border-box;
+  }
+
+  &__title-section {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__title {
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 16px;
+    color: #1c1b1f;
+    margin: 0;
+
+    .count-text{
+      font-family: var(--font-family);
+      font-weight: 500;
+      font-size: 14px;
+      line-height: normal;
+      color: #000;
+    }
+  }
+
+  &__subtitle {
+    font-family: var(--font-family);
+    font-weight: 500;
+    font-size: 14px;
+    line-height: normal;
+    color: #464646;
+    margin: 0;
+  }
+
+  &__close {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #1c1b1f;
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+
+    &:hover {
+      color: #666666;
+    }
+  }
+
+  // Content Styles
+  &__content {
+    position: relative;
+    padding: 23px;
+    background: white;
+    // min-height: 400px;
+    // max-height: 431px;
+    overflow-y: auto;
+
+    &-content-text{
+      font-family: var(--font-family);
+      font-weight: 500;
+      font-size: 14px;
+      line-height: normal;
+      color: #1c1b1f;
+      margin: 8px 0;
+      text-align: center;
+    }
+
+    &-warning-icon{
+      width: 40px;
+    }
+
+    &-note{
+      color: #666;
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 10px;
+      font-family: var(--font-family);
+    }
+
+    &-note-edit{
+      color: #666;
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 10px;
+      font-family: var(--font-family);
+    }
+
+    &-content-file-name{
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #f0f0f0;
+      border-radius: 4px;
+      padding: 12px;
+      background-color: #fafafa;
+    }
+
+    &-text-file-name-approve{
+      padding: 8px 0;
+      color: #1890ff;
+      font-family: var(--font-family);
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    &-text-file-name-reject{
+      padding: 8px 0;
+      color: #ff4d4f;
+      font-family: var(--font-family);
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    &-textarea{
+      width: 80%;
+      min-height: 100px;
+      padding: 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      resize: none;
+      font-size: 14px;
+      font-family: var(--font-family);
+      font-weight: 500;
+    }
+
+    .modal-input-char{
+      font-family: var(--font-family);
+      font-weight: 500;
+      font-size: 14px;
+      line-height: normal;
+      color: #464646;
+      margin-top: 4rem;
+    }
+
+    &-error-div{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      &--formatted {
+        .popup-modal__content-error-content {
+          font-weight: 400;
+          line-height: normal;
+
+          b {
+            font-weight: 600;
+          }
+        }
+      }
+    }
+
+    &-error-content{
+      font-family: var(--font-family);
+      font-weight: 600;
+      font-size: 16px;
+      line-height: normal;
+      color: #1c1b1f;
+      text-align: center;
+      margin-top: 10px;
+    }
+  }
+
+  &__form {
+    .ant-form-item {
+      margin-bottom: 22px;
+    }
+
+    .ant-form-item-label {
+      padding-bottom: 5px;
+
+      > label {
+        font-family: var(--font-family);
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 16px;
+        color: #8e8e8e;
+        height: auto;
+
+        &::after {
+          content: '';
+          margin: 0;
+        }
+      }
+    }
+  }
+
+  &__selected-count{
+    border-top: 1px solid #EFEFEF;
+    width: 100%;
+    left: 0px;
+    position: absolute;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__count-label{
+    padding-left: 23px;
+    font-family: var(--font-family);
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+  }
+
+  // Form Fields - now handled by individual components
+  &__form-fields {
+    margin-bottom: 22px;
+  }
+
+  &__date-fields {
+    // Date fields styling is now handled by DateFieldsSection component
+  }
+
+  // Footer Styles
+  &__footer {
+    border-top: 1px solid #efefef;
+    padding: 8px 20px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  &__buttons {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+
+    .ant-btn-variant-solid:disabled{
+      background-color: var(--btn-disabled-bg);
+      color: #fff;
+
+      &:hover {
+        border-color: var(--btn-disabled-bg);
+      }
+    }
+  }
+
+  &__button {
+    height: 35px;
+    border-radius: 20px;
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 16px;
+    padding: 10px 19px;
+    border: 1px solid;
+    cursor: pointer;
+
+    &--secondary {
+      background: white;
+      border-color: var(--btn-link);
+      color: var(--btn-link);
+
+      &:hover {
+        background: var(--btn-secondary-hover-bg);
+        border-color: var(--btn-link);
+        color: var(--btn-link);
+      }
+    }
+
+    &--primary {
+      background: var( --btn-primary-bg);
+      background: var( --btn-primary-bg);
+      color: white;
+
+      &:hover {
+        background: var(--btn-primary-hover-bg);
+        border-color: var(--btn-primary-hover-bg);
+        color: white;
+      }
+
+      &:active {
+        background: #c55d0c;
+        border-color: #c55d0c;
+      }
+    }
+  }
+}
+
+// Override Ant Design Modal styles
+.popup-modal {
+  .ant-modal {
+    padding: 0;
+  }
+
+  .ant-modal-content {
+    border-radius: 5px;
+  }
+
+  .ant-modal-mask {
+    background-color: rgba(0, 0, 0, 0.45);
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .popup-modal {
+    .ant-modal {
+      width: 95% !important;
+      max-width: 627px;
+    }
+
+    &__header {
+      padding: 17px 20px;
+    }
+
+    &__content {
+      padding: 20px;
+    }
+
+    &__footer {
+      padding: 14px 20px;
+    }
+
+    // Date fields responsive styling is now handled by DateFieldsSection component
+
+    &__button {
+      &--primary {
+        width: auto;
+        min-width: 120px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .popup-modal {
+    &__buttons {
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+
+    &__button {
+      width: 100%;
+
+      &--primary {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// .ant-modal-root .ant-modal-centered .ant-modal{
+//   border-radius: 5px !important;
+// }
+.ant-modal .ant-modal-container{
+  padding: 0px !important;
+}

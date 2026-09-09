@@ -1,0 +1,114 @@
+.page-title {
+  // width: 1470px;
+  display: flex;
+  align-items: center;
+  padding: 11px 0;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  // border-bottom: 1px solid #f0f0f0;
+
+  // Container for Ant Design Flex
+  &__container {
+    width: 100%;
+    height: 100%;
+  }
+
+  // Title Section
+  &__title-section {
+    display: flex;
+    align-items: center;
+    height: 28px;
+  }
+
+  &__title {
+    font-family: var(--font-family);
+    font-size: 22px;
+    font-weight: 600;
+    line-height: normal;
+    color: var(--page-title);
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 170px;
+  }
+
+  // Button Section
+  &__button-section {
+    display: flex;
+    align-items: center;
+    height: 42px;
+  }
+
+  &__button {
+    // Override Button component styles to match Figma
+    height: 32px !important;
+    padding: 8px 20px !important;
+    border-radius: 20px ;
+    background: var( --project-title-color);
+    border: none !important;
+    font-family: var(--font-family) !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    line-height: 16px !important;
+    color: white ;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    // min-width: 206px !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer;
+
+    &:hover{
+        background:none
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 1200px) {
+  .page-title {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-title {
+    height: 48px;
+    padding: 8px 20px 8px 15px;
+
+    &__title {
+      font-size: 20px;
+      max-width: 140px;
+    }
+
+    &__button {
+      height: 36px !important;
+      padding: 6px 24px !important;
+      font-size: 14px !important;
+      min-width: 160px !important;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    height: 44px;
+    padding: 6px 16px 6px 12px;
+
+    &__title {
+      font-size: 18px;
+      max-width: 120px;
+    }
+
+    &__button {
+      height: 32px !important;
+      padding: 4px 20px !important;
+      font-size: 12px !important;
+      min-width: 140px !important;
+    }
+  }
+}

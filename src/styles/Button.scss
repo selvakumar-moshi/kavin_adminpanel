@@ -1,0 +1,88 @@
+.btn_primary {
+  width: auto;
+  font-size: 16px;
+  border-radius: 6px;
+  margin: 20px;
+  height: var(--btn-height) !important;
+  background: var(--parent-color) !important;
+  color: var(--white);
+  font-family: var(--font-family);
+  background: var(--background-color);
+  color: var(--text-color);
+}
+
+.btn_primary:disabled {
+  cursor: pointer;
+  color: rgb(240, 238, 238);
+  transition: all 0.5 ease-out;
+  background-color: var(--button-disable-bg) !important;
+}
+
+.btn_secondary {
+  height: var(--btn-height) !important;
+  width: auto;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 6px;
+  background: var(--white) !important;
+  color: var(--parent-color) !important;
+  border: 2px solid var(--parent-color) !important;
+  font-family: var(--font-family);
+}
+.btn_secondary:hover {
+  background: var(--white) !important;
+}
+
+.btn_linkbutton {
+  height: var(--btn-height) !important;
+  width: auto;
+  font-size: 16px;
+  font-weight: 400;
+  border-radius: 10px;
+  background: none !important;
+  color: var(--btn-link) !important;
+  border: none !important;
+  font-family: var(--font-family);
+  text-decoration: underline;
+  position: absolute;
+  z-index: 60;
+  right: 4px;
+  top: 4px;
+}
+
+.btn_deletebutton {
+  width: auto;
+  height: var(--btn-height) !important;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 10px;
+  background: var(--white) !important;
+  color: var(--parent-color) !important;
+  border: none !important;
+  font-family: var(--font-family);
+}
+.btn_circlebutton {
+  height: 28px;
+  width: 20px;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 50px;
+  background: var(--white) !important;
+  color: var(--parent-color) !important;
+  border: none !important;
+  font-family: var(--font-family);
+}
+
+.button {
+  background: var(--background-color);
+  color: var(--text-color);
+}
+
+//ant design button styles
+.ant-btn-variant-solid:not(:disabled):not(.ant-btn-disabled):hover{
+  background: var(--btn-primary-hover-bg);
+}
+.ant-btn-variant-outlined:not(:disabled):not(.ant-btn-disabled):hover{
+  border: 1px solid var(--btn-secondary-hover-bg);
+  color: var(--btn-secondary-hover-bg);
+}

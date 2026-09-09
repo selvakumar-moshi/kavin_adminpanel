@@ -1,0 +1,99 @@
+.file-upload-section {
+  margin-bottom: 15px;
+  .upload__label {
+    font-family: var(--font-family);
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    color: #8e8e8e !important;
+    height: auto;
+  }
+  &__upload-area {
+    .ant-upload-dragger {
+      background: white;
+      border: 1px dashed #b3b3b3;
+      border-radius: 5px;
+      height: 100px;
+      padding: 0;
+
+      &:hover {
+        border-color: #ec7d16;
+      }
+    }
+  }
+
+  &__upload {
+    .ant-upload-dragger {
+      background: white;
+      border: 1px dashed #b3b3b3;
+      border-radius: 5px;
+      height: 100px;
+    }
+    .ant-upload-drag:not(.ant-upload-disable):hover{
+      border-color: #d9d9d9;
+    }
+  }
+
+  &__upload-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    padding: 6px 0;
+  }
+
+  &__upload-icon {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 24px;
+    color: #8d8b8b;
+  }
+
+  &__upload-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  &__upload-size {
+    font-family: var(--font-family);
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    color: #8d8b8b;
+  }
+
+  &__upload-formats {
+    font-family: var(--font-family);
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    color: #8d8b8b;
+    text-align: center;
+  }
+
+  // Form item styling
+  .ant-form-item {
+    margin-bottom: 0;
+  }
+
+  .ant-form-item-label {
+    padding-bottom: 5px;
+
+    > label {
+      font-family: var(--font-family);
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 16px;
+      color: #8e8e8e !important;
+      height: auto;
+
+      &::after {
+        content: "";
+        margin: 0;
+      }
+    }
+  }
+}

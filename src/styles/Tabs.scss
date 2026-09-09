@@ -1,0 +1,334 @@
+.tabs {
+  // height: 38px;
+  width: fit-content;
+  max-width: 100%;
+  background: #f6f8ff;
+  display: flex;
+  align-items: center;
+  padding: 4px 4px 0 4px;
+  box-sizing: border-box;
+  position: relative;
+  border-radius: 100px;
+  overflow: hidden;
+
+  // Container for Ant Design Flex
+  &__container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  // Tabs Section
+  &__tabs-section {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  // Tabs List
+  &__tabs-list {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    gap: 20px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    
+    &::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
+    }
+  }
+
+  // Individual Tab
+  &__tab {
+    height: 29px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: fit-content;
+    width: auto;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.2s ease;
+    cursor: pointer;
+
+    // Tab label
+    &-label {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 24px;
+      font-family: var(--font-family);
+      font-size: 16px;
+      font-weight: 600;
+      line-height: normal;
+      color: var(--tabs-text);
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: all 0.2s ease;
+      border-radius: 5px;
+      min-width: fit-content;
+    }
+
+    // Active tab styling
+    &--active {
+      background: white;
+      // padding: 0px 2px;
+      // border-radius: 100px;
+
+      .tabs__tab-label {
+        font-family: var(--font-family);
+        line-height: normal;
+        color: var(--tabs-text-active);
+        border-radius: 22px;
+        border-bottom: 3px solid #313c97;
+        background: transparent;
+        box-shadow: 0 2px 4px #00000017;
+      }
+    }
+
+    // Hover state
+    &:hover:not(&--active):not(&--disabled) {
+      border-radius: 100px;
+
+      .tabs__tab-label {
+        color: #23233f;
+      }
+    }
+
+    // Focus state
+    &:focus {
+      // outline: 2px solid #007aff;
+      // outline-offset: 2px;
+    }
+
+    // Disabled state
+    &--disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+
+      .tabs__tab-label {
+        color: #a6a6a6;
+      }
+    }
+  }
+
+  // Search Section
+  &__search-section {
+    height: 29px;
+    width: 29px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__search-button {
+    width: 29px;
+    height: 29px;
+    background: transparent;
+    border: none;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-family);
+    font-size: 14px;
+    color: #23233f;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.5);
+      color: #23233f;
+    }
+
+    &:focus {
+      // outline: 2px solid #007aff;
+      // outline-offset: 2px;
+    }
+
+    &:active {
+      background: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  &__search-icon {
+    font-size: 14px;
+    color: inherit;
+  }
+}
+
+// Responsive Design
+@media (max-width: 1200px) {
+  .tabs {
+    height: 32px;
+    padding: 2px 3px;
+
+    &__tabs-list {
+      gap: 14px;
+    }
+
+    &__tab {
+      height: 26px;
+      min-width: fit-content;
+      width: auto;
+
+      &-label {
+        padding: 5px 12px;
+        font-size: 13px;
+        min-width: fit-content;
+      }
+    }
+
+    &__search-section {
+      height: 26px;
+      width: 26px;
+    }
+
+    &__search-button {
+      width: 26px;
+      height: 26px;
+      font-size: 13px;
+    }
+
+    &__search-icon {
+      font-size: 13px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .tabs {
+    height: 30px;
+    padding: 2px 3px;
+
+    &__tabs-list {
+      gap: 12px;
+    }
+
+    &__tab {
+      height: 24px;
+      min-width: fit-content;
+      width: auto;
+
+      &-label {
+        padding: 4px 10px;
+        font-size: 12px;
+        min-width: fit-content;
+      }
+    }
+
+    &__search-section {
+      height: 24px;
+      width: 24px;
+    }
+
+    &__search-button {
+      width: 24px;
+      height: 24px;
+      font-size: 12px;
+    }
+
+    &__search-icon {
+      font-size: 12px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .tabs {
+    height: 28px;
+    padding: 1px 2px;
+
+    &__tabs-list {
+      gap: 10px;
+    }
+
+    &__tab {
+      height: 22px;
+      min-width: fit-content;
+      width: auto;
+
+      &-label {
+        padding: 3px 8px;
+        font-size: 11px;
+        min-width: fit-content;
+      }
+    }
+
+    &__search-section {
+      height: 22px;
+      width: 22px;
+    }
+
+    &__search-button {
+      width: 22px;
+      height: 22px;
+      font-size: 11px;
+    }
+
+    &__search-icon {
+      font-size: 11px;
+    }
+  }
+}
+
+// Dark theme support
+.dark-theme {
+  .tabs {
+    background: #374151;
+
+    &__tab {
+      &-label {
+        color: #d1d5db;
+      }
+
+      &--active {
+        background: #4b5563;
+
+        .tabs__tab-label {
+          color: #f9fafb;
+        }
+      }
+
+      &:hover:not(&--active):not(&--disabled) {
+        background: rgba(75, 85, 99, 0.5);
+
+        .tabs__tab-label {
+          color: #f9fafb;
+        }
+      }
+
+      &--disabled {
+        .tabs__tab-label {
+          color: #6b7280;
+        }
+      }
+    }
+
+    &__search-button {
+      color: #d1d5db;
+
+      &:hover {
+        background: rgba(75, 85, 99, 0.5);
+        color: #f9fafb;
+      }
+
+      &:active {
+        background: rgba(75, 85, 99, 0.7);
+      }
+    }
+  }
+}

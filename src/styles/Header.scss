@@ -1,0 +1,296 @@
+.header {
+  width: 100%;
+  height: 50px;
+  background: white;
+  border-bottom: 3px solid var(--project-title-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  box-sizing: border-box;
+  position: fixed;
+
+  // Left Section - Logo and App Name
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  &__logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 40px;
+
+    img {
+      width: auto;
+      height: 100%;
+      max-width: 120px;
+      object-fit: contain;
+    }
+  }
+
+  &__app-name {
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 20px;
+    line-height: normal;
+    color: var(--project-title-color);
+    margin: 0;
+  }
+
+  // Right Section - User Info and Actions
+  &__right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 32px;
+  }
+
+  &__greeting {
+    font-family: var(--font-family);
+    font-size: 13px;
+    line-height: 1.3;
+    color: var(--font-color-header);
+    margin-right: 24px;
+  }
+
+  &__greeting-text {
+    font-weight: 700;
+  }
+
+  &__user-name {
+    font-weight: 400;
+    text-transform: capitalize;
+  }
+
+  &__last-login {
+    font-family: var(--font-family);
+    font-size: 13px;
+    line-height: normal;
+    color: var(--font-color-header);
+    display: flex;
+    flex-direction: column;
+    margin-right: 24px;
+  }
+
+  &__last-login-label {
+    font-weight: 700;
+  }
+
+  &__last-login-time {
+    font-weight: 400;
+  }
+
+  &__role {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+
+  &__role-text {
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.3;
+    color: var(--font-color-header);
+  }
+
+  &__logout {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+
+  &__logout-text {
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.3;
+    color: var(--font-color-header);
+  }
+
+  &__profile-dropdown {
+    z-index: 9999 !important;
+
+    .ant-dropdown-menu {
+      min-width: 257px;
+      max-width: 300px;
+      padding: 0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  &__profile-menu {
+    padding: 0 !important;
+    background: white;
+
+    .ant-dropdown-menu-item {
+      padding: 0;
+    }
+  }
+
+  &__profile-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 21px 26px 0 26px;
+
+    .header__profile-title {
+      font-family: var(--font-family);
+      font-weight: 600;
+      font-size: 16px;
+      color: #D2591B;
+    }
+
+    .header__profile-edit {
+      cursor: pointer;
+    }
+  }
+
+  &__profile-info {
+    padding: 15px 26px;
+  }
+
+  &__profile-row {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__profile-label {
+    color: #666;
+    font-family: var(--font-family);
+    font-weight: 500;
+    font-size: 12px;
+    line-height: normal;
+  }
+
+  &__profile-value {
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 14px;
+    color: #1C1B1F;
+    word-break: break-word;
+  }
+
+  &__border-line {
+    border-bottom: 1px solid #ccc;
+    margin: 10px 0;
+  }
+}
+
+// Dropdown hover styles
+.ant-dropdown .ant-dropdown-menu .ant-dropdown-menu-item:hover {
+  background-color: #fff !important;
+}
+
+.ant-dropdown .ant-dropdown-menu .ant-dropdown-menu-item-active {
+  background-color: #fff !important;
+}
+
+// Responsive Design
+@media (max-width: 1200px) {
+  .header__right {
+    gap: 24px;
+    max-width: 70%;
+  }
+
+  .header__greeting,
+  .header__last-login {
+    margin-right: 20px;
+  }
+
+  .header__last-login {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0 16px;
+    height: 56px;
+  }
+
+  .header__left {
+    gap: 0;
+  }
+
+  .header__logo {
+    width: 110px;
+    height: 36px;
+    margin-right: 18px;
+  }
+
+  .header__app-name {
+    font-size: 20px;
+  }
+
+  .header__right {
+    gap: 16px;
+    max-width: 80%;
+  }
+
+  .header__greeting {
+    margin-right: 16px;
+    display: none;
+  }
+
+  .header__role,
+  .header__logout {
+    padding: 2px 4px;
+    gap: 6px;
+  }
+
+  .header__role-text,
+  .header__logout-text {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 0 12px;
+    height: 52px;
+  }
+
+  .header__left {
+    gap: 8px;
+  }
+
+  .header__logo {
+    width: 100px;
+    height: 32px;
+    margin-right: 16px;
+  }
+
+  .header__app-name {
+    font-size: 18px;
+  }
+
+  .header__right {
+    gap: 12px;
+    max-width: 85%;
+  }
+
+  .header__role-text,
+  .header__logout-text {
+    display: none;
+  }
+}

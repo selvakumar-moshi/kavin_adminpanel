@@ -1,0 +1,37 @@
+.quiz-rank-list {
+  max-height: 340px;
+  overflow-y: auto;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 4px;
+    border-bottom: 1px solid #f0f0f0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__rank {
+    width: 20px;
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #555;
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__score {
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #2a78d6;
+  }
+}

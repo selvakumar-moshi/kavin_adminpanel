@@ -1,0 +1,9 @@
+.report_main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .form-fields-section__form .ant-form-item{
+    padding-bottom: 0;
+  }
+}

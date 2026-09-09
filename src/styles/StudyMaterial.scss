@@ -1,0 +1,38 @@
+.study-material-current-file {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--table-head, #1c1b1f);
+}
+
+.study-material-container{
+  .custom-table{
+    top: 174px;
+  }
+}
+.video-material-container{
+  .custom-table{
+    top: 174px;
+  }
+}
+
+.material-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.material-container{
+  .filter-modal{
+    top: 170px;
+  }
+}
+
+.file-upload-display__field{
+  margin-bottom: 0;
+}
+
+.material-container{
+  .no-data-found__container {
+    height: calc(100vh - 326px) !important;
+  }
+}

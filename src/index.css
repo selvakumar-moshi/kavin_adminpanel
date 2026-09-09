@@ -1,0 +1,453 @@
+/*
+ * Copyright (c) 2024 Payhuddle. All rights reserved.
+ *
+ * This software and associated documentation files are the intellectual
+ * property of Payhuddle. Use of this software is governed by the terms
+ * of the applicable license agreement.
+ *
+ * No part of this software may be reproduced, distributed, or transmitted
+ * in any form or by any means without the prior written permission of Payhuddle.
+ */
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+/* Style sheets */
+@import "./App.css";
+/* @import "./app/layouts/LayoutContainer.scss"; */
+/* @import "./components/Common/Button/Button.scss"; */
+/* @import "./components/Common/RadioGroup/Radio.scss"; */
+/* @import "./components/Footer/Footer.scss"; */
+/* @import "./components/Header/Header.scss"; */
+/* @import "./components/Sidebar/Sidebar.scss"; */
+/* @import "./components/Breadcrumbs/Breadcrumbs.scss"; */
+/* @import "./components/PageTitle/PageTitle.scss"; */
+/* @import "./components/Tabs/Tabs.scss"; */
+/* @import "./components/Table/Table.scss"; */
+/* @import "./components/Table/StatusBadge.scss"; */
+/* @import "./components/Table/ActionIcons.scss"; */
+/* @import "./components/DropdownField/DropdownField.scss"; */
+/* @import "./components/FileUploadDisplay/FileUploadDisplay.scss"; */
+/* @import "./components/ToastMessages/ToastMessages.scss"; */
+/* @import "./components/PopupModal/PopupModal.scss"; */
+/* @import "./components/Checkbox/Checkbox.scss"; */
+/* @import "./pages/UserManagement/UserManagement.scss"; */
+/* @import "./components/ElevationRequest/ElevationRequest.scss"; */
+/* @import "./pages/Roles/Roles.scss"; */
+/* @import "./pages/Organization/Organization.scss"; */
+
+@font-face {
+  font-family: 'Discover Sans';
+  src: url('../public/DiscoverSans-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+ 
+@font-face {
+  font-family: 'Discover Sans';
+  src: url('../public/DiscoverSans-Book.ttf') format('truetype');
+  font-weight: 400; 
+  font-style: normal;
+  font-display: swap;
+}
+ 
+@font-face {
+  font-family: 'Discover Sans';
+  src: url('../public/DiscoverSans-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+ 
+@font-face {
+  font-family: 'Discover Sans';
+  src: url('../public/DiscoverSans-Semibold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+ 
+@font-face {
+  font-family: 'Discover Sans';
+  src: url('../public/DiscoverSans-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --parent-color: #ec6c2a;
+  --project-title-color: #ec6b29;
+  --border-color: #cccccc;
+  --font-color-R: #757474; /* R - Radio */
+  --color: #37302d;
+  --font-color-header: #7e8484;
+  --color-breadcrumb: #8D8B8B;
+
+  --menu-bg: #f8f8f8;
+  --grey-light: #e0e0e0;
+  --white: #ffffff;
+  --btn-shadow: #e4e2e4;
+  --btn-link: #313c97;
+  --tag-shadow: #313c971a;
+  --font-family: 'Discover Sans';
+  --button-disable-bg: #ec6c2a;
+  --error-message-color: #409cff;
+  --warning-color: red;
+  --btn-height: 40px;
+
+  /* Input component  */
+  --input-label: #666;
+
+  /* Checkbox component */
+  --checkbox-label: #1c1b1f;
+
+  /* Breadcrumbs component */
+  --breadcrumb-text: #313c97;
+
+  /* Tabs component */
+  --tabs-text-active: #313c97;
+  --tabs-text: #23233f;
+
+  /* Radio component */
+  --radio-border-color: #313c97;
+
+  /* Page Title */
+  --page-title: #1c1b1f;
+
+  /* Table component */
+  --table-head: #23233f;
+  --table-body: #1c1b1f;
+
+  /* Button component*/
+  --btn-primary-bg: #ec7d16;
+  --btn-primary-text: #ffffff;
+
+  --btn-primary-hover-bg: #C85029;
+  --btn-secondary-hover-bg: #23233F;
+
+  --btn-secondary-hover-bg: #23233F;
+
+  --btn-secondary-bg: #ffffff;
+  --btn-secondary-text: #313C97;
+  --btn-secondary-border: #313C97;
+
+  --btn-secondary2-bg: #ffffff;
+  --btn-secondary2-text: #8e8e8e;
+
+  --btn-tertiary-bg: transparent;
+  --btn-tertiary-text: #ec7d16;
+
+  --btn-disabled-bg: #666;
+  --btn-disabled-text: #8d8b8b;
+
+  /* Toast variables (change here to affect all toasts) */
+  --toast-success-bg: #ffffff;
+  --toast-success-text: #1c7a37;
+  --toast-success-border: #16a34a;
+
+  --toast-error-bg: #ffffff;
+  --toast-error-text: #b91c1c;
+  --toast-error-border: #ef4444;
+
+  --toast-warning-bg: #ffffff;
+  --toast-warning-text: #92400e;
+  --toast-warning-border: #f59e0b;
+
+  --toast-default-bg: #ffffff;
+  --toast-default-text: #1c1b1f;
+  --toast-default-border: #e5e7eb;
+
+  --toast-outline: rgba(0, 0, 0, 0.06);
+
+  --org-user-title-color: #15099E;
+  --org-user-name-color: #3C76A7;
+}
+
+button[data-variant="primary"]:not(:disabled):not([data-state="inactive"]):hover {
+  background-color: var(--btn-primary-hover-bg) !important;
+}
+
+button[data-variant="secondary"]:not(:disabled):not([data-state="inactive"]):hover {
+  border-color: var(--btn-secondary-hover-bg) !important;
+  color: var(--btn-secondary-hover-bg) !important;
+}
+
+body {
+  --primary-color: var(--theme-primary-color);
+  --background-color: var(--theme-background-color);
+  --text-color: var(--theme-text-color);
+}
+
+.light-theme {
+  --theme-primary-color: #007bff;
+  --theme-background-color: #f8f9fa;
+  --theme-text-color: #212529;
+}
+
+.dark-theme {
+  --theme-background-color: #282828ca;
+  --theme-text-color: #f8f9fa;
+}
+
+textarea:focus-visible:not(.dynamic-form-field__control--highlighted) {
+  outline: none !important;
+}
+.ant-input-textarea-show-count .ant-input-data-count{
+  font-family: var(--font-family);
+  font-size: 12px;
+}
+
+.ant-table-cell{
+  text-align: center !important;
+}
+
+.table-cell-capitalize{
+  text-transform: capitalize;
+}
+
+.text-captilize{
+  text-transform: capitalize;
+  font-weight: 700;
+}
+
+.table-cell-ellipsis{
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ant-tooltip .ant-tooltip-inner,
+.ant-picker-dropdown .ant-picker-panel-container .ant-picker-panel .ant-picker-content, 
+.ant-picker-dropdown .ant-picker-panel-container .ant-picker-panel table,
+.ant-picker-dropdown .ant-picker-header-view >button,
+.ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input
+{
+  font-family: var(--font-family);
+}
+
+.ant-tag {
+  text-transform: capitalize;
+  font-family: var(--font-family);
+}
+
+.ant-empty .ant-empty-image{
+  height: 50px;
+}
+
+.ant-table-wrapper .ant-table-tbody >tr >td{
+  border-bottom: none !important;
+}
+
+/* Shared layout/utility classes.
+   These replace inline style={{}} usage so style-src can drop 'unsafe-inline'
+   for anything under our own control (antd's own cssinjs still needs it). */
+.u-cursor-pointer {
+  cursor: pointer;
+}
+
+.u-text-center {
+  text-align: center;
+}
+
+.u-flex-center {
+  display: flex;
+  align-items: center;
+}
+
+.u-flex-center-justify {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.u-flex-1 {
+  flex: 1;
+}
+
+.u-full-width {
+  width: 100%;
+}
+
+.u-inline-flex-center {
+  display: inline-flex;
+  align-items: center;
+}
+
+.u-height-unset {
+  height: unset !important;
+}
+
+.u-mb-neg2 {
+  margin-bottom: -2px;
+}
+
+.u-mt-2 {
+  margin-top: 2px;
+}
+
+.u-mt-24 {
+  margin-top: 24px;
+}
+
+.u-mb-24 {
+  margin-bottom: 24px;
+}
+
+.u-pl-0 {
+  padding-left: 0;
+}
+
+.u-pl-6 {
+  padding-left: 6px;
+}
+
+.u-py-20-center {
+  padding: 20px 0;
+  text-align: center;
+}
+
+.u-py-20-px20-center {
+  padding: 20px;
+  text-align: center;
+}
+
+.u-relative-top-neg14 {
+  position: relative;
+  top: -14px;
+}
+
+.u-relative {
+  position: relative;
+}
+
+.u-margin-inline-end-4 {
+  margin-inline-end: 4px;
+}
+
+.u-min-width-fit-content {
+  min-width: fit-content;
+}
+
+.u-min-height-120 {
+  min-height: 120px;
+}
+
+.u-fade-inactive {
+  opacity: 0.4;
+}
+
+.u-fade-active {
+  opacity: 1;
+}
+
+.u-text-error {
+  color: #D13F3F;
+}
+
+.u-text-success {
+  color: #277A53;
+}
+
+.u-text-muted {
+  color: #8c8c8c;
+}
+
+.u-text-warning {
+  color: #faad14;
+}
+
+.u-icon-fontsize-12 {
+  font-size: 12px;
+}
+
+.u-icon-fontsize-16 {
+  font-size: 16px;
+}
+
+.u-toast-icon {
+  height: 25px;
+}
+
+.u-gap-8 {
+  gap: 8px;
+}
+
+.u-ml-10 {
+  margin-left: 10px;
+}
+
+body.user-profile-details-page .layout-container__outer {
+  background: #F1F4F7;
+}
+
+/* Toast.tsx (legacy standalone toast, currently unmounted) */
+.toast-message {
+  position: fixed;
+  font-family: var(--font-family);
+  color: var(--toast-default-text);
+  box-shadow: 0px 1px 16.6px 0px rgba(0, 0, 0, 0.25);
+  padding: 8px 20px;
+  max-width: 80%;
+  margin: 10px;
+  right: -10px;
+  bottom: 100px;
+  border-radius: 15px 0 0 15px;
+  border: 4px solid #EEE;
+  background: #FFF;
+  border-left: 4px solid var(--toast-default-border);
+}
+
+.toast-message--success {
+  border-left: 4px solid var(--toast-success-border);
+}
+
+.toast-message--error {
+  background-color: var(--toast-error-bg);
+  color: var(--toast-error-text);
+  border-left: 4px solid var(--toast-error-border);
+}
+
+.toast-message--warning {
+  background-color: var(--toast-warning-bg);
+  color: var(--toast-warning-text);
+  border-left: 4px solid var(--toast-warning-border);
+}
+
+.toast-message__body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  padding: 16px;
+  border-radius: 15px 0 0 15px;
+}
+
+.toast-message__icon {
+  height: 50px;
+  padding-right: 30px;
+}
+
+.toast-message__text {
+  font-size: 24px;
+}
+
+.ant-layout {
+  background: var(--white);
+}
+
+.ant-dropdown-menu {
+  min-width: 120px;
+  padding: 4px 0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ant-dropdown-menu-item {
+  font-family: var(--font-family) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--checkbox-label) !important;
+}

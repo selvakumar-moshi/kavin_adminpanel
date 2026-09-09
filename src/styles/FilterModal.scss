@@ -1,0 +1,208 @@
+/*
+ * Copyright (c) 2024 Payhuddle. All rights reserved.
+ *
+ * This software and associated documentation files are the intellectual
+ * property of Payhuddle. Use of this software is governed by the terms
+ * of the applicable license agreement.
+ *
+ * No part of this software may be reproduced, distributed, or transmitted
+ * in any form or by any means without the prior written permission of Payhuddle.
+ */
+ .filter-modal {
+  position: absolute;
+  top: 120px;
+  right: 19px;
+  z-index: 2;
+  background: #fff;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08),0 3px 6px -4px rgba(0, 0, 0, 0.12),0 9px 28px 8px rgba(0, 0, 0, 0.05);
+  padding: 10px 18px 18px 18px;
+  min-width: 24rem !important;
+  // max-height: 400px;
+  overflow-y: auto;
+
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 20px;
+    width: 12px;
+    height: 12px;
+    background: white;
+    transform: rotate(45deg);
+    border-left: 1px solid #e0e0e0;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+  }
+
+  &__close {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #1c1b1f;
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+
+    &:hover {
+      color: #666666;
+    }
+  }
+
+  &__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  // Force horizontal layout for form items
+  .filter-modal-input-fields {
+    .ant-form-item {
+      padding-bottom: 0;
+    }
+    .ant-row{
+      display: flex;
+      align-items: center;
+    }
+
+    .ant-form-item-label {
+      flex: 0 0 40%; // Adjust width as needed
+      text-align: left;
+      padding-right: 12px;
+      margin-bottom: 0;
+      
+      > label {
+        width: 100% !important;
+        height: auto !important;
+        margin-bottom: 0 !important;
+        font-size: 12px;
+        font-family: var(--font-family);
+        font-weight: 500;
+        color: #333;
+      }
+    }
+
+    .ant-form-item-control {
+      flex: 1;
+    }
+
+    .ant-input {
+      width: 100%;
+    }
+    .form-fields-section__input{
+      height: 32px;
+
+      &::placeholder{
+        color: #d9d9d9;
+        font-family: var(--font-family);
+        font-size: 12px;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .filter-modal-date-fields{
+    .date-fields-section__field{
+      display: flex;
+      align-items: center;
+    }
+    .date-fields-section__label{
+      flex: 0 0 40%;
+      font-family: var(--font-family);
+      font-weight: 500;
+      font-size: 12px;
+      line-height: normal;
+      color: #333;
+    }
+    .date-fields-section__date-picker{
+      height: 32px;
+
+      .ant-picker-input {
+        input {
+          &::placeholder {
+            color: #d9d9d9;
+            font-family: var(--font-family);
+            font-size: 12px;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__search-btn{
+    background: var(--btn-primary-bg);
+    border: 1px solid var(--btn-primary-bg);
+    color: white;
+    font-family: var(--font-family);
+    font-size: 14px;
+    font-weight: 500;
+    height: 32px;
+    // width: 90px;
+    border-radius: 26px;
+    padding: 6px 12px;
+
+    // Hover styles for Apply button
+    &:hover:not(:disabled) {
+      border-color: var(--btn-primary-hover-bg) !important;
+      background: var(--btn-primary-hover-bg) !important;
+    }
+
+    &:disabled {
+      background-color:var(--btn-disabled-bg) !important;
+      border-color: var(--btn-disabled-bg) !important;
+      color: white !important;
+    }
+  }
+
+  &__reset-btn {
+      padding: 6px 12px;
+      background-color: white;
+      border-color: var(--btn-secondary-text);
+      color: var(--btn-secondary-text);
+      font-family: var(--font-family);
+      font-weight: 500;
+      font-size: 14px;
+      // width: 90px;
+      height: 32px;
+      border-radius: 26px;
+  
+      // Hover styles for Reset button
+      &:hover:not(:disabled) {
+        border-color: var(--btn-secondary-text) !important;
+      }
+  
+      // Disabled styles
+      &:disabled {
+        background: none !important;
+        border-color: var(--btn-disabled-bg) !important;
+        color: var(--btn-disabled-bg) !important;
+      }
+    }
+}

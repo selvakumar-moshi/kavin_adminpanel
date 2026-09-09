@@ -1,0 +1,82 @@
+.column-search-modal{
+    padding: 12px;
+    width: 260px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+
+    &__title{
+        margin-bottom: 12px;
+        font-weight: 600;
+        font-family: var(--font-family);
+        font-size: 12px;
+        line-height: normal;
+        color: #1a1a1a;
+    }
+
+    &__input{
+        &::placeholder{
+            color: #d9d9d9;
+            font-family: var(--font-family);
+            font-size: 12px;
+            font-weight: 500;
+        }
+        &:hover{
+            border-color: #ec7d16 !important;
+            box-shadow: none !important;
+        }
+    }
+
+    .ant-input-affix-wrapper >input.ant-input{
+        font-family: var(--font-family);
+    }
+
+    .ant-picker .ant-picker-input{
+        font-family: var(--font-family);
+    }
+
+    .ant-picker .ant-picker-input >input:placeholder-shown{
+        font-family: var(--font-family);
+        font-size: 12px;
+    }
+
+    .ant-picker-outlined:hover, .ant-picker-outlined:focus, .ant-picker-outlined:focus-within, .ant-picker-outlined:active{
+        border-color: #ec7d16 !important;
+        box-shadow: none !important;
+    }
+
+    &__buttons{
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    &__search-btn{
+        font-family: var(--font-family);
+        font-weight: 600;
+        font-size: 14px;
+        line-height: normal;
+        color: #fff;
+        background: var(--btn-primary-bg) !important;
+        height: 32px;
+        border-radius: 26px;
+        padding: 6px 12px;
+
+        &:disabled{
+            background: var(--btn-disabled-bg) !important;
+            color: white !important;
+        }
+    }
+
+    &__clear-btn{
+        font-family: var(--font-family);
+        font-weight: 600;
+        font-size: 14px;
+        line-height: normal;
+        color: var(--btn-secondary-border);
+        height: 32px;
+        border-color: var(--btn-secondary-border) !important;
+        border-radius: 26px;
+        padding: 6px 12px;
+    }
+}

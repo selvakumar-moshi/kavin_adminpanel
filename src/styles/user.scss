@@ -1,0 +1,371 @@
+.ant-tag {
+  text-transform: capitalize;
+  font-family: var(--font-family);
+}
+
+// PopupModal renders via an antd Modal portal (appended to document.body), so this
+// must be scoped to the modal's own content wrapper, not a page-level container.
+.popup-modal__content{
+  .form-fields-section__form .ant-form-item{
+    padding-bottom: 0;
+  }
+}
+
+.users-container{
+  .no-data-found__container {
+    height: calc(100vh - 326px) !important;
+  }
+}
+
+// ============================================================
+// Shared "info card" building blocks — used by Users, UserDetail (course rows), and Course pages
+// ============================================================
+.user-detail {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: #fff;
+  border: 1px solid #e6e9f5;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.user-detail__info-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-detail__info {
+  display: flex;
+  align-items: center;
+  gap: 50px;
+}
+
+.user-detail__info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.user-detail__info-item-label {
+  font-size: 12px;
+  font-family: var(--font-family);
+  font-weight: 500;
+}
+
+.user-detail__info-item-value {
+  font-size: 14px;
+  font-family: var(--font-family);
+  font-weight: 600;
+}
+
+// ============================================================
+// Users list page (Users.tsx)
+// ============================================================
+.dl_filter_main{
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+
+    .form-fields-section__form .ant-form-item{
+        padding-bottom: 0;
+    }
+
+    .form-fields-section__field{
+        margin-bottom: 0;
+    }
+
+    &__filter_icon{
+        border-radius: 100px;
+        border: 1px solid #C5C5C7;
+        padding: 8px;
+        cursor: pointer;
+    }
+}
+
+.users-table__sort-icon{
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    gap: 1px;
+    margin-left: 4px;
+
+    &__up{
+     font-size: 10px;
+     color: #bfbfbf;
+     &--active{
+         color: #1890ff;
+     }
+   }
+
+   &__down{
+     font-size: 10px;
+     color: #bfbfbf;
+     &--active{
+         color: #1890ff;
+     }
+   }
+
+   &__search{
+     background: none;
+     border: none;
+     padding: 2px 4px;
+     cursor: pointer;
+     display: flex;
+     align-items: center;
+     margin-left: 4px;
+   }
+
+   &__search-icon{
+     font-size: 14px;
+     color: #a1a3ac;
+     &--active{
+         color: #eb6c2a;
+     }
+   }
+ }
+
+ .users-container{
+  .custom-table{
+    top: 130px;
+  }
+  .filter-modal{
+    top: 128px;
+  }
+ }
+
+// ============================================================
+// UserDetail page (UserDetail.tsx) — course list + hero banner
+// ============================================================
+body.user-detail-page {
+  .ant-layout {
+    background: #F1F4F7;
+  }
+
+  .ant-layout-content.collapsed,
+  .ant-layout-content.collapsed_expand {
+    background: #F1F4F7 !important;
+  }
+}
+
+.user-detail-container {
+  position: relative;
+  .user-detail-course {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    &__header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    &__amounts {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+      margin-top: 8px;
+    }
+
+    &__materials {
+      margin: 12px 0;
+      padding-left: 20px;
+    }
+
+    &__materials-main{
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    &__materials-desc{
+      font-size: 12px;
+      font-family: var(--font-family);
+      font-weight: 500;
+    }
+  }
+
+  .tabs__tab-label{
+    font-size: 12px;
+  }
+
+  .tabs__tab--active .tabs__tab-label{
+    font-size: 12px;
+  }
+
+  .tabs__tab{
+    height: 20px;
+  }
+}
+
+.user-detail__info-item-label2{
+  font-size: 12px;
+  font-family: var(--font-family);
+  font-weight: 500;
+  color: #000;
+}
+
+.user-detail__info-item-value2{
+  font-size: 14px;
+  font-family: var(--font-family);
+  font-weight: 600;
+  color: #000;
+}
+
+.user-course-title{
+  margin-top: 24px;
+  font-family: var(--font-family);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.user-course__module-div{
+  .user-course__module-header {
+    color: #000;
+    font-family: var(--font-family);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+    margin-bottom: 12px;
+    cursor: pointer;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    background: #fff;
+    min-width: 0;
+    overflow: hidden;
+
+    .no-data-found__container{
+      height: unset;
+    }
+  }
+
+  .user-course__module-section{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    &--expanded {
+        margin: -12px -16px 0;
+        padding: 12px 16px;
+        border-bottom: 1px solid #eee;
+    }
+  }
+
+  .user-course__module-arrow{
+    display: inline-block;
+    text-align: center;
+    width: 16px;
+  }
+
+  .user-course__module-title{
+    color: #000;
+    font-size: 16px;
+    font-family: var(--font-family);
+    font-weight: 600;
+    line-height: normal;
+  }
+}
+
+// Hero banner (dark navy background image behind the header/name row)
+.organization--user-profile-view{
+   height: calc(100vh - 128px);
+}
+
+.organization--user-details-view {
+   position: relative;
+   display: flex;
+   flex-direction: column;
+   overflow-x: visible;
+}
+
+.organization__user-details-main {
+  position: absolute;
+  z-index: 0;
+  top: -31px;
+  left: -92px;
+  width: calc(100% + 92px + 27px);
+  min-height: 160px;
+  background-color: #1E3650;
+  background-image: url('../assets/user_details_bg.svg');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+}
+
+.organization--user-details-view .organization__user-details-content {
+  position: relative;
+  overflow: visible;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  margin-top: -10px;
+  margin-left: -92px;
+  margin-right: -27px;
+  padding-top: 1rem;
+  height: 67px;
+  padding-left: calc(92px + 5rem);
+  padding-right: calc(27px + 2rem);
+  background-color: rgba(255, 255, 255, 0.1019607843);
+  z-index: 0;
+}
+
+// Frosted hero panel sits on a dark background — override the shared card defaults above
+.organization--user-details-view .organization__user-details-content .user-detail__info-item-label,
+.organization--user-details-view .organization__user-details-content .user-detail__info-item-value {
+  color: #fff;
+}
+
+// Header (and its 70px initials badge) must paint above .organization__user-details-content's
+// -10px overlap, so it's excluded from the generic catch-all below instead of relying on a
+// separate z-index rule — both had equal specificity and the catch-all, being declared later,
+// was silently winning and flattening header/content to the same z-index.
+.organization--user-details-view > .organization__user-details-header {
+  position: relative;
+  z-index: 2;
+}
+
+.organization--user-details-view > *:not(.organization__user-details-main):not(.organization__user-details-header):not(.organization__user-details-content) {
+  position: relative;
+  z-index: 1;
+}
+
+.organization__user-details-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+// Name text in the header also sits on the dark banner
+.organization__user-details-header .user-detail__info-item-value {
+  color: #fff;
+}
+
+.organization__user-left-initial {
+  position: relative;
+  z-index: 1;
+  top: 22px;
+  border-radius: 35px;
+  background: #FFE7C3;
+  box-shadow: 0 4px 3.3px 0 rgba(0, 0, 0, 0.25);
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #B57C25;
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: 18px;
+  line-height: normal;
+}
+
+.organization__user-details-content-items {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}

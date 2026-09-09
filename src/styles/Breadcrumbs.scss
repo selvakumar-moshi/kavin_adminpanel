@@ -1,0 +1,265 @@
+/*
+ * Copyright (c) 2024 Payhuddle. All rights reserved.
+ *
+ * This software and associated documentation files are the intellectual
+ * property of Payhuddle. Use of this software is governed by the terms
+ * of the applicable license agreement.
+ *
+ * No part of this software may be reproduced, distributed, or transmitted
+ * in any form or by any means without the prior written permission of Payhuddle.
+ */
+// Breadcrumbs Styles - Matching Figma Design
+.breadcrumbs {
+  //   width: 1470px;
+    // height: 57px;
+    display: flex;
+    align-items: center;
+    // padding: 9px 12px 9px 11px;
+    gap: 10px;
+    box-sizing: border-box;
+    position: fixed;
+    left: 94px;
+    right: 0px;
+    top: 60px; // Below header component (60px height)
+    z-index: 999;
+  //   border-bottom: 1px solid #f0f0f0;
+  
+    // Container for Ant Design Breadcrumb
+    &__container {
+      width: 100%;
+      
+      // Override Ant Design default styles
+      .ant-breadcrumb {
+        font-family: var(--font-family);
+        font-size: 12px;
+        line-height: 1;
+        color: #8d8b8b;
+      }
+  
+      .ant-breadcrumb-link {
+        text-transform: capitalize;
+        color: #8d8b8b;
+        text-decoration: none;
+        transition: color 0.2s ease;
+  
+        &:hover {
+          color: #ec6b29;
+        }
+      }
+  
+      .ant-breadcrumb-separator {
+        color: #8d8b8b;
+        margin: 0;
+      }
+    }
+  
+    // Individual breadcrumb items
+    &__item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: color 0.2s ease;
+      font-family: var(--font-family);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1;
+      color: #8d8b8b;
+      white-space: nowrap;
+  
+      &:hover {
+        color: #ec6b29;
+      }
+  
+      &--active {
+        color: #1c1b1f;
+        font-weight: 500;
+        cursor: default;
+  
+        &:hover {
+          color: #1c1b1f;
+        }
+      }
+    }
+  
+    &__icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 12px;
+      height: 12px;
+      margin-right: 2px;
+    }
+  
+    &__label {
+      font-family: var(--font-family);
+      color: var(--color-breadcrumb);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1;
+    }
+  
+    &__separator {
+      color: var(--color-breadcrumb);
+      margin: 0 10px;
+      font-size: 12px;
+      position: relative;
+    }
+
+    &--embedded {
+      position: relative;
+      top: auto;
+      left: auto;
+      right: auto;
+      z-index: 3;
+      width: auto;
+    }
+  }
+  
+  // Responsive Design
+  @media (max-width: 1200px) {
+    .breadcrumbs {
+      width: calc(100vw - 94px);
+      left: 94px;
+      right: 0px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .breadcrumbs {
+      width: calc(100vw - 60px);
+      left: 60px;
+      right: 0px;
+      height: 48px;
+      padding: 8px 10px 8px 9px;
+      top: 56px; // Adjusted for smaller header
+  
+      &__item {
+        font-size: 11px;
+      }
+  
+      &__label {
+        font-size: 11px;
+      }
+  
+      &__separator {
+        font-size: 11px;
+        margin: 0 6px;
+      }
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .breadcrumbs {
+      width: calc(100vw - 56px);
+      left: 56px;
+      right: 0px;
+      height: 44px;
+      padding: 6px 8px 6px 7px;
+      top: 52px; // Adjusted for mobile header
+  
+      &__item {
+        font-size: 10px;
+      }
+  
+      &__label {
+        font-size: 10px;
+      }
+  
+      &__separator {
+        font-size: 10px;
+        margin: 0 4px;
+      }
+    }
+  }
+  
+  // Dark theme support
+  .dark-theme {
+    .breadcrumbs {
+      background: #1f2937;
+      // border-bottom-color: #374151;
+  
+      &__container {
+        .ant-breadcrumb {
+          color: #9ca3af;
+        }
+  
+        .ant-breadcrumb-link {
+          color: #9ca3af;
+  
+          &:hover {
+            color: #ec6b29;
+          }
+        }
+  
+        .ant-breadcrumb-separator {
+          color: #9ca3af;
+        }
+      }
+  
+      &__item {
+        color: #9ca3af;
+  
+        &:hover {
+          color: #ec6b29;
+        }
+  
+        &--active {
+          color: #f9fafb;
+  
+          &:hover {
+            color: #f9fafb;
+          }
+        }
+      }
+  
+      &__separator {
+        color: #9ca3af;
+      }
+    }
+  }
+
+
+// User detail view (body class from usePageBodyClass) — readable on hero background
+body.user-detail-page {
+  .breadcrumbs {
+    &__container {
+      .ant-breadcrumb {
+        color: #ffffff;
+      }
+
+      .ant-breadcrumb-link {
+        color: #ffffff;
+      }
+
+      .ant-breadcrumb-separator {
+        color: #ffffff;
+      }
+    }
+
+    &__item {
+      color: #ffffff;
+
+      &:not(&--active) {
+        cursor: pointer;
+      }
+
+      &--active {
+        color: #ffffff;
+
+        &:hover {
+          color: #ffffff;
+        }
+      }
+    }
+
+    &__label {
+      color: #ffffff;
+    }
+
+    &__separator {
+      color: #ffffff;
+      filter: brightness(0) invert(1);
+    }
+  }
+}

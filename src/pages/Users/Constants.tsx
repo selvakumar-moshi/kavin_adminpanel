@@ -1,0 +1,90 @@
+import { Avatar } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
+import type { ITableColumn } from '../../components/Table/ITable';
+import { formatDate } from '../../utils/dateUtils';
+import { renderTruncatedCellWithTooltip } from '../../utils/tableCellRender';
+
+export interface UserRecord {
+    userId: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    email: string;
+    role: string;
+    profileImage?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+const compareText = (a?: string | null, b?: string | null) =>
+    (a || '').toLowerCase().localeCompare((b || '').toLowerCase());
+
+export const SEARCH_INPUT_FIELDS = [
+    {
+        name: 'search',
+        label: '',
+        placeholder: 'Search by name, email or phone',
+        type: 'text' as const,
+        search: true,
+    },
+];
+
+// Define columns without the actions render function
+export const getUserTableColumns = (): ITableColumn[] => [
+    {
+        title: 'Profile',
+        dataIndex: 'profileImage',
+        key: 'profileImage',
+        render: (profileImage: string | null) => (
+            <Avatar src={profileImage || undefined} icon={!profileImage ? <UserOutlined /> : undefined} />
+        ),
+    },
+    {
+        title: 'User Name',
+        dataIndex: 'firstName',
+        key: 'userName',
+        searchType: 'text',
+        sorter: (a: UserRecord, b: UserRecord) =>
+            compareText(`${a.firstName || ''} ${a.lastName || ''}`.trim(), `${b.firstName || ''} ${b.lastName || ''}`.trim()),
+        render: (_: string, record: UserRecord) =>
+            renderTruncatedCellWithTooltip(`${record.firstName || ''} ${record.lastName || ''}`.trim()),
+    },
+    {
+        title: 'Phone Number',
+        dataIndex: 'phoneNumber',
+        key: 'phoneNumber',
+        searchType: 'text',
+        sorter: (a: UserRecord, b: UserRecord) => compareText(a.phoneNumber, b.phoneNumber),
+    },
+    {
+        title: 'Email',
+        dataIndex: 'email',
+        key: 'email',
+        searchType: 'text',
+        sorter: (a: UserRecord, b: UserRecord) => compareText(a.email, b.email),
+        render: (email: string) => renderTruncatedCellWithTooltip(email),
+    },
+    {
+        title: 'Role',
+        dataIndex: 'role',
+        key: 'role',
+        searchType: 'text',
+        sorter: (a: UserRecord, b: UserRecord) => compareText(a.role, b.role),
+    },
+    {
+        title: 'Created At',
+        dataIndex: 'createdAt',
+        key: 'createdAt',
+        searchType: 'date',
+        sorter: (a: UserRecord, b: UserRecord) => compareText(a.createdAt, b.createdAt),
+        render: (text: string) => formatDate(text),
+    },
+    {
+        title: 'Updated At',
+        dataIndex: 'updatedAt',
+        key: 'updatedAt',
+        searchType: 'date',
+        sorter: (a: UserRecord, b: UserRecord) => compareText(a.updatedAt, b.updatedAt),
+        render: (text: string) => formatDate(text),
+    },
+];
