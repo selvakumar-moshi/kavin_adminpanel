@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getSSLogin, getRegister, deleteUser, updateUser, getUsers, getUserById, updateEnrollmentStatus, getCourses, getCourseById, createCourse, updateCourse, deleteCourse, getBatches, createBatch, updateBatch, deleteBatch, getStudyMaterials, createStudyMaterial, updateStudyMaterial, deleteStudyMaterial, getVideoMaterials, createVideoMaterial, updateVideoMaterial, deleteVideoMaterial, getDashboardCounts, getQuizzes, getQuizById, createQuiz, updateQuiz, deleteQuiz, publishQuiz, getQuizRankList} from "./SuperSalesAction";
+import { getSSLogin, getRegister, deleteUser, updateUser, getUsers, getUserById, updateEnrollmentStatus, getCourses, getCourseById, createCourse, updateCourse, deleteCourse, getBatches, createBatch, updateBatch, deleteBatch, getStudyMaterials, createStudyMaterial, updateStudyMaterial, deleteStudyMaterial, getVideoMaterials, createVideoMaterial, updateVideoMaterial, deleteVideoMaterial, getDashboardCounts, getQuizzes, getQuizById, createQuiz, updateQuiz, deleteQuiz, publishQuiz, getQuizRankList, getNotifications, createNotification, updateNotification, deleteNotification} from "./SuperSalesAction";
 import { initialState } from "./ISuperSales";
 
 const SuperSalesSlice = createSlice({
@@ -614,6 +614,75 @@ const SuperSalesSlice = createSlice({
                 state.apiStatus.QuizRankListData.loading = false;
                 state.apiStatus.QuizRankListData.success = false;
                 state.apiStatus.QuizRankListData.error = action.payload as string || "Failed to fetch rank list";
+            });
+
+        builder
+            .addCase(getNotifications.pending, (state) => {
+                state.apiStatus.NotificationsData.loading = true;
+                state.apiStatus.NotificationsData.success = false;
+                state.apiStatus.NotificationsData.error = null;
+            })
+            .addCase(getNotifications.fulfilled, (state, action) => {
+                state.NotificationsData = action.payload;
+                state.apiStatus.NotificationsData.loading = false;
+                state.apiStatus.NotificationsData.success = true;
+                state.apiStatus.NotificationsData.error = null;
+            })
+            .addCase(getNotifications.rejected, (state, action) => {
+                state.apiStatus.NotificationsData.loading = false;
+                state.apiStatus.NotificationsData.success = false;
+                state.apiStatus.NotificationsData.error = action.payload as string || "Failed to fetch Notifications";
+            });
+
+        builder
+            .addCase(createNotification.pending, (state) => {
+                state.apiStatus.NotificationsData.loading = true;
+                state.apiStatus.NotificationsData.success = false;
+                state.apiStatus.NotificationsData.error = null;
+            })
+            .addCase(createNotification.fulfilled, (state) => {
+                state.apiStatus.NotificationsData.loading = false;
+                state.apiStatus.NotificationsData.success = true;
+                state.apiStatus.NotificationsData.error = null;
+            })
+            .addCase(createNotification.rejected, (state, action) => {
+                state.apiStatus.NotificationsData.loading = false;
+                state.apiStatus.NotificationsData.success = false;
+                state.apiStatus.NotificationsData.error = action.payload as string || "Failed to create Notification";
+            });
+
+        builder
+            .addCase(updateNotification.pending, (state) => {
+                state.apiStatus.NotificationsData.loading = true;
+                state.apiStatus.NotificationsData.success = false;
+                state.apiStatus.NotificationsData.error = null;
+            })
+            .addCase(updateNotification.fulfilled, (state) => {
+                state.apiStatus.NotificationsData.loading = false;
+                state.apiStatus.NotificationsData.success = true;
+                state.apiStatus.NotificationsData.error = null;
+            })
+            .addCase(updateNotification.rejected, (state, action) => {
+                state.apiStatus.NotificationsData.loading = false;
+                state.apiStatus.NotificationsData.success = false;
+                state.apiStatus.NotificationsData.error = action.payload as string || "Failed to update Notification";
+            });
+
+        builder
+            .addCase(deleteNotification.pending, (state) => {
+                state.apiStatus.NotificationsData.loading = true;
+                state.apiStatus.NotificationsData.success = false;
+                state.apiStatus.NotificationsData.error = null;
+            })
+            .addCase(deleteNotification.fulfilled, (state) => {
+                state.apiStatus.NotificationsData.loading = false;
+                state.apiStatus.NotificationsData.success = true;
+                state.apiStatus.NotificationsData.error = null;
+            })
+            .addCase(deleteNotification.rejected, (state, action) => {
+                state.apiStatus.NotificationsData.loading = false;
+                state.apiStatus.NotificationsData.success = false;
+                state.apiStatus.NotificationsData.error = action.payload as string || "Failed to delete Notification";
             });
     },
 });

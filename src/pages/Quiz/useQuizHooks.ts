@@ -1,21 +1,24 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
 import { getQuizzes, deleteQuiz, publishQuiz } from '../../services/SuperSalesAction';
 import type { QuizRecord } from './Constant';
-import { getQuizTableColumns } from './Constant';
+import { getQuizTableColumns, dayjsToISOString } from './Constant';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 
 export const useQuizManagement = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
     const { messages: toastMessages, showSuccess, showError, hideToast } = useToastMessages();
 
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [isPublishModalVisible, setIsPublishModalVisible] = useState(false);
     const [selectedQuiz, setSelectedQuiz] = useState<QuizRecord | null>(null);
+    const [publishExpiresAt, setPublishExpiresAt] = useState<unknown>(null);
+    const [publishExpiresAtError, setPublishExpiresAtError] = useState('');
     const [operationType, setOperationType] = useState<'delete' | 'publish' | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
@@ -46,6 +49,16 @@ export const useQuizManagement = () => {
     useEffect(() => {
         dispatch(getQuizzes({ pageNumber: currentPage, pageSize }) as any);
     }, [dispatch, currentPage, pageSize]);
+
+    // Picks up a success toast handed off via navigation state (e.g. from the Create/Edit Quiz
+    // page, which unmounts immediately on navigate and can't keep its own toast alive long enough).
+    useEffect(() => {
+        const navState = location.state as { toastMessage?: string } | undefined | null;
+        if (!navState?.toastMessage) return;
+
+        showSuccess(navState.toastMessage);
+        navigate(location.pathname, { replace: true, state: null });
+    }, [location, navigate, showSuccess]);
 
     const handlePaginationChange = (page: number, newPageSize: number) => {
         setCurrentPage(page);
@@ -103,18 +116,34 @@ export const useQuizManagement = () => {
 
     const openPublishModal = (quiz: QuizRecord) => {
         setSelectedQuiz(quiz);
+        setPublishExpiresAt(null);
+        setPublishExpiresAtError('');
         setIsPublishModalVisible(true);
     };
 
     const closePublishModal = () => {
         setIsPublishModalVisible(false);
         setSelectedQuiz(null);
+        setPublishExpiresAt(null);
+        setPublishExpiresAtError('');
+    };
+
+    const handlePublishExpiresAtChange = (_name: string, value: unknown) => {
+        setPublishExpiresAt(value);
+        if (publishExpiresAtError) setPublishExpiresAtError('');
     };
 
     const handlePublishConfirm = () => {
         if (!selectedQuiz) return;
+
+        const expiresAt = dayjsToISOString(publishExpiresAt);
+        if (!expiresAt) {
+            setPublishExpiresAtError('Expiry date & time is required');
+            return;
+        }
+
         setOperationType('publish');
-        dispatch(publishQuiz({ id: selectedQuiz.id }) as any);
+        dispatch(publishQuiz({ id: selectedQuiz.id, expiresAt }) as any);
     };
 
     return {
@@ -137,6 +166,8 @@ export const useQuizManagement = () => {
         isDeleteModalVisible,
         isPublishModalVisible,
         selectedQuiz,
+        publishExpiresAt,
+        publishExpiresAtError,
         openCreateQuiz,
         openEditQuiz,
         openDeleteModal,
@@ -144,6 +175,7 @@ export const useQuizManagement = () => {
         handleDeleteConfirm,
         openPublishModal,
         closePublishModal,
+        handlePublishExpiresAtChange,
         handlePublishConfirm,
         toastMessages,
         hideToast,

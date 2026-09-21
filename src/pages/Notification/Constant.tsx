@@ -1,0 +1,91 @@
+import type { ITableColumn } from '../../components/Table/ITable';
+import { formatDate } from '../../utils/dateUtils';
+import dayjs from 'dayjs';
+
+export interface NotificationRecord {
+    id: string;
+    title: string;
+    description: string;
+    link: string;
+    date: string;
+    createdAt?: string;
+    updatedAt?: string | null;
+}
+
+export const NOTIFICATION_INPUT_FIELDS = [
+    {
+        name: 'title',
+        label: 'Title',
+        placeholder: 'Enter notification title',
+        required: true,
+        type: 'text' as const,
+    },
+    {
+        name: 'description',
+        label: 'Description',
+        placeholder: 'Enter notification description',
+        required: true,
+        type: 'textarea' as const,
+        maxLength: 500,
+    },
+    {
+        name: 'link',
+        label: 'Link',
+        placeholder: 'Enter link URL',
+        required: true,
+        type: 'text' as const,
+    },
+];
+
+export const NOTIFICATION_DATE_FIELD = [
+    {
+        name: 'date',
+        label: 'Date',
+        placeholder: 'Select date & time',
+        required: true,
+    },
+];
+
+export const dayjsToISOString = (value: unknown): string => {
+    if (!value) return '';
+    if (dayjs.isDayjs(value)) return value.toISOString();
+    const parsed = dayjs(value as string);
+    return parsed.isValid() ? parsed.toISOString() : '';
+};
+
+const compareText = (a?: string | null, b?: string | null) =>
+    (a || '').toLowerCase().localeCompare((b || '').toLowerCase());
+
+export const getNotificationTableColumns = (): ITableColumn[] => [
+    {
+        title: 'Title',
+        dataIndex: 'title',
+        key: 'title',
+        searchType: 'text',
+        sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.title, b.title),
+    },
+    {
+        title: 'Description',
+        dataIndex: 'description',
+        key: 'description',
+        searchType: 'text',
+        sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.description, b.description),
+    },
+    {
+        title: 'Link',
+        dataIndex: 'link',
+        key: 'link',
+        searchType: 'text',
+        render: (link: string) => (
+            <a href={link} target="_blank" rel="noopener noreferrer">{link}</a>
+        ),
+    },
+    {
+        title: 'Date',
+        dataIndex: 'date',
+        key: 'date',
+        searchType: 'date',
+        sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.date, b.date),
+        render: (value: string) => (value ? formatDate(value) : '-'),
+    },
+];

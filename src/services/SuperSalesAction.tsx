@@ -1,6 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import superSalesAPI from "./SuperSalesAPI";
-import type { QuizQuestionInput } from "./SuperSalesAPI";
 
 export const getSSLogin = createAsyncThunk<any, { email: string; password: string }>(
     "userManagement/getSSLogin",
@@ -363,11 +362,11 @@ export const getQuizById = createAsyncThunk<any, string>(
   }
 );
 
-export const createQuiz = createAsyncThunk<any, { courseId: string; title: string; questions: QuizQuestionInput[] }>(
+export const createQuiz = createAsyncThunk<any, FormData>(
     "quizManagement/createQuiz",
-    async ({ courseId, title, questions }, { rejectWithValue }) => {
+    async (formData, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.createQuiz(courseId, title, questions);
+        const res = await superSalesAPI.createQuiz(formData);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to create Quiz";
@@ -376,11 +375,11 @@ export const createQuiz = createAsyncThunk<any, { courseId: string; title: strin
   }
 );
 
-export const updateQuiz = createAsyncThunk<any, { id: string; title: string; questions: QuizQuestionInput[] }>(
+export const updateQuiz = createAsyncThunk<any, { id: string; formData: FormData }>(
     "quizManagement/updateQuiz",
-    async ({ id, title, questions }, { rejectWithValue }) => {
+    async ({ id, formData }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.updateQuiz(id, title, questions);
+        const res = await superSalesAPI.updateQuiz(id, formData);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to update Quiz";
@@ -402,11 +401,11 @@ export const deleteQuiz = createAsyncThunk<any, { id: string }>(
   }
 );
 
-export const publishQuiz = createAsyncThunk<any, { id: string }>(
+export const publishQuiz = createAsyncThunk<any, { id: string; expiresAt: string }>(
     "quizManagement/publishQuiz",
-    async ({ id }, { rejectWithValue }) => {
+    async ({ id, expiresAt }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.publishQuiz(id);
+        const res = await superSalesAPI.publishQuiz(id, expiresAt);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to publish Quiz";
@@ -423,6 +422,58 @@ export const getQuizRankList = createAsyncThunk<any, { quizId: string }>(
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch rank list";
+        return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const getNotifications = createAsyncThunk<any, { pageNumber?: number; pageSize?: number }>(
+    "notificationManagement/getNotifications",
+    async ({ pageNumber, pageSize }, { rejectWithValue }) => {
+      try {
+        const res = await superSalesAPI.getNotifications(pageNumber, pageSize);
+        return res?.data?.data;
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Notifications";
+        return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const createNotification = createAsyncThunk<any, { title: string; description: string; link: string; date: string }>(
+    "notificationManagement/createNotification",
+    async ({ title, description, link, date }, { rejectWithValue }) => {
+      try {
+        const res = await superSalesAPI.createNotification(title, description, link, date);
+        return res?.data?.data || res?.data;
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || error.message || "Failed to create Notification";
+        return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const updateNotification = createAsyncThunk<any, { id: string; title: string; description: string; link: string; date: string }>(
+    "notificationManagement/updateNotification",
+    async ({ id, title, description, link, date }, { rejectWithValue }) => {
+      try {
+        const res = await superSalesAPI.updateNotification(id, title, description, link, date);
+        return res?.data?.data || res?.data;
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || error.message || "Failed to update Notification";
+        return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const deleteNotification = createAsyncThunk<any, { id: string }>(
+    "notificationManagement/deleteNotification",
+    async ({ id }, { rejectWithValue }) => {
+      try {
+        const res = await superSalesAPI.deleteNotification(id);
+        return res?.data?.data;
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || error.message || "Failed to delete Notification";
         return rejectWithValue(errorMessage);
     }
   }

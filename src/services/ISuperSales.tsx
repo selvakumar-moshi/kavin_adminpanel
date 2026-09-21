@@ -13,6 +13,7 @@ export interface IinitialState {
     QuizzesData: any;
     QuizDetailData: any;
     QuizRankListData: any;
+    NotificationsData: any;
     loading: boolean;
     error: string | null;
     isAuthenticated: boolean;
@@ -50,6 +51,7 @@ export const initialState: IinitialState = {
     QuizzesData: [],
     QuizDetailData: null,
     QuizRankListData: [],
+    NotificationsData: [],
     loading: false,
     error: null,
     isAuthenticated: Boolean(storedToken && storedUser),
@@ -68,5 +70,6 @@ export const initialState: IinitialState = {
         QuizzesData: { loading: false, success: false, error: null },
         QuizDetailData: { loading: false, success: false, error: null },
         QuizRankListData: { loading: false, success: false, error: null },
+        NotificationsData: { loading: false, success: false, error: null },
     },
 }

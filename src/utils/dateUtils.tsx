@@ -10,7 +10,7 @@ export const formatDate = (dateString: string): string => {
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
  
-    return `${year}-${month}-${day}`;
+    return `${day}-${month}-${year}`;
   } catch (error) {
     return "N/A";
   }

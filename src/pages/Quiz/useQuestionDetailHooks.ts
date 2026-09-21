@@ -4,34 +4,76 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
 import { getQuizById, createQuiz, updateQuiz, getCourses } from '../../services/SuperSalesAction';
-import { emptyQuestion, type QuizQuestion, type QuizRecord } from './Constant';
+import {
+    emptyQuestion,
+    parsePastedOptionsList,
+    QUESTION_OPTION_KEYS,
+    IMAGE_FIELD_NAMES,
+    IMAGE_URL_FIELD_NAMES,
+    type QuizQuestion,
+    type QuizQuestionImages,
+    type QuizQuestionImageFiles,
+    type QuizRecord,
+} from './Constant';
 import type { CourseRecord } from '../Course/Constant';
 import { QUIZ_VALIDATION_RULES, QUIZ_QUESTION_VALIDATION_RULES, type ValidationRule } from '../../utils/validationUtils';
 
 type QuestionErrors = Record<number, Partial<Record<keyof QuizQuestion, string>>>;
 
-// Client-only identity for stable React list keys — never sent to the API (stripped in handleSubmit)
-export type KeyedQuizQuestion = QuizQuestion & { _key: number };
+// Client-only identity + image state — `images`/`imageFiles` are never sent as-is (handleSubmit
+// rebuilds the multipart payload from imageFiles, and derives text fields directly from `question`)
+export type KeyedQuizQuestion = QuizQuestion & { _key: number; images: QuizQuestionImages; imageFiles: QuizQuestionImageFiles };
+
+// Client-only "Title and description" organizer block — never sent to the API, purely for editor layout
+export interface KeyedSection {
+    _key: number;
+    title: string;
+    description: string;
+}
+
+export type ListItem =
+    | { type: 'question'; question: KeyedQuizQuestion }
+    | { type: 'section'; section: KeyedSection };
+
+export const getItemKey = (item: ListItem): number => (item.type === 'question' ? item.question._key : item.section._key);
 
 // Module-level (not a ref/state) so key generation never touches React's render/hook rules
-let questionKeySeed = 0;
-const nextQuestionKey = () => ++questionKeySeed;
+let itemKeySeed = 0;
+const nextItemKey = () => ++itemKeySeed;
 
 export const useQuestionDetailManagement = () => {
     const { id } = useParams<{ id: string }>();
     const isEditMode = Boolean(id);
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { messages: toastMessages, showSuccess, showError, hideToast } = useToastMessages();
+    const { messages: toastMessages, showError, hideToast } = useToastMessages();
 
-    const makeKeyedQuestion = (q?: QuizQuestion): KeyedQuizQuestion => ({
-        ...(q || emptyQuestion()),
-        _key: nextQuestionKey(),
+    // Hydrates preview state from an existing question's S3 URLs (edit mode); blank for a new question
+    const makeKeyedQuestion = (q?: QuizQuestion): KeyedQuizQuestion => {
+        const base = q || emptyQuestion();
+        const images: QuizQuestionImages = {};
+        (Object.keys(IMAGE_URL_FIELD_NAMES) as (keyof QuizQuestionImages)[]).forEach((imageKey) => {
+            const url = base[IMAGE_URL_FIELD_NAMES[imageKey]] as string | undefined;
+            if (url) images[imageKey] = url;
+        });
+
+        return {
+            ...base,
+            _key: nextItemKey(),
+            images,
+            imageFiles: {},
+        };
+    };
+
+    const makeKeyedSection = (): KeyedSection => ({
+        _key: nextItemKey(),
+        title: '',
+        description: '',
     });
 
     const [title, setTitle] = useState('');
     const [courseId, setCourseId] = useState('');
-    const [questions, setQuestions] = useState<KeyedQuizQuestion[]>(() => [makeKeyedQuestion()]);
+    const [items, setItems] = useState<ListItem[]>(() => [{ type: 'question', question: makeKeyedQuestion() }]);
     const [titleError, setTitleError] = useState('');
     const [courseError, setCourseError] = useState('');
     const [questionErrors, setQuestionErrors] = useState<QuestionErrors>({});
@@ -60,10 +102,10 @@ export const useQuestionDetailManagement = () => {
         if (isEditMode && quizDetail && quizDetail.id === id) {
             setTitle(quizDetail.title || '');
             setCourseId(quizDetail.courseId || '');
-            setQuestions(
+            setItems(
                 quizDetail.questions && quizDetail.questions.length > 0
-                    ? quizDetail.questions.map((q) => makeKeyedQuestion(q))
-                    : [makeKeyedQuestion()]
+                    ? quizDetail.questions.map((q) => ({ type: 'question' as const, question: makeKeyedQuestion(q) }))
+                    : [{ type: 'question', question: makeKeyedQuestion() }]
             );
         }
     }, [isEditMode, quizDetail, id]);
@@ -72,16 +114,19 @@ export const useQuestionDetailManagement = () => {
         if (!isSaving) return;
 
         if (saveStatus?.success) {
-            showSuccess(isEditMode ? 'Quiz updated successfully!' : 'Quiz created successfully!');
             setIsSaving(false);
-            navigate('/quiz');
+            // Toast is shown by the Quiz list page after landing there — this page unmounts
+            // immediately on navigate, so a toast raised here would vanish before it's seen.
+            navigate('/quiz', {
+                state: { toastMessage: isEditMode ? 'Quiz updated successfully!' : 'Quiz created successfully!' },
+            });
         }
 
         if (saveStatus?.error) {
             showError(saveStatus.error);
             setIsSaving(false);
         }
-    }, [saveStatus, isSaving, isEditMode, showSuccess, showError, navigate]);
+    }, [saveStatus, isSaving, isEditMode, showError, navigate]);
 
     const handleTitleChange = (_name: string, value: string) => {
         setTitle(value);
@@ -94,31 +139,99 @@ export const useQuestionDetailManagement = () => {
         if (courseError) setCourseError('');
     };
 
-    const addQuestion = () => {
-        setQuestions((prev) => [...prev, makeKeyedQuestion()]);
+    const insertItemAfter = (afterKey: number, newItem: ListItem) => {
+        setItems((prev) => {
+            const idx = prev.findIndex((it) => getItemKey(it) === afterKey);
+            if (idx === -1) return [...prev, newItem];
+            const next = [...prev];
+            next.splice(idx + 1, 0, newItem);
+            return next;
+        });
     };
 
-    const removeQuestion = (index: number) => {
-        setQuestions((prev) => prev.filter((_, i) => i !== index));
+    const addQuestionAfter = (afterKey: number) => insertItemAfter(afterKey, { type: 'question', question: makeKeyedQuestion() });
+
+    const addSectionAfter = (afterKey: number) => insertItemAfter(afterKey, { type: 'section', section: makeKeyedSection() });
+
+    const removeItem = (key: number) => {
+        setItems((prev) => prev.filter((it) => getItemKey(it) !== key));
         setQuestionErrors((prev) => {
-            const next: QuestionErrors = {};
-            Object.entries(prev).forEach(([key, value]) => {
-                const keyIndex = Number(key);
-                if (keyIndex < index) next[keyIndex] = value;
-                else if (keyIndex > index) next[keyIndex - 1] = value;
+            if (!(key in prev)) return prev;
+            const next = { ...prev };
+            delete next[key];
+            return next;
+        });
+    };
+
+    const handleQuestionFieldChange = (key: number, field: keyof QuizQuestion, value: string) => {
+        setItems((prev) => prev.map((it) => (
+            it.type === 'question' && it.question._key === key
+                ? { ...it, question: { ...it.question, [field]: value } }
+                : it
+        )));
+        setQuestionErrors((prev) => {
+            if (!prev[key]?.[field]) return prev;
+            const next = { ...prev, [key]: { ...prev[key] } };
+            delete next[key][field];
+            return next;
+        });
+    };
+
+    const handleSectionFieldChange = (key: number, field: keyof Omit<KeyedSection, '_key'>, value: string) => {
+        setItems((prev) => prev.map((it) => (
+            it.type === 'section' && it.section._key === key
+                ? { ...it, section: { ...it.section, [field]: value } }
+                : it
+        )));
+    };
+
+    const handleImageChange = (key: number, imageKey: keyof QuizQuestionImages, file: File, previewUrl: string) => {
+        setItems((prev) => prev.map((it) => (
+            it.type === 'question' && it.question._key === key
+                ? {
+                    ...it,
+                    question: {
+                        ...it.question,
+                        images: { ...it.question.images, [imageKey]: previewUrl },
+                        imageFiles: { ...it.question.imageFiles, [imageKey]: file },
+                    },
+                }
+                : it
+        )));
+    };
+
+    const handleImageRemove = (key: number, imageKey: keyof QuizQuestionImages) => {
+        setItems((prev) => prev.map((it) => {
+            if (it.type !== 'question' || it.question._key !== key) return it;
+            const images = { ...it.question.images };
+            delete images[imageKey];
+            const imageFiles = { ...it.question.imageFiles };
+            delete imageFiles[imageKey];
+            return { ...it, question: { ...it.question, images, imageFiles } };
+        }));
+    };
+
+    // Applies a multi-line paste across option A-D in order (keeps each line's text as-is)
+    const applySmartOptionsPaste = (key: number, pastedText: string): boolean => {
+        if (!pastedText.includes('\n')) return false;
+        const parsedLines = parsePastedOptionsList(pastedText);
+        if (parsedLines.length < 2) return false;
+
+        setItems((prev) => prev.map((it) => {
+            if (it.type !== 'question' || it.question._key !== key) return it;
+            const updatedQuestion = { ...it.question };
+            QUESTION_OPTION_KEYS.forEach((optionKey, keyIndex) => {
+                if (parsedLines[keyIndex] !== undefined) updatedQuestion[optionKey] = parsedLines[keyIndex];
             });
-            return next;
-        });
-    };
-
-    const handleQuestionFieldChange = (index: number, field: keyof QuizQuestion, value: string) => {
-        setQuestions((prev) => prev.map((q, i) => (i === index ? { ...q, [field]: value } : q)));
+            return { ...it, question: updatedQuestion };
+        }));
         setQuestionErrors((prev) => {
-            if (!prev[index]?.[field]) return prev;
-            const next = { ...prev, [index]: { ...prev[index] } };
-            delete next[index][field];
+            if (!prev[key]) return prev;
+            const next = { ...prev, [key]: { ...prev[key] } };
+            QUESTION_OPTION_KEYS.forEach((optionKey) => delete next[key][optionKey]);
             return next;
         });
+        return true;
     };
 
     const validateSingleField = (rules: Record<string, ValidationRule>, field: string, rawValue: string): string => {
@@ -139,6 +252,8 @@ export const useQuestionDetailManagement = () => {
         return '';
     };
 
+    const questions = items.filter((it): it is { type: 'question'; question: KeyedQuizQuestion } => it.type === 'question').map((it) => it.question);
+
     const validate = (): boolean => {
         let isValid = true;
 
@@ -158,14 +273,14 @@ export const useQuestionDetailManagement = () => {
         }
 
         const newQuestionErrors: QuestionErrors = {};
-        questions.forEach((q, index) => {
+        questions.forEach((q) => {
             const fieldErrors: Partial<Record<keyof QuizQuestion, string>> = {};
             (Object.keys(QUIZ_QUESTION_VALIDATION_RULES) as (keyof QuizQuestion)[]).forEach((field) => {
                 const error = validateSingleField(QUIZ_QUESTION_VALIDATION_RULES, field, q[field] as string);
                 if (error) fieldErrors[field] = error;
             });
             if (Object.keys(fieldErrors).length > 0) {
-                newQuestionErrors[index] = fieldErrors;
+                newQuestionErrors[q._key] = fieldErrors;
                 isValid = false;
             }
         });
@@ -180,21 +295,32 @@ export const useQuestionDetailManagement = () => {
             return;
         }
 
-        const payloadQuestions = questions.map(({ questionText, optionA, optionB, optionC, optionD, correctOption }) => ({
-            questionText,
-            optionA,
-            optionB,
-            optionC,
-            optionD,
-            correctOption,
-        }));
+        const formData = new FormData();
+        formData.append('title', title);
+        if (!isEditMode) formData.append('courseId', courseId);
+
+        // ASP.NET Core's [FromForm] binder expects dot notation for List<T> items (e.g. "questions[0].questionText"),
+        // not bracket-in-bracket — IFormFile properties in particular only bind on an exact path match.
+        questions.forEach((q, index) => {
+            formData.append(`questions[${index}].questionText`, q.questionText);
+            formData.append(`questions[${index}].optionA`, q.optionA);
+            formData.append(`questions[${index}].optionB`, q.optionB);
+            formData.append(`questions[${index}].optionC`, q.optionC);
+            formData.append(`questions[${index}].optionD`, q.optionD);
+            formData.append(`questions[${index}].correctOption`, q.correctOption);
+
+            (Object.keys(IMAGE_FIELD_NAMES) as (keyof QuizQuestionImages)[]).forEach((imageKey) => {
+                const file = q.imageFiles[imageKey];
+                if (file) formData.append(`questions[${index}].${IMAGE_FIELD_NAMES[imageKey]}`, file);
+            });
+        });
 
         setIsSaving(true);
 
         if (isEditMode && id) {
-            dispatch(updateQuiz({ id, title, questions: payloadQuestions }) as any);
+            dispatch(updateQuiz({ id, formData }) as any);
         } else {
-            dispatch(createQuiz({ courseId, title, questions: payloadQuestions }) as any);
+            dispatch(createQuiz(formData) as any);
         }
     };
 
@@ -210,15 +336,21 @@ export const useQuestionDetailManagement = () => {
         isSaving,
         title,
         courseId,
-        questions,
+        items,
+        questionCount: questions.length,
         titleError,
         courseError,
         questionErrors,
         handleTitleChange,
         handleCourseChange,
-        addQuestion,
-        removeQuestion,
+        addQuestionAfter,
+        addSectionAfter,
+        removeItem,
         handleQuestionFieldChange,
+        handleSectionFieldChange,
+        handleImageChange,
+        handleImageRemove,
+        applySmartOptionsPaste,
         handleSubmit,
         handleCancel,
         toastMessages,

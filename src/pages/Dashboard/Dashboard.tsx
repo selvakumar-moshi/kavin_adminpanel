@@ -1,9 +1,10 @@
-import { Card, Row, Col, Spin, Empty, Avatar } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
+import { Card, Row, Col, Spin, Empty, Avatar, Button } from 'antd';
+import { UserOutlined, DownloadOutlined } from '@ant-design/icons';
 import { Pie } from '@ant-design/plots';
 import { useDashboard } from './useDashboard';
 import PageTitle from '../../components/PageTitle';
 import DropdownField from '../../components/DropdownField/DropdownField';
+import ToastMessages from '../../components/ToastMessages';
 import { CATEGORY_COLORS } from './Constant';
 
 const Dashboard = () => {
@@ -20,6 +21,10 @@ const Dashboard = () => {
     handleQuizChange,
     rankList,
     rankListLoading,
+    handleDownloadRankList,
+    isDownloadingRankList,
+    toastMessages,
+    hideToast,
   } = useDashboard();
 
   const overviewData = [
@@ -35,6 +40,7 @@ const Dashboard = () => {
 
   return (
     <div>
+      <ToastMessages messages={toastMessages} onMessageClose={hideToast} />
       <PageTitle title="Dashboard" />
 
       <Row gutter={[16, 16]}>
@@ -68,7 +74,21 @@ const Dashboard = () => {
         </Col>
 
         <Col xs={24} lg={14}>
-          <Card title="Quiz Rank List" style={{ height: '100%' }}>
+          <Card
+            title="Quiz Rank List"
+            style={{ height: '100%' }}
+            extra={
+              <Button
+                type="link"
+                icon={<DownloadOutlined />}
+                onClick={handleDownloadRankList}
+                loading={isDownloadingRankList}
+                disabled={!selectedQuizId || rankList.length === 0}
+              >
+                Download
+              </Button>
+            }
+          >
             <DropdownField
               fields={[
                 {

@@ -38,6 +38,7 @@ export interface UserDetailRecord {
     firstName: string;
     lastName: string;
     email: string;
+    applicationNo: string;
     phoneNumber: string;
     role: string;
     profileImage?: string | null;
@@ -84,5 +85,9 @@ export const UserDetailtabs = [
     {
         key: 'video',
         label: 'Video Materials',
+    },
+    {
+        key: 'Batch',
+        label: 'Batch Details',
     },
 ]

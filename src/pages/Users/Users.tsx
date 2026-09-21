@@ -69,6 +69,8 @@ const Users = () => {
             {
                 title: 'Actions',
                 key: 'actions',
+                onHeaderCell: () => ({ style: { width: 90, minWidth: 90, maxWidth: 90 } }),
+                onCell: () => ({ style: { width: 90, minWidth: 90, maxWidth: 90 } }),
                 render: (_: any, record: any) => (
                     <ActionIcons
                         actions={['edit', 'delete']}

@@ -91,7 +91,7 @@ const CourseDetail = () => {
                     <div className='organization__user-details-content'>
                         <div className='organization__user-details-content-items'>
                             <InfoItem icon={person_add_Icon} label="Course Name:" value={courseDetail.courseName} />
-                            <InfoItem icon={person_add_Icon} label="Description:" value={courseDetail.courseDescription} />
+                            {/* <InfoItem icon={person_add_Icon} label="Description:" value={courseDetail.courseDescription} /> */}
                             <InfoItem icon={person_add_Icon} label="Course Amount:" value={`₹${courseDetail.courseAmount}`} />
                             <InfoItem icon={person_add_Icon} label="Created At:" value={courseDetail.createdAt ? formatDate(courseDetail.createdAt) : ''} />
                             <InfoItem icon={person_add_Icon} label="Updated At:" value={courseDetail.updatedAt ? formatDate(courseDetail.updatedAt) : ''} />

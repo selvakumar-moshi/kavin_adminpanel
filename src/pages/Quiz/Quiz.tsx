@@ -3,11 +3,12 @@ import TableWithPagination from '../../components/Table/TableWithPagination';
 import { withSortAndSearch } from '../../components/Table/withSortAndSearch';
 import ActionIcons from '../../components/Table/ActionIcons';
 import PopupModal from '../../components/PopupModal/PopupModal';
+import DateFieldsSection from '../../components/DateFieldsSection/DateFieldsSection';
 import Loader from '../../components/Loader/Loader';
 import ToastMessages from '../../components/ToastMessages';
 import PageTitle from '../../components/PageTitle';
 import { useQuizManagement } from './useQuizHooks';
-import { getQuizTableColumns, type QuizRecord } from './Constant';
+import { getQuizTableColumns, QUIZ_EXPIRES_AT_FIELD, type QuizRecord } from './Constant';
 import add_Icon from '../../assets/add_Icon.svg';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 
@@ -29,6 +30,8 @@ const Quiz = () => {
         isDeleteModalVisible,
         isPublishModalVisible,
         selectedQuiz,
+        publishExpiresAt,
+        publishExpiresAtError,
         openCreateQuiz,
         openEditQuiz,
         openDeleteModal,
@@ -36,6 +39,7 @@ const Quiz = () => {
         handleDeleteConfirm,
         openPublishModal,
         closePublishModal,
+        handlePublishExpiresAtChange,
         handlePublishConfirm,
         toastMessages,
         hideToast,
@@ -135,10 +139,21 @@ const Quiz = () => {
                 primaryButtonLoading={loading}
                 primaryButtonDisabled={loading}
                 contentHeight="auto"
-                minHeight={100}
+                minHeight={200}
             >
                 <div className="popup-modal__content-content-text">
                     Are you sure you want to publish the quiz <b>"{selectedQuiz?.title}"</b>? Once published, students can attempt it.
+                </div>
+                <div style={{ padding: '0 8px' }}>
+                    <DateFieldsSection
+                        fields={QUIZ_EXPIRES_AT_FIELD}
+                        showTime
+                        format="YYYY-MM-DD HH:mm"
+                        values={{ expiresAt: publishExpiresAt }}
+                        errors={publishExpiresAtError ? { expiresAt: publishExpiresAtError } : {}}
+                        onChange={handlePublishExpiresAtChange}
+                        disabled={loading}
+                    />
                 </div>
             </PopupModal>
         </div>

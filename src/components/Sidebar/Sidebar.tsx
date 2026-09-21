@@ -57,10 +57,10 @@ const MENU_ITEMS: MenuItem[] = [
     route: "/quiz",
   },
   {
-    id: "industry",
-    label: "Industry",
+    id: "notification",
+    label: "Notification",
     icon: industry_Icon,
-    route: "/industry",
+    route: "/notification",
   },
 ];
 

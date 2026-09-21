@@ -113,8 +113,10 @@ const UserDetail = () => {
                 <div className='organization__user-details-main'></div>
                 <div className='organization__user-details-header'>
                     <div className='user-detail__info-main'>
-                        <div className='organization__user-left-initial'>{userDetail.firstName.substring(0,2)}</div>
-                        <div className='user-detail__info-item-value'>{userDetail.firstName} {userDetail.lastName}</div>
+                        <div className='organization__user-left-initial'>{`${userDetail.firstName.charAt(0)}${userDetail.lastName.charAt(0)}`}</div>
+                        <div className='user-detail__info-item-value'>{userDetail.applicationNo}</div>
+                        {/* <div className='user-detail__info-item-value'>-</div>
+                        <div className='user-detail__info-item-value'>{userDetail.firstName} {userDetail.lastName}</div> */}
                     </div>
                     
                     <Dropdown menu={{ items: menuItems }} classNames={{ root: 'organization__user-details-actions-dropdown' }} trigger={['click']} placement="bottomRight">
@@ -213,7 +215,7 @@ const UserDetail = () => {
                                                         ) : (
                                                             <NoDataFound type="nodata" description="No study material" />
                                                         )
-                                                    ) : (
+                                                    ) : getActiveMaterialTab(course.enrollmentId) === 'video' ? (
                                                         course.videoMaterials && course.videoMaterials.length > 0 ? (
                                                             <ul className="user-detail-course__materials">
                                                                 {course.videoMaterials.map((video) => (
@@ -226,6 +228,14 @@ const UserDetail = () => {
                                                             </ul>
                                                         ) : (
                                                             <NoDataFound type="nodata" description="No video material" />
+                                                        )
+                                                    ) : (
+                                                        course.batchTitle ? (
+                                                            <div className='user-detail__info-item-label2'>Batch:
+                                                                <span className='user-detail__info-item-value2'> {course.batchTitle}</span>
+                                                            </div>
+                                                        ) : (
+                                                            <NoDataFound type="nodata" description="No batch assigned" />
                                                         )
                                                     )}
                                                 </div>

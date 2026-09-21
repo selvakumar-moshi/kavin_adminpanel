@@ -8,6 +8,7 @@ export interface UserRecord {
     userId: string;
     firstName: string;
     lastName: string;
+    applicationNo: string;
     phoneNumber: string;
     email: string;
     role: string;
@@ -40,6 +41,13 @@ export const getUserTableColumns = (): ITableColumn[] => [
         ),
     },
     {
+        title: 'Application No',
+        dataIndex: 'applicationNo',
+        key: 'applicationNo',
+        searchType: 'text',
+        sorter: (a: UserRecord, b: UserRecord) => compareText(a.applicationNo, b.applicationNo),
+    },
+    {
         title: 'User Name',
         dataIndex: 'firstName',
         key: 'userName',
@@ -50,13 +58,6 @@ export const getUserTableColumns = (): ITableColumn[] => [
             renderTruncatedCellWithTooltip(`${record.firstName || ''} ${record.lastName || ''}`.trim()),
     },
     {
-        title: 'Phone Number',
-        dataIndex: 'phoneNumber',
-        key: 'phoneNumber',
-        searchType: 'text',
-        sorter: (a: UserRecord, b: UserRecord) => compareText(a.phoneNumber, b.phoneNumber),
-    },
-    {
         title: 'Email',
         dataIndex: 'email',
         key: 'email',
@@ -65,12 +66,19 @@ export const getUserTableColumns = (): ITableColumn[] => [
         render: (email: string) => renderTruncatedCellWithTooltip(email),
     },
     {
-        title: 'Role',
-        dataIndex: 'role',
-        key: 'role',
+        title: 'Phone Number',
+        dataIndex: 'phoneNumber',
+        key: 'phoneNumber',
         searchType: 'text',
-        sorter: (a: UserRecord, b: UserRecord) => compareText(a.role, b.role),
+        sorter: (a: UserRecord, b: UserRecord) => compareText(a.phoneNumber, b.phoneNumber),
     },
+    // {
+    //     title: 'Role',
+    //     dataIndex: 'role',
+    //     key: 'role',
+    //     searchType: 'text',
+    //     sorter: (a: UserRecord, b: UserRecord) => compareText(a.role, b.role),
+    // },
     {
         title: 'Created At',
         dataIndex: 'createdAt',

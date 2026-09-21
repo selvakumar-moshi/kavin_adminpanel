@@ -110,6 +110,33 @@ export const VIDEO_MATERIAL_VALIDATION_RULES: Record<string, ValidationRule> = {
     },
 };
 
+export const NOTIFICATION_VALIDATION_RULES: Record<string, ValidationRule> = {
+    title: {
+        required: true,
+        maxLength: 200,
+        errorMessages: {
+            required: 'Title is required',
+            maxLength: 'Title must not exceed 200 characters.',
+        },
+    },
+    description: {
+        required: true,
+        maxLength: 500,
+        errorMessages: {
+            required: 'Description is required',
+            maxLength: 'Description must not exceed 500 characters.',
+        },
+    },
+    link: {
+        required: true,
+        pattern: /^https?:\/\/.+/i,
+        errorMessages: {
+            required: 'Link is required',
+            pattern: 'Enter a valid URL starting with http:// or https://',
+        },
+    },
+};
+
 export const QUIZ_VALIDATION_RULES: Record<string, ValidationRule> = {
     title: {
         required: true,

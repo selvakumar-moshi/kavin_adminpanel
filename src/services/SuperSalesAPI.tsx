@@ -143,24 +143,54 @@ class SuperSalesAPI {
         return Super_Sales.get(`/quiz/${id}`);
     }
 
-    createQuiz(courseId: string, title: string, questions: QuizQuestionInput[]) {
-        return Super_Sales.post('/quiz', { courseId, title, questions });
+    createQuiz(formData: FormData) {
+        return Super_Sales.post('/quiz', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     }
 
-    updateQuiz(id: string, title: string, questions: QuizQuestionInput[]) {
-        return Super_Sales.put(`/quiz/${id}`, { title, questions });
+    updateQuiz(id: string, formData: FormData) {
+        return Super_Sales.put(`/quiz/${id}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     }
 
     deleteQuiz(id: string) {
         return Super_Sales.delete(`/quiz/${id}`);
     }
 
-    publishQuiz(id: string) {
-        return Super_Sales.post(`/quiz/${id}/publish`);
+    publishQuiz(id: string, expiresAt: string) {
+        return Super_Sales.post(`/quiz/${id}/publish`, { expiresAt });
     }
 
     getQuizRankList(quizId: string) {
         return Super_Sales.get(`/Quiz/${quizId}/rank-list`, {});
+    }
+    getQuizRankListDownload(quizId: string) {
+        return Super_Sales.get(`/Quiz/${quizId}/rank-list/download`, { responseType: 'blob' });
+    }
+
+    getNotifications(pageNumber?: number, pageSize?: number) {
+        return Super_Sales.post('/Notification/search', {
+            pageNumber: pageNumber || 1,
+            pageSize: pageSize || 10,
+        });
+    }
+
+    createNotification(title: string, description: string, link: string, date: string) {
+        return Super_Sales.post('/Notification', { title, description, link, date });
+    }
+
+    updateNotification(id: string, title: string, description: string, link: string, date: string) {
+        return Super_Sales.put(`/Notification/${id}`, { title, description, link, date });
+    }
+
+    deleteNotification(id: string) {
+        return Super_Sales.delete(`/Notification/${id}`);
     }
 }
 
