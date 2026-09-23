@@ -92,6 +92,7 @@ const DropdownField: React.FC<DropdownFieldProps> = ({
       <div className={`dropdown-field__form dropdown-field__form`}>
         {fields.map((field) => {
           const hasError = Boolean(errors[field.name]);
+          const isSearchable = field.showSearch !== false;
           return (
           <div key={field.name} className="dropdown-field__field" 
           ref={(el) => {
@@ -107,10 +108,10 @@ const DropdownField: React.FC<DropdownFieldProps> = ({
             <Select
               placeholder={field.placeholder}
               title={field.selectHoverTitle}
-              className={`dropdown-field__select${field.showSearch ? " dropdown-field__select--searchable" : ""}`}
+              className={`dropdown-field__select${isSearchable ? " dropdown-field__select--searchable" : ""}`}
               status={hasError ? "error" : undefined}
               prefix={
-                field.showSearch ? (
+                isSearchable ? (
                   <SearchOutlined
                     className="dropdown-field__search-prefix-icon"
                     aria-hidden
@@ -145,8 +146,8 @@ const DropdownField: React.FC<DropdownFieldProps> = ({
               disabled={field.disabled}
               loading={field.loading}
               allowClear
-              showSearch={field.showSearch}
-              filterOption={field.showSearch ? (field.filterOption || defaultFilterOption) : false}
+              showSearch={isSearchable}
+              filterOption={isSearchable ? (field.filterOption || defaultFilterOption) : false}
               onSearch={field.onSearch}
               optionFilterProp="children" 
             >

@@ -38,6 +38,12 @@ export const EDIT_USER_VALIDATION_RULES: Record<string, ValidationRule> = {
             pattern: 'Phone Number must be exactly 10 digits.',
         },
     },
+    district: {
+        required: true,
+        errorMessages: {
+            required: 'District is required',
+        },
+    },
 };
 
 export const COURSE_VALIDATION_RULES: Record<string, ValidationRule> = {

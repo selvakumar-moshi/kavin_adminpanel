@@ -74,6 +74,7 @@ export const withSortAndSearch = (
                         columnTitle={columnTitleStr}
                         initialValue={getSearchValue(col.key)}
                         searchType={col.searchType}
+                        disableFutureDates={col.disableFutureDates}
                         triggerElement={
                             <button
                                 type="button"

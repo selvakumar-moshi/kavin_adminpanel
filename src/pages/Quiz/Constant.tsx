@@ -134,6 +134,16 @@ export const CORRECT_OPTION_CHOICES = [
     { value: 'D', label: 'Option D' },
 ];
 
+export const QUIZ_SEARCH_INPUT_FIELDS = [
+    {
+        name: 'search',
+        label: '',
+        placeholder: 'Search by title or course',
+        type: 'text' as const,
+        search: true,
+    },
+];
+
 export const QUIZ_TITLE_FIELD = [
     {
         name: 'title',
@@ -184,6 +194,7 @@ export const getQuizTableColumns = (): ITableColumn[] => [
         dataIndex: 'publishedAt',
         key: 'publishedAt',
         searchType: 'date',
+        disableFutureDates: true,
         sorter: (a: QuizRecord, b: QuizRecord) => compareText(a.publishedAt, b.publishedAt),
         render: (value: string | null) => (value ? formatDate(value) : '-'),
     },
@@ -192,6 +203,7 @@ export const getQuizTableColumns = (): ITableColumn[] => [
         dataIndex: 'createdAt',
         key: 'createdAt',
         searchType: 'date',
+        disableFutureDates: true,
         sorter: (a: QuizRecord, b: QuizRecord) => compareText(a.createdAt, b.createdAt),
         render: (value: string) => formatDate(value),
     },

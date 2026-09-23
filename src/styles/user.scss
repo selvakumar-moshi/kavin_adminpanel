@@ -86,6 +86,39 @@
     }
 }
 
+.dl_filter_main2{
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px;
+
+  .form-fields-section__form .ant-form-item{
+      padding-bottom: 0;
+  }
+
+  .form-fields-section__field{
+      margin-bottom: 0;
+  }
+
+  &__filter_icon{
+      border-radius: 100px;
+      border: 1px solid #C5C5C7;
+      padding: 8px;
+      cursor: pointer;
+  }
+}
+
+.users-table__application-no-link {
+    font-family: var(--font-family);
+    font-weight: 700;
+    font-size: 14px;
+    line-height: normal;
+    color: #3C76A7;
+    text-decoration: underline;
+    cursor: pointer;
+    text-transform: capitalize;
+}
+
 .users-table__sort-icon{
     display: inline-flex;
     flex-direction: column;
@@ -156,8 +189,8 @@ body.user-detail-page {
   position: relative;
   .user-detail-course {
     display: flex;
-    flex-direction: column;
     gap: 8px;
+    margin-top: 10px;
 
     &__header {
       display: flex;
@@ -166,22 +199,29 @@ body.user-detail-page {
     }
 
     &__amounts {
-      display: flex;
-      gap: 24px;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-      margin-top: 8px;
+      list-style: disc;
+      margin: 16px 0;
+      padding-left: 40px;
+
+      li {
+        margin-bottom: 8px;
+      }
     }
 
     &__materials {
-      margin: 12px 0;
-      padding-left: 20px;
+      margin: 16px 0;
+      padding-left: 40px;
+
+      li {
+        margin-bottom: 4px;
+      }
     }
 
     &__materials-main{
       display: flex;
       align-items: center;
       gap: 4px;
+      margin-bottom: 8px;
     }
 
     &__materials-desc{
@@ -205,9 +245,9 @@ body.user-detail-page {
 }
 
 .user-detail__info-item-label2{
-  font-size: 12px;
+  font-size: 14px;
   font-family: var(--font-family);
-  font-weight: 500;
+  font-weight: 400;
   color: #000;
 }
 
@@ -219,7 +259,7 @@ body.user-detail-page {
 }
 
 .user-course-title{
-  margin-top: 24px;
+  margin-top: 18px;
   font-family: var(--font-family);
   font-size: 18px;
   font-weight: 600;
@@ -243,6 +283,7 @@ body.user-detail-page {
 
     .no-data-found__container{
       height: unset;
+      margin-top: 16px;
     }
   }
 
@@ -273,9 +314,41 @@ body.user-detail-page {
   }
 }
 
+.user-course__status-with-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.user-course__status-dropdown {
+  .dropdown-field__field {
+    margin-bottom: 0;
+  }
+
+  .dropdown-field__select {
+    min-width: 130px;
+  }
+}
+
+.user-course__status-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #8e8e8e;
+  cursor: pointer;
+  padding: 2px;
+
+  &:hover {
+    color: var(--btn-primary-bg, #eb6c2a);
+  }
+}
+
 // Hero banner (dark navy background image behind the header/name row)
 .organization--user-profile-view{
    height: calc(100vh - 128px);
+  //  overflow-y: hidden;
 }
 
 .organization--user-details-view {
@@ -285,13 +358,26 @@ body.user-detail-page {
    overflow-x: visible;
 }
 
+.user-detail-course-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+}
+
 .organization__user-details-main {
   position: absolute;
   z-index: 0;
   top: -31px;
   left: -92px;
   width: calc(100% + 92px + 27px);
-  min-height: 160px;
+  min-height: 158px;
   background-color: #1E3650;
   background-image: url('../assets/user_details_bg.svg');
   background-size: cover;

@@ -2,6 +2,22 @@
   max-height: 340px;
   overflow-y: auto;
 
+  &__download {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    color: var(--btn-primary-bg);
+    font-weight: 500;
+    user-select: none;
+
+    &--disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  }
+
   &__item {
     display: flex;
     align-items: center;

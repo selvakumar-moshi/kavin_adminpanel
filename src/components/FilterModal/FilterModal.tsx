@@ -18,10 +18,11 @@ interface FilterProps {
   onClose: () => void;
   onApply: (filters: Record<string, any>) => void;
   onReset: () => void;
-  columns: Array<{ 
-    key: string; 
-    title: string; 
+  columns: Array<{
+    key: string;
+    title: string;
     searchType?: string;
+    disableFutureDates?: boolean;
     displayOrder?: number;
   }>;
   initialValues?: Record<string, any>;
@@ -160,6 +161,7 @@ const FilterModal: React.FC<FilterProps> = ({
           label: field.title,
           placeholder: `Select ${field.title}`,
           disabled: false,
+          disableFutureDates: field.disableFutureDates,
         };
         
         return (

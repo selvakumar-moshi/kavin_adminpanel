@@ -7,12 +7,12 @@ import DropdownField from '../../components/DropdownField/DropdownField';
 import ActionIcons from '../../components/Table/ActionIcons';
 import ToastMessages from '../../components/ToastMessages';
 import { useVideoMaterialManagement } from './useVideoMaterialHooks';
-import { VIDEO_MATERIAL_TEXT_FIELDS, getVideoMaterialTableColumns, type VideoMaterialProps, type VideoMaterialRecord } from './Constants';
+import { VIDEO_MATERIAL_TEXT_FIELDS, MATERIAL_TO_VIEW_OPTIONS, getVideoMaterialTableColumns, type VideoMaterialProps, type VideoMaterialRecord } from './Constants';
 import add_Icon from '../../assets/add_Icon.svg'
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 import Loader from '../../components/Loader/Loader';
 
-const VideoMaterial: React.FC<VideoMaterialProps> = ({ searchTerm = '', appliedFilters = {} }) => {
+const VideoMaterial: React.FC<VideoMaterialProps> = ({ searchTerm = '', appliedFilters = {}, courseId = '' }) => {
     const {
         videoMaterialsArray,
         coursesArray,
@@ -48,7 +48,7 @@ const VideoMaterial: React.FC<VideoMaterialProps> = ({ searchTerm = '', appliedF
         handleDeleteConfirm,
         toastMessages,
         hideToast,
-    } = useVideoMaterialManagement(searchTerm, appliedFilters);
+    } = useVideoMaterialManagement(searchTerm, appliedFilters, courseId);
 
     const baseColumns = withSortAndSearch(getVideoMaterialTableColumns(getCourseName), {
         sortState,
@@ -65,6 +65,8 @@ const VideoMaterial: React.FC<VideoMaterialProps> = ({ searchTerm = '', appliedF
         {
             title: 'Actions',
             key: 'actions',
+            onHeaderCell: () => ({ style: { width: 90, minWidth: 90, maxWidth: 90 } }),
+            onCell: () => ({ style: { width: 90, minWidth: 90, maxWidth: 90 } }),
             render: (_: unknown, record: VideoMaterialRecord) => (
                 <ActionIcons
                     actions={['edit', 'delete']}
@@ -125,7 +127,7 @@ const VideoMaterial: React.FC<VideoMaterialProps> = ({ searchTerm = '', appliedF
                 primaryButtonLoading={loading}
                 primaryButtonDisabled={loading || !hasFormChanges}
                 contentHeight="auto"
-                minHeight={350}
+                minHeight={450}
             >
                 <div style={{ padding: '0 8px' }}>
                     <InputFields
@@ -147,10 +149,17 @@ const VideoMaterial: React.FC<VideoMaterialProps> = ({ searchTerm = '', appliedF
                             {
                                 name: 'batchId',
                                 label: 'Batch',
-                                placeholder: 'Select batch (optional)',
+                                placeholder: 'Select batch',
                                 options: batchOptions,
                                 loading: batchesLoading,
                                 disabled: !formValues.courseId,
+                            },
+                            {
+                                name: 'materialToView',
+                                label: 'Material To View',
+                                placeholder: 'Select access type',
+                                required: true,
+                                options: MATERIAL_TO_VIEW_OPTIONS,
                             },
                         ]}
                         values={formValues}

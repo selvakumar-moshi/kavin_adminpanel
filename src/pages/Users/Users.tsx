@@ -9,7 +9,7 @@ import { withSortAndSearch } from '../../components/Table/withSortAndSearch';
 import Loader from '../../components/Loader/Loader';
 import ToastMessages from '../../components/ToastMessages';
 import { useUserManagement } from './useUserHooks';
-import { getUserTableColumns } from './Constants';
+import { getUserTableColumns, type UserRecord } from './Constants';
 import filter_Icon from '../../assets/filter_Icon.svg';
 import PageTitle from '../../components/PageTitle';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
@@ -52,7 +52,22 @@ const Users = () => {
 
     // Prepare columns with sort icons, per-column search, and action handlers
     const columns = useMemo(() => {
-        const baseColumns = getUserTableColumns();
+        const baseColumns = getUserTableColumns().map((col) => {
+            if (col.key === 'applicationNo') {
+                return {
+                    ...col,
+                    render: (value: string, record: UserRecord) => (
+                        <span
+                            className="users-table__application-no-link"
+                            onClick={() => handleActionClick('edit', record)}
+                        >
+                            {value}
+                        </span>
+                    ),
+                };
+            }
+            return col;
+        });
 
         const withCustomHeaders = withSortAndSearch(baseColumns, {
             sortState,

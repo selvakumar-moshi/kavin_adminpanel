@@ -3,14 +3,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { UploadFile } from 'antd';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
-import { getStudyMaterials, createStudyMaterial, updateStudyMaterial, deleteStudyMaterial, getCourses, getBatches,} from '../../services/SuperSalesAction';
+import { getStudyMaterials, createStudyMaterial, updateStudyMaterial, deleteStudyMaterial, getBatches,} from '../../services/SuperSalesAction';
 import type { StudyMaterialRecord } from './Constants';
 import { getStudyMaterialTableColumns } from './Constants';
 import type { CourseRecord, BatchRecord } from '../Course/Constant';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 import { STUDY_MATERIAL_VALIDATION_RULES } from '../../utils/validationUtils';
 
-export const useStudyMaterialManagement = (searchTerm = '', appliedFilters: Record<string, string> = {}) => {
+export const useStudyMaterialManagement = (searchTerm = '', appliedFilters: Record<string, string> = {}, courseId = '') => {
     const dispatch = useDispatch();
     const { messages: toastMessages, showSuccess, showError, hideToast } = useToastMessages();
 
@@ -53,24 +53,25 @@ export const useStudyMaterialManagement = (searchTerm = '', appliedFilters: Reco
     const columns = getStudyMaterialTableColumns(getCourseName);
     const displayStudyMaterials = applyToData(studyMaterialsArray, columns);
 
-    useEffect(() => {
-        dispatch(getCourses() as any);
-    }, [dispatch]);
+    // Courses are fetched once by the parent Material page (shared with the header course filter)
+    // — fetching again here would double the request while this tab is active.
 
-    // Search/filter changes always start back at page 1
+    // Search/filter/course changes always start back at page 1
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm, appliedFilters]);
+    }, [searchTerm, appliedFilters, courseId]);
 
-    // Fetch whenever page, page size, search term, or filters change
+    // Fetch whenever page, page size, search term, filters, or course change
     useEffect(() => {
         dispatch(getStudyMaterials({
             searchTerm: searchTerm.trim() || undefined,
+            courseId: courseId || undefined,
+            material: 'study',
             globalFilter: appliedFilters,
             pageNumber: currentPage,
             pageSize,
         }) as any);
-    }, [dispatch, currentPage, pageSize, searchTerm, appliedFilters]);
+    }, [dispatch, currentPage, pageSize, searchTerm, appliedFilters, courseId]);
 
     const handlePaginationChange = (page: number, newPageSize: number) => {
         setCurrentPage(page);
@@ -101,6 +102,8 @@ export const useStudyMaterialManagement = (searchTerm = '', appliedFilters: Reco
             setOperationType(null);
             dispatch(getStudyMaterials({
                 searchTerm: searchTerm.trim() || undefined,
+                courseId: courseId || undefined,
+                material: 'study',
                 globalFilter: appliedFilters,
                 pageNumber: currentPage,
                 pageSize,
@@ -111,7 +114,7 @@ export const useStudyMaterialManagement = (searchTerm = '', appliedFilters: Reco
             showError(apiStatus.StudyMaterialsData.error);
             setOperationType(null);
         }
-    }, [apiStatus.StudyMaterialsData, operationType, showSuccess, showError, dispatch, currentPage, pageSize, searchTerm, appliedFilters]);
+    }, [apiStatus.StudyMaterialsData, operationType, showSuccess, showError, dispatch, currentPage, pageSize, searchTerm, appliedFilters, courseId]);
 
     const openCreateModal = () => {
         setSelectedMaterial(null);
@@ -128,6 +131,7 @@ export const useStudyMaterialManagement = (searchTerm = '', appliedFilters: Reco
             description: material.description || '',
             courseId: material.courseId || '',
             batchId: material.batchId || '',
+            materialToView: material.materialToView || '',
         });
         setFormErrors({});
         setFileList([]);
@@ -232,6 +236,10 @@ export const useStudyMaterialManagement = (searchTerm = '', appliedFilters: Reco
             newErrors.courseId = 'Course is required';
         }
 
+        if (!formValues.materialToView) {
+            newErrors.materialToView = 'Material to view is required';
+        }
+
         if (!selectedMaterial && fileList.length === 0) {
             newErrors.pdffile = 'PDF file is required';
         }
@@ -247,6 +255,7 @@ export const useStudyMaterialManagement = (searchTerm = '', appliedFilters: Reco
             (formValues.description || '') !== (selectedMaterial.description || '') ||
             (formValues.courseId || '') !== (selectedMaterial.courseId || '') ||
             (formValues.batchId || '') !== (selectedMaterial.batchId || '') ||
+            (formValues.materialToView || '') !== (selectedMaterial.materialToView || '') ||
             fileList.length > 0
         )
         : (
@@ -254,6 +263,7 @@ export const useStudyMaterialManagement = (searchTerm = '', appliedFilters: Reco
             Boolean(formValues.description?.trim()) ||
             Boolean(formValues.courseId) ||
             Boolean(formValues.batchId) ||
+            Boolean(formValues.materialToView) ||
             fileList.length > 0
         );
 
@@ -267,6 +277,7 @@ export const useStudyMaterialManagement = (searchTerm = '', appliedFilters: Reco
         formData.append('courseId', formValues.courseId);
         formData.append('description', formValues.description || '');
         formData.append('batchId', formValues.batchId || '');
+        formData.append('materialToView', formValues.materialToView);
 
         const file = fileList[0]?.originFileObj;
         if (file) {

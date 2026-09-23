@@ -5,7 +5,8 @@ import { useToastMessages } from '../../components/ToastMessages/useToastMessage
 import type { RootState } from '../../services/Store';
 import { getQuizzes, deleteQuiz, publishQuiz } from '../../services/SuperSalesAction';
 import type { QuizRecord } from './Constant';
-import { getQuizTableColumns, dayjsToISOString } from './Constant';
+import { getQuizTableColumns, dayjsToISOString, QUIZ_SEARCH_INPUT_FIELDS } from './Constant';
+import { QUIZ_FILTER_FIELDS } from '../../utils/filterUtils';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 
 export const useQuizManagement = () => {
@@ -22,6 +23,10 @@ export const useQuizManagement = () => {
     const [operationType, setOperationType] = useState<'delete' | 'publish' | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [searchValue, setSearchValue] = useState('');
+    const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+    const [appliedFilters, setAppliedFilters] = useState<Record<string, string>>({});
+    const activeFilterCount = Object.values(appliedFilters).filter(value => value && value.trim() !== '').length;
 
     const { QuizzesData, apiStatus } = useSelector(
         (state: RootState) => state.superSales
@@ -46,9 +51,19 @@ export const useQuizManagement = () => {
 
     const displayQuizzes = applyToData(quizzesArray, getQuizTableColumns());
 
+    // Search/filter changes always start back at page 1
     useEffect(() => {
-        dispatch(getQuizzes({ pageNumber: currentPage, pageSize }) as any);
-    }, [dispatch, currentPage, pageSize]);
+        setCurrentPage(1);
+    }, [searchValue, appliedFilters]);
+
+    useEffect(() => {
+        dispatch(getQuizzes({
+            searchTerm: searchValue.trim() || undefined,
+            globalFilter: appliedFilters,
+            pageNumber: currentPage,
+            pageSize,
+        }) as any);
+    }, [dispatch, currentPage, pageSize, searchValue, appliedFilters]);
 
     // Picks up a success toast handed off via navigation state (e.g. from the Create/Edit Quiz
     // page, which unmounts immediately on navigate and can't keep its own toast alive long enough).
@@ -68,6 +83,26 @@ export const useQuizManagement = () => {
         }
     };
 
+    const handleSearchChange = (_name: string, value: string) => {
+        setSearchValue(value);
+    };
+
+    const toggleFilterDropdown = () => {
+        setIsFilterDropdownOpen(prev => !prev);
+    };
+
+    const closeFilterModal = () => {
+        setIsFilterDropdownOpen(false);
+    };
+
+    const handleApplyFilters = (filters: Record<string, string>) => {
+        setAppliedFilters(filters);
+    };
+
+    const handleResetFilters = () => {
+        setAppliedFilters({});
+    };
+
     useEffect(() => {
         if (!operationType) return;
 
@@ -81,14 +116,19 @@ export const useQuizManagement = () => {
             }
             setSelectedQuiz(null);
             setOperationType(null);
-            dispatch(getQuizzes({ pageNumber: currentPage, pageSize }) as any);
+            dispatch(getQuizzes({
+                searchTerm: searchValue.trim() || undefined,
+                globalFilter: appliedFilters,
+                pageNumber: currentPage,
+                pageSize,
+            }) as any);
         }
 
         if (apiStatus.QuizzesData?.error) {
             showError(apiStatus.QuizzesData.error);
             setOperationType(null);
         }
-    }, [apiStatus.QuizzesData, operationType, showSuccess, showError, dispatch, currentPage, pageSize]);
+    }, [apiStatus.QuizzesData, operationType, showSuccess, showError, dispatch, currentPage, pageSize, searchValue, appliedFilters]);
 
     const openCreateQuiz = () => {
         navigate('/quiz/create');
@@ -153,6 +193,19 @@ export const useQuizManagement = () => {
         pageSize,
         totalQuizzes,
         handlePaginationChange,
+
+        // Global search & filter modal
+        searchField: QUIZ_SEARCH_INPUT_FIELDS,
+        searchValue,
+        activeFilterCount,
+        isFilterDropdownOpen,
+        filterField: QUIZ_FILTER_FIELDS,
+        appliedFilters,
+        handleSearchChange,
+        toggleFilterDropdown,
+        closeFilterModal,
+        handleApplyFilters,
+        handleResetFilters,
 
         // Column sort & search
         sortState,

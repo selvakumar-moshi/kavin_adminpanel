@@ -61,7 +61,7 @@ const PopupModal: React.FC<PopupModalProps> = ({
     <Modal
       open={open}
       onCancel={handleCancel}
-      mask={{ closable: false }}
+      maskClosable={false}
       footer={null}
       width={627}
       className={`popup-modal ${className || ""}`}

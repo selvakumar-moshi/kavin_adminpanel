@@ -1,3 +1,4 @@
+import { Badge } from 'antd';
 import Button from '../../components/Button/Button';
 import TableWithPagination from '../../components/Table/TableWithPagination';
 import { withSortAndSearch } from '../../components/Table/withSortAndSearch';
@@ -5,6 +6,7 @@ import ActionIcons from '../../components/Table/ActionIcons';
 import PopupModal from '../../components/PopupModal/PopupModal';
 import InputFields from '../../components/InputFields/InputFields';
 import DateFieldsSection from '../../components/DateFieldsSection/DateFieldsSection';
+import FilterModal from '../../components/FilterModal/FilterModal';
 import Loader from '../../components/Loader/Loader';
 import ToastMessages from '../../components/ToastMessages';
 import PageTitle from '../../components/PageTitle';
@@ -12,6 +14,7 @@ import NoDataFound from '../../components/NoDataFound/NoDataFound';
 import { useNotificationManagement } from './useNotification';
 import { getNotificationTableColumns, NOTIFICATION_INPUT_FIELDS, NOTIFICATION_DATE_FIELD, type NotificationRecord } from './Constant';
 import add_Icon from '../../assets/add_Icon.svg';
+import filter_Icon from '../../assets/filter_Icon.svg';
 
 const Notification = () => {
     const {
@@ -21,6 +24,17 @@ const Notification = () => {
         pageSize,
         totalNotifications,
         handlePaginationChange,
+        searchField,
+        searchValue,
+        activeFilterCount,
+        isFilterDropdownOpen,
+        filterField,
+        appliedFilters,
+        handleSearchChange,
+        toggleFilterDropdown,
+        closeFilterModal,
+        handleApplyFilters,
+        handleResetFilters,
         sortState,
         openSearchColumn,
         handleSort,
@@ -91,6 +105,19 @@ const Notification = () => {
                 </Button>
             </div>
 
+            <div className="dl_filter_main2">
+                    <InputFields
+                        fields={searchField.map(field => ({ ...field }))}
+                        onChange={handleSearchChange}
+                        values={{ search: searchValue }}
+                    />
+                    <Badge count={activeFilterCount} size="small" color="#dc1132">
+                        <div className="dl_filter_main__filter_icon" onClick={toggleFilterDropdown} data-testid="filter-icon">
+                            <img src={filter_Icon} alt="filter" />
+                        </div>
+                    </Badge>
+                </div>
+
             <TableWithPagination
                 columns={columns}
                 dataSource={notificationsArray.map((notification) => ({ ...notification, key: notification.id }))}
@@ -158,6 +185,16 @@ const Notification = () => {
                     Are you sure you want to delete the notification <b>"{selectedNotification?.title}"</b>?
                 </div>
             </PopupModal>
+
+            {/* Filter Modal */}
+            <FilterModal
+                visible={isFilterDropdownOpen}
+                onClose={closeFilterModal}
+                onApply={handleApplyFilters}
+                onReset={handleResetFilters}
+                columns={filterField}
+                initialValues={appliedFilters}
+            />
         </div>
     );
 };

@@ -1,3 +1,5 @@
+import { getDistricts } from 'india-state-district';
+
 export interface StudyMaterial {
     id: string;
     title: string;
@@ -42,15 +44,22 @@ export interface UserDetailRecord {
     phoneNumber: string;
     role: string;
     profileImage?: string | null;
+    district?: string;
+    state?: string;
     createdAt?: string;
     updatedAt?: string;
     courses: EnrolledCourse[];
 }
 
+// Districts are scoped to Tamil Nadu only — state itself is never shown or sent to the API
+const FIXED_STATE_CODE = 'TN';
+
+export const DISTRICT_OPTIONS = getDistricts(FIXED_STATE_CODE).map((district) => ({ value: district, label: district }));
+
 export const ENROLLMENT_STATUS_OPTIONS = [
     { value: 'Pending', label: 'Pending' },
     { value: 'Verified', label: 'Verified' },
-    // { value: 'Rejected', label: 'Rejected' },
+    { value: 'Dropped', label: 'Dropped' },
 ];
 
 export const EDIT_USER_FIELDS = [
@@ -78,6 +87,10 @@ export const EDIT_USER_FIELDS = [
 ];
 
 export const UserDetailtabs = [
+    {
+        key: 'purchased',
+        label: 'Purchased Details',
+    },
     {
         key: 'study',
         label: 'Study Materials',

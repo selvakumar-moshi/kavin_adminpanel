@@ -96,6 +96,7 @@ export const useUserDetailManagement = () => {
             firstName: userDetail.firstName || '',
             lastName: userDetail.lastName || '',
             phoneNumber: userDetail.phoneNumber || '',
+            district: userDetail.district || '',
         });
         setFormErrors({});
         setSelectedCourses([]);
@@ -219,6 +220,7 @@ export const useUserDetailManagement = () => {
             firstName: formValues.firstName,
             lastName: formValues.lastName,
             phoneNumber: formValues.phoneNumber,
+            district: formValues.district,
             courses: selectedCourses,
         }) as any);
     };
@@ -233,6 +235,7 @@ export const useUserDetailManagement = () => {
         formValues.firstName !== (userDetail?.firstName || '') ||
         formValues.lastName !== (userDetail?.lastName || '') ||
         formValues.phoneNumber !== (userDetail?.phoneNumber || '') ||
+        formValues.district !== (userDetail?.district || '') ||
         selectedCourses.length > 0
     );
 

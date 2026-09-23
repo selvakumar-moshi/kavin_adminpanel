@@ -22,6 +22,8 @@ export interface ColumnSearchModalProps {
   initialValue?: string;
   triggerElement?: React.ReactNode;
   searchType?: "text" | "date" | "dropdown"; // Type of search input
+  /** For searchType "date" only — disables picking a date after today. */
+  disableFutureDates?: boolean;
 }
 
 const ColumnSearchModal: React.FC<ColumnSearchModalProps> = ({
@@ -32,6 +34,7 @@ const ColumnSearchModal: React.FC<ColumnSearchModalProps> = ({
   initialValue = "",
   triggerElement,
   searchType = "text",
+  disableFutureDates = false,
 }) => {
   const [searchValue, setSearchValue] = useState<string>(initialValue);
   const [dateValue, setDateValue] = useState<Dayjs | null>(
@@ -138,6 +141,7 @@ const ColumnSearchModal: React.FC<ColumnSearchModalProps> = ({
             allowClear
             onKeyDown={handleKeyDown}
             autoFocus
+            disabledDate={disableFutureDates ? (current) => !!current && current > dayjs().endOf("day") : undefined}
           />
         ) : (
           <Input

@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
-import { getVideoMaterials, createVideoMaterial, updateVideoMaterial, deleteVideoMaterial, getCourses, getBatches } from '../../services/SuperSalesAction';
+import { getVideoMaterials, createVideoMaterial, updateVideoMaterial, deleteVideoMaterial, getBatches } from '../../services/SuperSalesAction';
 import type { VideoMaterialRecord } from './Constants';
 import { getVideoMaterialTableColumns } from './Constants';
 import type { CourseRecord, BatchRecord } from '../Course/Constant';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 import { VIDEO_MATERIAL_VALIDATION_RULES } from '../../utils/validationUtils';
 
-export const useVideoMaterialManagement = (searchTerm = '', appliedFilters: Record<string, string> = {}) => {
+export const useVideoMaterialManagement = (searchTerm = '', appliedFilters: Record<string, string> = {}, courseId = '') => {
     const dispatch = useDispatch();
     const { messages: toastMessages, showSuccess, showError, hideToast } = useToastMessages();
 
@@ -51,24 +51,25 @@ export const useVideoMaterialManagement = (searchTerm = '', appliedFilters: Reco
     const columns = getVideoMaterialTableColumns(getCourseName);
     const displayVideoMaterials = applyToData(videoMaterialsArray, columns);
 
-    useEffect(() => {
-        dispatch(getCourses() as any);
-    }, [dispatch]);
+    // Courses are fetched once by the parent Material page (shared with the header course filter)
+    // — fetching again here would double the request while this tab is active.
 
-    // Search/filter changes always start back at page 1
+    // Search/filter/course changes always start back at page 1
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm, appliedFilters]);
+    }, [searchTerm, appliedFilters, courseId]);
 
-    // Fetch whenever page, page size, search term, or filters change
+    // Fetch whenever page, page size, search term, filters, or course change
     useEffect(() => {
         dispatch(getVideoMaterials({
             searchTerm: searchTerm.trim() || undefined,
+            courseId: courseId || undefined,
+            material: 'video',
             globalFilter: appliedFilters,
             pageNumber: currentPage,
             pageSize,
         }) as any);
-    }, [dispatch, currentPage, pageSize, searchTerm, appliedFilters]);
+    }, [dispatch, currentPage, pageSize, searchTerm, appliedFilters, courseId]);
 
     const handlePaginationChange = (page: number, newPageSize: number) => {
         setCurrentPage(page);
@@ -98,6 +99,8 @@ export const useVideoMaterialManagement = (searchTerm = '', appliedFilters: Reco
             setOperationType(null);
             dispatch(getVideoMaterials({
                 searchTerm: searchTerm.trim() || undefined,
+                courseId: courseId || undefined,
+                material: 'video',
                 globalFilter: appliedFilters,
                 pageNumber: currentPage,
                 pageSize,
@@ -108,7 +111,7 @@ export const useVideoMaterialManagement = (searchTerm = '', appliedFilters: Reco
             showError(apiStatus.VideoMaterialsData.error);
             setOperationType(null);
         }
-    }, [apiStatus.VideoMaterialsData, operationType, showSuccess, showError, dispatch, currentPage, pageSize, searchTerm, appliedFilters]);
+    }, [apiStatus.VideoMaterialsData, operationType, showSuccess, showError, dispatch, currentPage, pageSize, searchTerm, appliedFilters, courseId]);
 
     const openCreateModal = () => {
         setSelectedVideo(null);
@@ -125,6 +128,7 @@ export const useVideoMaterialManagement = (searchTerm = '', appliedFilters: Reco
             courseId: video.courseId || '',
             batchId: video.batchId || '',
             youtubeLink: video.youtubeLink || '',
+            materialToView: video.materialToView || '',
         });
         setFormErrors({});
         if (video.courseId) {
@@ -216,6 +220,10 @@ export const useVideoMaterialManagement = (searchTerm = '', appliedFilters: Reco
             newErrors.courseId = 'Course is required';
         }
 
+        if (!formValues.materialToView) {
+            newErrors.materialToView = 'Material to view is required';
+        }
+
         setFormErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -227,14 +235,16 @@ export const useVideoMaterialManagement = (searchTerm = '', appliedFilters: Reco
             (formValues.description || '') !== (selectedVideo.description || '') ||
             (formValues.courseId || '') !== (selectedVideo.courseId || '') ||
             (formValues.batchId || '') !== (selectedVideo.batchId || '') ||
-            (formValues.youtubeLink || '') !== (selectedVideo.youtubeLink || '')
+            (formValues.youtubeLink || '') !== (selectedVideo.youtubeLink || '') ||
+            (formValues.materialToView || '') !== (selectedVideo.materialToView || '')
         )
         : (
             Boolean(formValues.title?.trim()) ||
             Boolean(formValues.description?.trim()) ||
             Boolean(formValues.courseId) ||
             Boolean(formValues.batchId) ||
-            Boolean(formValues.youtubeLink?.trim())
+            Boolean(formValues.youtubeLink?.trim()) ||
+            Boolean(formValues.materialToView)
         );
 
     const handleSubmit = () => {
@@ -248,6 +258,7 @@ export const useVideoMaterialManagement = (searchTerm = '', appliedFilters: Reco
             courseId: formValues.courseId,
             batchId: formValues.batchId || '',
             youtubeLink: formValues.youtubeLink,
+            materialToView: formValues.materialToView,
         };
 
         if (selectedVideo) {

@@ -12,6 +12,16 @@ export interface NotificationRecord {
     updatedAt?: string | null;
 }
 
+export const NOTIFICATION_SEARCH_INPUT_FIELDS = [
+    {
+        name: 'search',
+        label: '',
+        placeholder: 'Search by title, description or link',
+        type: 'text' as const,
+        search: true,
+    },
+];
+
 export const NOTIFICATION_INPUT_FIELDS = [
     {
         name: 'title',
@@ -87,5 +97,23 @@ export const getNotificationTableColumns = (): ITableColumn[] => [
         searchType: 'date',
         sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.date, b.date),
         render: (value: string) => (value ? formatDate(value) : '-'),
+    },
+    {
+        title: 'Created At',
+        dataIndex: 'createdAt',
+        key: 'createdAt',
+        searchType: 'date',
+        disableFutureDates: true,
+        sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.createdAt, b.createdAt),
+        render: (value: string) => (value ? formatDate(value) : '-'),
+    },
+    {
+        title: 'Updated At',
+        dataIndex: 'updatedAt',
+        key: 'updatedAt',
+        searchType: 'date',
+        disableFutureDates: true,
+        sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.updatedAt, b.updatedAt),
+        render: (value: string | null) => (value ? formatDate(value) : '-'),
     },
 ];

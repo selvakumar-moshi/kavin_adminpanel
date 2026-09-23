@@ -75,7 +75,7 @@ const HeaderContainer = () => {
             )}
             trigger={['hover']}
             placement="bottomRight"
-            classNames={{ root: 'header__profile-dropdown' }}
+            overlayClassName="header__profile-dropdown"
             // open={isDropdownOpen}
             // onOpenChange={onDropdownVisibleChange}
             getPopupContainer={() => document.body}

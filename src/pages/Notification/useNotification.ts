@@ -4,7 +4,8 @@ import { useToastMessages } from '../../components/ToastMessages/useToastMessage
 import type { RootState } from '../../services/Store';
 import { getNotifications, createNotification, updateNotification, deleteNotification } from '../../services/SuperSalesAction';
 import type { NotificationRecord } from './Constant';
-import { getNotificationTableColumns, dayjsToISOString } from './Constant';
+import { getNotificationTableColumns, dayjsToISOString, NOTIFICATION_SEARCH_INPUT_FIELDS } from './Constant';
+import { NOTIFICATION_FILTER_FIELDS } from '../../utils/filterUtils';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 import { NOTIFICATION_VALIDATION_RULES } from '../../utils/validationUtils';
 
@@ -20,6 +21,10 @@ export const useNotificationManagement = () => {
     const [operationType, setOperationType] = useState<'create' | 'edit' | 'delete' | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [searchValue, setSearchValue] = useState('');
+    const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+    const [appliedFilters, setAppliedFilters] = useState<Record<string, string>>({});
+    const activeFilterCount = Object.values(appliedFilters).filter(value => value && value.trim() !== '').length;
 
     const { NotificationsData, apiStatus } = useSelector(
         (state: RootState) => state.superSales
@@ -44,9 +49,19 @@ export const useNotificationManagement = () => {
 
     const displayNotifications = applyToData(notificationsArray, getNotificationTableColumns());
 
+    // Search/filter changes always start back at page 1
     useEffect(() => {
-        dispatch(getNotifications({ pageNumber: currentPage, pageSize }) as any);
-    }, [dispatch, currentPage, pageSize]);
+        setCurrentPage(1);
+    }, [searchValue, appliedFilters]);
+
+    useEffect(() => {
+        dispatch(getNotifications({
+            searchTerm: searchValue.trim() || undefined,
+            globalFilter: appliedFilters,
+            pageNumber: currentPage,
+            pageSize,
+        }) as any);
+    }, [dispatch, currentPage, pageSize, searchValue, appliedFilters]);
 
     const handlePaginationChange = (page: number, newPageSize: number) => {
         setCurrentPage(page);
@@ -54,6 +69,26 @@ export const useNotificationManagement = () => {
             setPageSize(newPageSize);
             setCurrentPage(1);
         }
+    };
+
+    const handleSearchChange = (_name: string, value: string) => {
+        setSearchValue(value);
+    };
+
+    const toggleFilterDropdown = () => {
+        setIsFilterDropdownOpen(prev => !prev);
+    };
+
+    const closeFilterModal = () => {
+        setIsFilterDropdownOpen(false);
+    };
+
+    const handleApplyFilters = (filters: Record<string, string>) => {
+        setAppliedFilters(filters);
+    };
+
+    const handleResetFilters = () => {
+        setAppliedFilters({});
     };
 
     useEffect(() => {
@@ -73,14 +108,19 @@ export const useNotificationManagement = () => {
             setFormErrors({});
             setSelectedNotification(null);
             setOperationType(null);
-            dispatch(getNotifications({ pageNumber: currentPage, pageSize }) as any);
+            dispatch(getNotifications({
+                searchTerm: searchValue.trim() || undefined,
+                globalFilter: appliedFilters,
+                pageNumber: currentPage,
+                pageSize,
+            }) as any);
         }
 
         if (notificationStatus?.error) {
             showError(notificationStatus.error);
             setOperationType(null);
         }
-    }, [notificationStatus, operationType, showSuccess, showError, dispatch, currentPage, pageSize]);
+    }, [notificationStatus, operationType, showSuccess, showError, dispatch, currentPage, pageSize, searchValue, appliedFilters]);
 
     const openCreateModal = () => {
         setSelectedNotification(null);
@@ -224,6 +264,19 @@ export const useNotificationManagement = () => {
         pageSize,
         totalNotifications,
         handlePaginationChange,
+
+        // Global search & filter modal
+        searchField: NOTIFICATION_SEARCH_INPUT_FIELDS,
+        searchValue,
+        activeFilterCount,
+        isFilterDropdownOpen,
+        filterField: NOTIFICATION_FILTER_FIELDS,
+        appliedFilters,
+        handleSearchChange,
+        toggleFilterDropdown,
+        closeFilterModal,
+        handleApplyFilters,
+        handleResetFilters,
 
         // Column sort & search
         sortState,

@@ -64,7 +64,7 @@ const Course = () => {
                                     <div className="course-card__title">{course.courseName}</div>
                                 </div>
                                 <div className="course-card__description"> {course.courseDescription} </div>
-                                <div className="course-card__amount">₹{course.courseAmount}</div>
+                                <div className="course-card__amount">₹{course.courseAmount.toLocaleString()}</div>
                             </div>
                         );
                     })}

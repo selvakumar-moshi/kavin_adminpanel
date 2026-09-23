@@ -11,11 +11,11 @@ import ActionIcons from '../../components/Table/ActionIcons';
 import Loader from '../../components/Loader/Loader';
 import ToastMessages from '../../components/ToastMessages';
 import { useStudyMaterialManagement } from './useStudyMaterialHooks';
-import { STUDY_MATERIAL_TEXT_FIELDS, getStudyMaterialTableColumns, type StudyMaterialProps, type StudyMaterialRecord } from './Constants';
+import { STUDY_MATERIAL_TEXT_FIELDS, MATERIAL_TO_VIEW_OPTIONS, getStudyMaterialTableColumns, type StudyMaterialProps, type StudyMaterialRecord } from './Constants';
 import add_Icon from '../../assets/add_Icon.svg';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 
-const StudyMaterial: React.FC<StudyMaterialProps> = ({ searchTerm = '', appliedFilters = {} }) => {
+const StudyMaterial: React.FC<StudyMaterialProps> = ({ searchTerm = '', appliedFilters = {}, courseId = '' }) => {
     const {
         studyMaterialsArray,
         coursesArray,
@@ -53,7 +53,7 @@ const StudyMaterial: React.FC<StudyMaterialProps> = ({ searchTerm = '', appliedF
         handleDeleteConfirm,
         toastMessages,
         hideToast,
-    } = useStudyMaterialManagement(searchTerm, appliedFilters);
+    } = useStudyMaterialManagement(searchTerm, appliedFilters, courseId);
 
     const [replacingFile, setReplacingFile] = useState(false);
 
@@ -78,6 +78,8 @@ const StudyMaterial: React.FC<StudyMaterialProps> = ({ searchTerm = '', appliedF
         {
             title: 'Actions',
             key: 'actions',
+            onHeaderCell: () => ({ style: { width: 90, minWidth: 90, maxWidth: 90 } }),
+            onCell: () => ({ style: { width: 90, minWidth: 90, maxWidth: 90 } }),
             render: (_: unknown, record: StudyMaterialRecord) => (
                 <ActionIcons
                     actions={['edit', 'delete']}
@@ -160,10 +162,17 @@ const StudyMaterial: React.FC<StudyMaterialProps> = ({ searchTerm = '', appliedF
                             {
                                 name: 'batchId',
                                 label: 'Batch',
-                                placeholder: 'Select batch (optional)',
+                                placeholder: 'Select batch',
                                 options: batchOptions,
                                 loading: batchesLoading,
                                 disabled: !formValues.courseId,
+                            },
+                            {
+                                name: 'materialToView',
+                                label: 'Material To View',
+                                placeholder: 'Select access type',
+                                required: true,
+                                options: MATERIAL_TO_VIEW_OPTIONS,
                             },
                         ]}
                         values={formValues}

@@ -24,9 +24,15 @@ export interface StudyMaterialRecord {
     courseId: string;
     batchId: string | null;
     batchTitle: string | null;
+    materialToView?: string;
     createdAt?: string;
     updatedAt?: string | null;
 }
+
+export const MATERIAL_TO_VIEW_OPTIONS = [
+    { value: 'Paid', label: 'Paid' },
+    { value: 'Free', label: 'Free' },
+];
 
 export const STUDY_MATERIAL_TEXT_FIELDS = [
     {
@@ -53,14 +59,14 @@ export const getStudyMaterialTableColumns = (getCourseName: (courseId: string) =
         searchType: 'text',
         sorter: (a: StudyMaterialRecord, b: StudyMaterialRecord) => compareText(a.title, b.title),
     },
-    {
-        title: 'Description',
-        dataIndex: 'description',
-        key: 'description',
-        searchType: 'text',
-        sorter: (a: StudyMaterialRecord, b: StudyMaterialRecord) => compareText(a.description, b.description),
-        render: (value: string) => value || '-',
-    },
+    // {
+    //     title: 'Description',
+    //     dataIndex: 'description',
+    //     key: 'description',
+    //     searchType: 'text',
+    //     sorter: (a: StudyMaterialRecord, b: StudyMaterialRecord) => compareText(a.description, b.description),
+    //     render: (value: string) => value || '-',
+    // },
     {
         title: 'Course',
         dataIndex: 'courseId',
@@ -86,12 +92,30 @@ export const getStudyMaterialTableColumns = (getCourseName: (courseId: string) =
         ),
     },
     {
+        title: 'Material To View',
+        dataIndex: 'materialToView',
+        key: 'materialToView',
+        searchType: 'text',
+        sorter: (a: StudyMaterialRecord, b: StudyMaterialRecord) => compareText(a.materialToView, b.materialToView),
+        render: (value: string | undefined) => value || '-',
+    },
+    {
         title: 'Created At',
         dataIndex: 'createdAt',
         key: 'createdAt',
         searchType: 'date',
+        disableFutureDates: true,
         sorter: (a: StudyMaterialRecord, b: StudyMaterialRecord) => compareText(a.createdAt, b.createdAt),
         render: (value: string) => formatDate(value),
+    },
+    {
+        title: 'Updated At',
+        dataIndex: 'updatedAt',
+        key: 'updatedAt',
+        searchType: 'date',
+        disableFutureDates: true,
+        sorter: (a: StudyMaterialRecord, b: StudyMaterialRecord) => compareText(a.updatedAt, b.updatedAt),
+        render: (value: string | null) => (value ? formatDate(value) : '-'),
     },
 ];
 
@@ -103,6 +127,7 @@ export interface VideoMaterialRecord {
     batchId: string | null;
     batchTitle: string | null;
     youtubeLink: string;
+    materialToView?: string;
     createdAt?: string;
     updatedAt?: string | null;
 }
@@ -139,14 +164,14 @@ export const getVideoMaterialTableColumns = (getCourseName: (courseId: string) =
         searchType: 'text',
         sorter: (a: VideoMaterialRecord, b: VideoMaterialRecord) => compareText(a.title, b.title),
     },
-    {
-        title: 'Description',
-        dataIndex: 'description',
-        key: 'description',
-        searchType: 'text',
-        sorter: (a: VideoMaterialRecord, b: VideoMaterialRecord) => compareText(a.description, b.description),
-        render: (value: string) => value || '-',
-    },
+    // {
+    //     title: 'Description',
+    //     dataIndex: 'description',
+    //     key: 'description',
+    //     searchType: 'text',
+    //     sorter: (a: VideoMaterialRecord, b: VideoMaterialRecord) => compareText(a.description, b.description),
+    //     render: (value: string) => value || '-',
+    // },
     {
         title: 'Course',
         dataIndex: 'courseId',
@@ -172,12 +197,30 @@ export const getVideoMaterialTableColumns = (getCourseName: (courseId: string) =
         ),
     },
     {
+        title: 'Material To View',
+        dataIndex: 'materialToView',
+        key: 'materialToView',
+        searchType: 'text',
+        sorter: (a: VideoMaterialRecord, b: VideoMaterialRecord) => compareText(a.materialToView, b.materialToView),
+        render: (value: string | undefined) => value || '-',
+    },
+    {
         title: 'Created At',
         dataIndex: 'createdAt',
         key: 'createdAt',
         searchType: 'date',
+        disableFutureDates: true,
         sorter: (a: VideoMaterialRecord, b: VideoMaterialRecord) => compareText(a.createdAt, b.createdAt),
         render: (value: string) => formatDate(value),
+    },
+    {
+        title: 'Updated At',
+        dataIndex: 'updatedAt',
+        key: 'updatedAt',
+        searchType: 'date',
+        disableFutureDates: true,
+        sorter: (a: VideoMaterialRecord, b: VideoMaterialRecord) => compareText(a.updatedAt, b.updatedAt),
+        render: (value: string | null) => (value ? formatDate(value) : '-'),
     },
 ];
 
@@ -189,9 +232,11 @@ export const MATERIAL_TAB_ITEMS = [
 export interface StudyMaterialProps {
     searchTerm?: string;
     appliedFilters?: Record<string, string>;
+    courseId?: string;
 }
 
 export interface VideoMaterialProps {
     searchTerm?: string;
     appliedFilters?: Record<string, string>;
+    courseId?: string;
 }

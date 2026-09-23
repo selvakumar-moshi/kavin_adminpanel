@@ -1,39 +1,4 @@
-/*
- * Copyright (c) 2024 Payhuddle. All rights reserved.
- *
- * This software and associated documentation files are the intellectual
- * property of Payhuddle. Use of this software is governed by the terms
- * of the applicable license agreement.
- *
- * No part of this software may be reproduced, distributed, or transmitted
- * in any form or by any means without the prior written permission of Payhuddle.
- */
-/* @tailwind base;
-@tailwind components;
-@tailwind utilities; */
-/* Style sheets */
 @import "./App.css";
-/* @import "./app/layouts/LayoutContainer.scss"; */
-/* @import "./components/Common/Button/Button.scss"; */
-/* @import "./components/Common/RadioGroup/Radio.scss"; */
-/* @import "./components/Footer/Footer.scss"; */
-/* @import "./components/Header/Header.scss"; */
-/* @import "./components/Sidebar/Sidebar.scss"; */
-/* @import "./components/Breadcrumbs/Breadcrumbs.scss"; */
-/* @import "./components/PageTitle/PageTitle.scss"; */
-/* @import "./components/Tabs/Tabs.scss"; */
-/* @import "./components/Table/Table.scss"; */
-/* @import "./components/Table/StatusBadge.scss"; */
-/* @import "./components/Table/ActionIcons.scss"; */
-/* @import "./components/DropdownField/DropdownField.scss"; */
-/* @import "./components/FileUploadDisplay/FileUploadDisplay.scss"; */
-/* @import "./components/ToastMessages/ToastMessages.scss"; */
-/* @import "./components/PopupModal/PopupModal.scss"; */
-/* @import "./components/Checkbox/Checkbox.scss"; */
-/* @import "./pages/UserManagement/UserManagement.scss"; */
-/* @import "./components/ElevationRequest/ElevationRequest.scss"; */
-/* @import "./pages/Roles/Roles.scss"; */
-/* @import "./pages/Organization/Organization.scss"; */
 
 @font-face {
   font-family: 'Discover Sans';
@@ -241,142 +206,23 @@ textarea:focus-visible:not(.dynamic-form-field__control--highlighted) {
   border-bottom: none !important;
 }
 
-/* Shared layout/utility classes.
-   These replace inline style={{}} usage so style-src can drop 'unsafe-inline'
-   for anything under our own control (antd's own cssinjs still needs it). */
-.u-cursor-pointer {
-  cursor: pointer;
+.ant-picker-dropdown .ant-picker-header-view >button:hover{
+  color: var(--project-title-color)
 }
-
-.u-text-center {
-  text-align: center;
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-body{
+  padding: 4px 8px;
 }
-
-.u-flex-center {
-  display: flex;
-  align-items: center;
+.ant-picker-dropdown .ant-picker-cell .ant-picker-cell-inner{
+  line-height: 26px;
 }
-
-.u-flex-center-justify {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.ant-picker-dropdown .ant-picker-cell{
+  padding: 3px 0;
 }
-
-.u-flex-1 {
-  flex: 1;
-}
-
-.u-full-width {
-  width: 100%;
-}
-
-.u-inline-flex-center {
-  display: inline-flex;
-  align-items: center;
-}
-
-.u-height-unset {
-  height: unset !important;
-}
-
-.u-mb-neg2 {
-  margin-bottom: -2px;
-}
-
-.u-mt-2 {
-  margin-top: 2px;
-}
-
-.u-mt-24 {
-  margin-top: 24px;
-}
-
-.u-mb-24 {
-  margin-bottom: 24px;
-}
-
-.u-pl-0 {
-  padding-left: 0;
-}
-
-.u-pl-6 {
-  padding-left: 6px;
-}
-
-.u-py-20-center {
-  padding: 20px 0;
-  text-align: center;
-}
-
-.u-py-20-px20-center {
-  padding: 20px;
-  text-align: center;
-}
-
-.u-relative-top-neg14 {
-  position: relative;
-  top: -14px;
-}
-
-.u-relative {
-  position: relative;
-}
-
-.u-margin-inline-end-4 {
-  margin-inline-end: 4px;
-}
-
-.u-min-width-fit-content {
-  min-width: fit-content;
-}
-
-.u-min-height-120 {
-  min-height: 120px;
-}
-
-.u-fade-inactive {
-  opacity: 0.4;
-}
-
-.u-fade-active {
-  opacity: 1;
-}
-
-.u-text-error {
-  color: #D13F3F;
-}
-
-.u-text-success {
-  color: #277A53;
-}
-
-.u-text-muted {
-  color: #8c8c8c;
-}
-
-.u-text-warning {
-  color: #faad14;
-}
-
-.u-icon-fontsize-12 {
-  font-size: 12px;
-}
-
-.u-icon-fontsize-16 {
-  font-size: 16px;
-}
-
-.u-toast-icon {
-  height: 25px;
-}
-
-.u-gap-8 {
-  gap: 8px;
-}
-
-.u-ml-10 {
-  margin-left: 10px;
+.ant-picker-now-btn,
+.ant-pagination .ant-pagination-item,
+.ant-pagination .ant-pagination-options-quick-jumper
+{
+  font-family: var(--font-family);
 }
 
 body.user-profile-details-page .layout-container__outer {

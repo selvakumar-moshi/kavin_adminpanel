@@ -63,11 +63,11 @@ export const getUserById = createAsyncThunk<any, string>(
   }
 );
 
-export const updateUser = createAsyncThunk<any, { id: string; firstName: string; lastName: string; phoneNumber: string; courses?: { courseId: string; batchId: string }[] }>(
+export const updateUser = createAsyncThunk<any, { id: string; firstName: string; lastName: string; phoneNumber: string; district: string; courses?: { courseId: string; batchId: string }[] }>(
     "userManagement/updateUser",
-    async ({ id, firstName, lastName, phoneNumber, courses }, { rejectWithValue }) => {
+    async ({ id, firstName, lastName, phoneNumber, district, courses }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.updateUser(id, firstName, lastName, phoneNumber, courses);
+        const res = await superSalesAPI.updateUser(id, firstName, lastName, phoneNumber, district, courses);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to update User";
@@ -219,11 +219,11 @@ export const deleteBatch = createAsyncThunk<any, { id: string }>(
   }
 );
 
-export const getStudyMaterials = createAsyncThunk<any, { searchTerm?: string; globalFilter?: Record<string, string>; pageNumber?: number; pageSize?: number } | undefined>(
+export const getStudyMaterials = createAsyncThunk<any, { searchTerm?: string; courseId?: string; material: string; globalFilter?: Record<string, string>; pageNumber?: number; pageSize?: number } | undefined>(
     "courseManagement/getStudyMaterials",
     async (params, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getStudyMaterials(params?.searchTerm, params?.globalFilter, params?.pageNumber, params?.pageSize);
+        const res = await superSalesAPI.getStudyMaterials(params?.searchTerm, params?.courseId || '', params?.material || '', params?.globalFilter, params?.pageNumber, params?.pageSize);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Study Materials";
@@ -271,11 +271,11 @@ export const deleteStudyMaterial = createAsyncThunk<any, { id: string }>(
   }
 );
 
-export const getVideoMaterials = createAsyncThunk<any, { searchTerm?: string; globalFilter?: Record<string, string>; pageNumber?: number; pageSize?: number } | undefined>(
+export const getVideoMaterials = createAsyncThunk<any, { searchTerm?: string; courseId?: string; material: string; globalFilter?: Record<string, string>; pageNumber?: number; pageSize?: number } | undefined>(
     "courseManagement/getVideoMaterials",
     async (params, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getVideoMaterials(params?.searchTerm, params?.globalFilter, params?.pageNumber, params?.pageSize);
+        const res = await superSalesAPI.getVideoMaterials(params?.searchTerm, params?.courseId || '', params?.material || '', params?.globalFilter, params?.pageNumber, params?.pageSize);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Video Materials";
@@ -284,11 +284,11 @@ export const getVideoMaterials = createAsyncThunk<any, { searchTerm?: string; gl
   }
 );
 
-export const createVideoMaterial = createAsyncThunk<any, { title: string; description: string; courseId: string; batchId: string; youtubeLink: string }>(
+export const createVideoMaterial = createAsyncThunk<any, { title: string; description: string; courseId: string; batchId: string; youtubeLink: string; materialToView: string }>(
     "courseManagement/createVideoMaterial",
-    async ({ title, description, courseId, batchId, youtubeLink }, { rejectWithValue }) => {
+    async ({ title, description, courseId, batchId, youtubeLink, materialToView }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.createVideoMaterial(title, description, courseId, batchId, youtubeLink);
+        const res = await superSalesAPI.createVideoMaterial(title, description, courseId, batchId, youtubeLink, materialToView);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to create Video Material";
@@ -297,11 +297,11 @@ export const createVideoMaterial = createAsyncThunk<any, { title: string; descri
   }
 );
 
-export const updateVideoMaterial = createAsyncThunk<any, { id: string; title: string; description: string; courseId: string; batchId: string; youtubeLink: string }>(
+export const updateVideoMaterial = createAsyncThunk<any, { id: string; title: string; description: string; courseId: string; batchId: string; youtubeLink: string; materialToView: string }>(
     "courseManagement/updateVideoMaterial",
-    async ({ id, title, description, courseId, batchId, youtubeLink }, { rejectWithValue }) => {
+    async ({ id, title, description, courseId, batchId, youtubeLink, materialToView }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.updateVideoMaterial(id, title, description, courseId, batchId, youtubeLink);
+        const res = await superSalesAPI.updateVideoMaterial(id, title, description, courseId, batchId, youtubeLink, materialToView);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to update Video Material";
@@ -427,11 +427,11 @@ export const getQuizRankList = createAsyncThunk<any, { quizId: string }>(
   }
 );
 
-export const getNotifications = createAsyncThunk<any, { pageNumber?: number; pageSize?: number }>(
+export const getNotifications = createAsyncThunk<any, { searchTerm?: string; globalFilter?: Record<string, string>; pageNumber?: number; pageSize?: number }>(
     "notificationManagement/getNotifications",
-    async ({ pageNumber, pageSize }, { rejectWithValue }) => {
+    async ({ searchTerm, globalFilter, pageNumber, pageSize }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getNotifications(pageNumber, pageSize);
+        const res = await superSalesAPI.getNotifications(searchTerm, globalFilter, pageNumber, pageSize);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Notifications";

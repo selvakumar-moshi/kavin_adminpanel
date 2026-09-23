@@ -10,6 +10,8 @@ export interface ITableColumn {
   sorter?: (a: any, b: any) => number;
   sortDirections?: ("ascend" | "descend")[];
   searchType?: "text" | "date" | "dropdown";
+  /** For searchType "date" only — disables picking a date after today (e.g. Created At/Updated At can't be in the future). */
+  disableFutureDates?: boolean;
   filterOptions?: Array<{ value: string; label: string }>;
   displayOrder?: number;
   Permissions?: boolean;

@@ -1,11 +1,12 @@
-import { Card, Row, Col, Spin, Empty, Avatar, Button } from 'antd';
-import { UserOutlined, DownloadOutlined } from '@ant-design/icons';
+import { Card, Row, Col, Spin, Empty, Avatar } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
 import { Pie } from '@ant-design/plots';
 import { useDashboard } from './useDashboard';
 import PageTitle from '../../components/PageTitle';
 import DropdownField from '../../components/DropdownField/DropdownField';
 import ToastMessages from '../../components/ToastMessages';
 import { CATEGORY_COLORS } from './Constant';
+import download_Icon from '../../assets/pngDownload.svg';
 
 const Dashboard = () => {
   const {
@@ -78,15 +79,19 @@ const Dashboard = () => {
             title="Quiz Rank List"
             style={{ height: '100%' }}
             extra={
-              <Button
-                type="link"
-                icon={<DownloadOutlined />}
-                onClick={handleDownloadRankList}
-                loading={isDownloadingRankList}
-                disabled={!selectedQuizId || rankList.length === 0}
+              <div className={`quiz-rank-list__download${!selectedQuizId || rankList.length === 0 || isDownloadingRankList ? ' quiz-rank-list__download--disabled' : ''}`}
+                onClick={() => {
+                  if (!selectedQuizId || rankList.length === 0 || isDownloadingRankList) return;
+                  handleDownloadRankList();
+                }}
               >
+                {isDownloadingRankList ? (
+                  <Spin size="small" />
+                ) : (
+                  <img src={download_Icon} alt="Download" />
+                )}
                 Download
-              </Button>
+              </div>
             }
           >
             <DropdownField

@@ -22,8 +22,8 @@ class SuperSalesAPI {
         return Super_Sales.get(`/User/${id}`);
     }
 
-    updateUser(id: string, firstName: string, lastName: string, phoneNumber: string, courses?: { courseId: string; batchId: string }[]) {
-        return Super_Sales.put(`/User/${id}`, { firstName, lastName, phoneNumber, courses: courses || [] });
+    updateUser(id: string, firstName: string, lastName: string, phoneNumber: string, district: string, courses?: { courseId: string; batchId: string }[]) {
+        return Super_Sales.put(`/User/${id}`, { firstName, lastName, phoneNumber, district, courses: courses || [] });
     }
 
     deleteUser(id: string) {
@@ -76,9 +76,11 @@ class SuperSalesAPI {
         return Super_Sales.delete(`/Batch/${id}`);
     }
 
-    getStudyMaterials(searchTerm?: string, globalFilter?: Record<string, string>, pageNumber?: number, pageSize?: number) {
+    getStudyMaterials(searchTerm?: string, courseId?: string, material?: string, globalFilter?: Record<string, string>, pageNumber?: number, pageSize?: number) {
         return Super_Sales.post('/StudyMaterial/search', {
             searchTerm: searchTerm || '',
+            courseId: courseId || '',
+            material: material || '',
             globalFilter: globalFilter || {},
             pageNumber: pageNumber || 1,
             pageSize: pageSize || 10,
@@ -105,21 +107,23 @@ class SuperSalesAPI {
         return Super_Sales.delete(`/StudyMaterial/${id}`);
     }
 
-    getVideoMaterials(searchTerm?: string, globalFilter?: Record<string, string>, pageNumber?: number, pageSize?: number) {
+    getVideoMaterials(searchTerm?: string, courseId?: string, material?: string, globalFilter?: Record<string, string>, pageNumber?: number, pageSize?: number) {
         return Super_Sales.post('/VideoMaterial/search', {
             searchTerm: searchTerm || '',
+            courseId: courseId || '',
+            material: material || '',
             globalFilter: globalFilter || {},
             pageNumber: pageNumber || 1,
             pageSize: pageSize || 10,
         });
     }
 
-    createVideoMaterial(title: string, description: string, courseId: string, batchId: string, youtubeLink: string) {
-        return Super_Sales.post('/VideoMaterial', { title, description, courseId, batchId, youtubeLink });
+    createVideoMaterial(title: string, description: string, courseId: string, batchId: string, youtubeLink: string, materialToView: string) {
+        return Super_Sales.post('/VideoMaterial', { title, description, courseId, batchId, youtubeLink, materialToView });
     }
 
-    updateVideoMaterial(id: string, title: string, description: string, courseId: string, batchId: string, youtubeLink: string) {
-        return Super_Sales.put(`/VideoMaterial/${id}`, { title, description, courseId, batchId, youtubeLink });
+    updateVideoMaterial(id: string, title: string, description: string, courseId: string, batchId: string, youtubeLink: string, materialToView: string) {
+        return Super_Sales.put(`/VideoMaterial/${id}`, { title, description, courseId, batchId, youtubeLink, materialToView });
     }
 
     deleteVideoMaterial(id: string) {
@@ -174,8 +178,10 @@ class SuperSalesAPI {
         return Super_Sales.get(`/Quiz/${quizId}/rank-list/download`, { responseType: 'blob' });
     }
 
-    getNotifications(pageNumber?: number, pageSize?: number) {
+    getNotifications(searchTerm?: string, globalFilter?: Record<string, string>, pageNumber?: number, pageSize?: number) {
         return Super_Sales.post('/Notification/search', {
+            searchTerm: searchTerm || '',
+            globalFilter: globalFilter || {},
             pageNumber: pageNumber || 1,
             pageSize: pageSize || 10,
         });

@@ -82,7 +82,7 @@ const CourseDetail = () => {
                             <div className='user-detail__info-item-value'>{courseDetail.courseName}</div>
                         </div>
 
-                        <Dropdown menu={{ items: menuItems }} classNames={{ root: 'organization__user-details-actions-dropdown' }} trigger={['click']} placement="bottomRight">
+                        <Dropdown menu={{ items: menuItems }} overlayClassName="organization__user-details-actions-dropdown" trigger={['click']} placement="bottomRight">
                             <button type="button" className="dot-icon">
                                 <img src={dot_Icon} alt="dot-icon" />
                             </button>

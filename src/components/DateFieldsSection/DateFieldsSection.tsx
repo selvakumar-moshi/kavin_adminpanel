@@ -12,6 +12,8 @@ export interface DateField {
   disabled?: boolean;
   disablePastDates?: boolean;
   allowPastDates?: boolean;
+  /** Disables picking a date after today (e.g. Created At/Updated At filters, which can't be in the future). Takes priority over the other date flags. */
+  disableFutureDates?: boolean;
 }
 
 export interface DateFieldsSectionProps {
@@ -92,7 +94,12 @@ const DateFieldsSection: React.FC<DateFieldsSectionProps> = ({
                   disabled={disabled || field.disabled}
                   disabledDate={(current) => {
                     if (!current) return false;
-                    
+
+                    // If disableFutureDates is true, disable all dates after today
+                    if (field.disableFutureDates === true) {
+                      return current > dayjs().endOf("day");
+                    }
+
                     // If disablePastDates is true, disable all past dates
                     if (field.disablePastDates === true) {
                       return current < dayjs().startOf("day");

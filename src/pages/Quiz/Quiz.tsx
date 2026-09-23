@@ -1,15 +1,19 @@
+import { Badge } from 'antd';
 import Button from '../../components/Button/Button';
 import TableWithPagination from '../../components/Table/TableWithPagination';
 import { withSortAndSearch } from '../../components/Table/withSortAndSearch';
 import ActionIcons from '../../components/Table/ActionIcons';
 import PopupModal from '../../components/PopupModal/PopupModal';
+import InputFields from '../../components/InputFields/InputFields';
 import DateFieldsSection from '../../components/DateFieldsSection/DateFieldsSection';
+import FilterModal from '../../components/FilterModal/FilterModal';
 import Loader from '../../components/Loader/Loader';
 import ToastMessages from '../../components/ToastMessages';
 import PageTitle from '../../components/PageTitle';
 import { useQuizManagement } from './useQuizHooks';
 import { getQuizTableColumns, QUIZ_EXPIRES_AT_FIELD, type QuizRecord } from './Constant';
 import add_Icon from '../../assets/add_Icon.svg';
+import filter_Icon from '../../assets/filter_Icon.svg';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 
 const Quiz = () => {
@@ -20,6 +24,17 @@ const Quiz = () => {
         pageSize,
         totalQuizzes,
         handlePaginationChange,
+        searchField,
+        searchValue,
+        activeFilterCount,
+        isFilterDropdownOpen,
+        filterField,
+        appliedFilters,
+        handleSearchChange,
+        toggleFilterDropdown,
+        closeFilterModal,
+        handleApplyFilters,
+        handleResetFilters,
         sortState,
         openSearchColumn,
         handleSort,
@@ -93,6 +108,19 @@ const Quiz = () => {
                 </Button>
             </div>
 
+            <div className="dl_filter_main2">
+                    <InputFields
+                        fields={searchField.map(field => ({ ...field }))}
+                        onChange={handleSearchChange}
+                        values={{ search: searchValue }}
+                    />
+                    <Badge count={activeFilterCount} size="small" color="#dc1132">
+                        <div className="dl_filter_main__filter_icon" onClick={toggleFilterDropdown} data-testid="filter-icon">
+                            <img src={filter_Icon} alt="filter" />
+                        </div>
+                    </Badge>
+                </div>
+
             <TableWithPagination
                 columns={columns}
                 dataSource={quizzesArray.map((quiz) => ({ ...quiz, key: quiz.id }))}
@@ -156,6 +184,16 @@ const Quiz = () => {
                     />
                 </div>
             </PopupModal>
+
+            {/* Filter Modal */}
+            <FilterModal
+                visible={isFilterDropdownOpen}
+                onClose={closeFilterModal}
+                onApply={handleApplyFilters}
+                onReset={handleResetFilters}
+                columns={filterField}
+                initialValues={appliedFilters}
+            />
         </div>
     );
 };
