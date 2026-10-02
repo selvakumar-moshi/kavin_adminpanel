@@ -229,6 +229,20 @@ body.user-detail-page {
       font-family: var(--font-family);
       font-weight: 500;
     }
+
+    &__payment-screenshot {
+      margin: 16px 0;
+
+      img {
+        max-width: 320px;
+        max-height: 320px;
+        border: 1px solid #e6e9f5;
+        border-radius: 8px;
+        object-fit: contain;
+        display: block;
+        cursor: pointer;
+      }
+    }
   }
 
   .tabs__tab-label{
@@ -314,6 +328,12 @@ body.user-detail-page {
   }
 }
 
+.user-course__payment-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .user-course__status-with-edit {
   display: inline-flex;
   align-items: center;
@@ -327,6 +347,13 @@ body.user-detail-page {
 
   .dropdown-field__select {
     min-width: 130px;
+    border-radius: 6px;
+    height: 30px;
+    overflow: hidden;
+
+    .ant-select-selector {
+      border-radius: 6px;
+    }
   }
 }
 

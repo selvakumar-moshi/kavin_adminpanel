@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../services/Store';
-import { getCourses } from '../../services/SuperSalesAction';
+import { getCourses } from '../../services/LearningAction';
 import type { CourseRecord } from '../Course/Constant';
 import { MATERIAL_SEARCH_INPUT_FIELDS } from './Constants';
 import { MATERIAL_FILTER_FIELDS } from '../../utils/filterUtils';
@@ -17,7 +17,7 @@ export const useMaterialManagement = () => {
     const [selectedCourseId, setSelectedCourseId] = useState(ALL_COURSES_VALUE);
     const activeFilterCount = Object.values(appliedFilters).filter(value => value && value.trim() !== '').length;
 
-    const { CoursesData } = useSelector((state: RootState) => state.superSales);
+    const { CoursesData } = useSelector((state: RootState) => state.learning);
     const coursesArray = Array.isArray(CoursesData) ? (CoursesData as CourseRecord[]) : [];
     const courseOptions = [
         { value: ALL_COURSES_VALUE, label: 'All Course' },

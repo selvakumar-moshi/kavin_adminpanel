@@ -29,13 +29,13 @@
     border: 1px solid #e6e9f5;
     border-radius: 10px;
     padding: 20px;
-    flex: 0 0 340px;
+    flex: 0 0 290px;
 
     &__readonly-course {
       color: #000;
       font-weight: 400;
       font-family: var(--font-family);
-      margin-top: 8px;
+      margin: 0 0 12px 0;
 
       span{
         font-weight: 600;
@@ -60,8 +60,13 @@
       z-index: 1;
       transition: box-shadow 0.15s ease;
 
+      .page-title{
+        padding-left: 12px;
+      }
+
       &--scrolled {
         box-shadow: 0 4px 9px 0 rgba(0, 0, 0, 0.15);
+        border-radius: 6px;
       }
     }
 
@@ -152,10 +157,6 @@
       img{
         width: 28px;
       }
-    }
-
-    &__field {
-      margin-bottom: 12px;
     }
 
     &__row {
@@ -253,6 +254,29 @@
     &__field--correct {
       .question-detail-card__correct-option-dropdown {
         max-width: 220px;
+      }
+    }
+
+    &__correct-mark-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+
+      .question-detail-card__field {
+        // flex: 1;
+        min-width: 0;
+        margin-bottom: 0;
+      }
+
+      .question-detail-card__field--mark {
+        max-width: 220px;
+      }
+
+      .dropdown-field__field,
+      .form-fields-section__field,
+      .ant-form-item {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
       }
     }
   }

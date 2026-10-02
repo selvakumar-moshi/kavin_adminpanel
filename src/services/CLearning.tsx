@@ -1,9 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getSSLogin, getRegister, deleteUser, updateUser, getUsers, getUserById, updateEnrollmentStatus, getCourses, getCourseById, createCourse, updateCourse, deleteCourse, getBatches, createBatch, updateBatch, deleteBatch, getStudyMaterials, createStudyMaterial, updateStudyMaterial, deleteStudyMaterial, getVideoMaterials, createVideoMaterial, updateVideoMaterial, deleteVideoMaterial, getDashboardCounts, getQuizzes, getQuizById, createQuiz, updateQuiz, deleteQuiz, publishQuiz, getQuizRankList, getNotifications, createNotification, updateNotification, deleteNotification} from "./SuperSalesAction";
-import { initialState } from "./ISuperSales";
+import { getSSLogin, getRegister, deleteUser, updateUser, getUsers, getUserById, updateEnrollmentStatus, getCourses, getCourseById, createCourse, updateCourse, deleteCourse, getBatches, createBatch, updateBatch, deleteBatch, getStudyMaterials, createStudyMaterial, updateStudyMaterial, deleteStudyMaterial, getVideoMaterials, createVideoMaterial, updateVideoMaterial, deleteVideoMaterial, getDashboardCounts, getQuizzes, getQuizById, createQuiz, updateQuiz, deleteQuiz, publishQuiz, getQuizRankList, getNotifications, createNotification, updateNotification, deleteNotification} from "./LearningAction";
+import { initialState } from "./ILearning";
 
-const SuperSalesSlice = createSlice({
-    name: "superSales",
+const LearningSlice = createSlice({
+    name: "learning",
     initialState,
     reducers: {
         resetSSLogin: (state) => {
@@ -687,5 +687,5 @@ const SuperSalesSlice = createSlice({
     },
 });
 
-export const { resetSSLogin, clearError, logout } = SuperSalesSlice.actions;
-export default SuperSalesSlice.reducer;
+export const { resetSSLogin, clearError, logout } = LearningSlice.actions;
+export default LearningSlice.reducer;

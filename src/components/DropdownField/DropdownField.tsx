@@ -24,6 +24,8 @@ export interface DropdownField {
   value?: string | string[];
   disabled?: boolean;
   loading?: boolean;
+  /** Defaults to true; set false to hide the clear ("x") icon for this field. */
+  allowClear?: boolean;
   showSearch?: boolean;
   filterOption?: boolean | ((input: string, option: any) => boolean);
   onSearch?: (value: string) => void;
@@ -145,7 +147,7 @@ const DropdownField: React.FC<DropdownFieldProps> = ({
               }}
               disabled={field.disabled}
               loading={field.loading}
-              allowClear
+              allowClear={field.allowClear !== false}
               showSearch={isSearchable}
               filterOption={isSearchable ? (field.filterOption || defaultFilterOption) : false}
               onSearch={field.onSearch}

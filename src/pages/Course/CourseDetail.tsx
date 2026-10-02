@@ -14,6 +14,7 @@ import person_add_Icon from '../../assets/person_add_Icon.svg'
 import { usePageBodyClass } from '../../utils/pageBodyClass';
 import InfoItem from '../../components/InfoItem/InfoItem';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
+import download_Icon from '../../assets/pngDownload.svg';
 
 /** Applied to document.body while this page is shown; user.scss/Breadcrumbs.scss/Sidebar.scss target this for the hero-banner chrome. */
 const COURSE_DETAIL_PAGE_BODY_CLASS = 'user-detail-page';
@@ -37,6 +38,8 @@ const CourseDetail = () => {
         handleInputChange,
         handleEditSubmit,
         handleDeleteConfirm,
+        handleDownloadEnrollments,
+        isDownloadingEnrollments,
         toastMessages,
         hideToast,
     } = useCourseDetailManagement();
@@ -95,6 +98,14 @@ const CourseDetail = () => {
                             <InfoItem icon={person_add_Icon} label="Course Amount:" value={`₹${courseDetail.courseAmount}`} />
                             <InfoItem icon={person_add_Icon} label="Created At:" value={courseDetail.createdAt ? formatDate(courseDetail.createdAt) : ''} />
                             <InfoItem icon={person_add_Icon} label="Updated At:" value={courseDetail.updatedAt ? formatDate(courseDetail.updatedAt) : ''} />
+                            <div
+                                className="quiz-rank-list__download"
+                                onClick={isDownloadingEnrollments ? undefined : handleDownloadEnrollments}
+                                aria-disabled={isDownloadingEnrollments}
+                            >
+                                <img src={download_Icon} alt="Download" />
+                                {isDownloadingEnrollments ? 'Downloading...' : 'Download'}
+                            </div>
                         </div>
                     </div>
                 </div>

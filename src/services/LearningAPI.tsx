@@ -1,6 +1,6 @@
 import Super_Sales from "../config/Axios";
 
-class SuperSalesAPI {
+class LearningAPI {
     getSSLogin(email: string, password: string) {
         return Super_Sales.post(`/Auth/login`, { email, password });
     }
@@ -52,6 +52,10 @@ class SuperSalesAPI {
 
     deleteCourse(id: string) {
         return Super_Sales.delete(`/Course/${id}`);
+    }
+
+    getEnrollmentDownload(courseId: string) {
+        return Super_Sales.get(`/Enrollment/course/${courseId}/download`, { responseType: 'blob' });
     }
 
     getBatches(courseId: string, searchTerm?: string, globalFilter?: Record<string, string>, pageNumber?: number, pageSize?: number) {
@@ -209,7 +213,7 @@ export interface QuizQuestionInput {
     correctOption: string;
 }
 
-const superSalesAPI = new SuperSalesAPI();
+const learningAPI = new LearningAPI();
 
-export { superSalesAPI };
-export default superSalesAPI;
+export { learningAPI };
+export default learningAPI;

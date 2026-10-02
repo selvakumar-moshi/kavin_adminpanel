@@ -35,6 +35,7 @@ import './styles/StatusBadge.scss';
 import './styles/Dashboard.scss';
 import './styles/NoDataFound.scss';
 import './styles/Notification.scss';
+import './styles/Checkbox.scss';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <Provider store={Store}>

@@ -13,7 +13,7 @@ import StatusBadge from '../../components/Table/StatusBadge';
 import InfoItem from '../../components/InfoItem/InfoItem';
 import { useUserDetailManagement } from './useUserDetailHooks';
 import { usePageBodyClass } from '../../utils/pageBodyClass';
-import { EDIT_USER_FIELDS, ENROLLMENT_STATUS_OPTIONS, UserDetailtabs, DISTRICT_OPTIONS } from './Constants';
+import { EDIT_USER_FIELDS, PENDING_ENROLLMENT_STATUS_OPTIONS, UserDetailtabs, DISTRICT_OPTIONS } from './Constants';
 import { formatDate } from '../../utils/dateUtils';
 import dot_Icon from '../../assets/dot_Icon.svg';
 import person_add_Icon from '../../assets/person_add_Icon.svg'
@@ -162,7 +162,7 @@ const UserDetail = () => {
                     </div>
                 </div>
 
-                <h2 className="user-course-title">Couse Details</h2>
+                <h2 className="user-course-title">Course Details</h2>
 
                 <div className="user-detail-course-list">
                 {(!userDetail.courses || userDetail.courses.length === 0) ? (
@@ -184,7 +184,8 @@ const UserDetail = () => {
                                             </span>
                                             <img src={manage_acc_Icon} alt="manage-acc-icon" />
                                             <span className="user-course__module-title">{course.courseName}</span>
-                                            <div style={{ marginLeft: 'auto' }} onClick={(e) => e.stopPropagation()}>
+                                            <div className="user-course__payment-status" style={{ marginLeft: 'auto' }} onClick={(e) => e.stopPropagation()}>
+                                                <span className="user-detail__info-item-label2">Payment Status:</span>
                                                 {course.enrollmentStatus === 'Pending' ? (
                                                     <DropdownField
                                                         className="user-course__status-dropdown"
@@ -193,9 +194,10 @@ const UserDetail = () => {
                                                                 name: 'enrollmentStatus',
                                                                 label: '',
                                                                 placeholder: 'Select status',
-                                                                options: ENROLLMENT_STATUS_OPTIONS,
+                                                                options: PENDING_ENROLLMENT_STATUS_OPTIONS,
                                                                 loading: updatingEnrollmentId === course.enrollmentId,
                                                                 disabled: updatingEnrollmentId === course.enrollmentId,
+                                                                allowClear: false,
                                                             },
                                                         ]}
                                                         values={{ enrollmentStatus: course.enrollmentStatus }}
@@ -275,7 +277,7 @@ const UserDetail = () => {
                                                         ) : (
                                                             <NoDataFound type="nodata" description="No video material" />
                                                         )
-                                                    ) : (
+                                                    ) : getActiveMaterialTab(course.enrollmentId) === 'Batch' ? (
                                                         course.batchTitle ? (
                                                             <ul className="user-detail-course__amounts">
                                                                 <li className='user-detail__info-item-label2'>Batch:
@@ -284,6 +286,16 @@ const UserDetail = () => {
                                                             </ul>
                                                         ) : (
                                                             <NoDataFound type="nodata" description="No batch assigned" />
+                                                        )
+                                                    ) : (
+                                                        course.paymentScreenshot ? (
+                                                            <div className="user-detail-course__payment-screenshot">
+                                                                <a href={course.paymentScreenshot} target="_blank" rel="noopener noreferrer">
+                                                                    <img src={course.paymentScreenshot} alt="Payment Screenshot" />
+                                                                </a>
+                                                            </div>
+                                                        ) : (
+                                                            <NoDataFound type="nodata" description="No payment screenshot" />
                                                         )
                                                     )}
                                                 </div>

@@ -13,6 +13,7 @@ import { useBatchManagement } from './useBatchHooks';
 import { BATCH_TITLE_FIELD, BATCH_DATE_FIELDS, getBatchTableColumns, type BatchRecord } from './Constant';
 import { formatDate } from '../../utils/dateUtils';
 import add_Icon from '../../assets/add_Icon.svg';
+import NoDataFound from '../../components/NoDataFound/NoDataFound';
 
 export interface BatchDetailsProps {
     courseId: string;
@@ -118,19 +119,18 @@ const BatchDetails: React.FC<BatchDetailsProps> = ({ courseId }) => {
             </div>
 
             <div className="batch-table-section">
-                {batchesArray.length === 0 ? (
-                    <Empty description="No batches available" />
-                ) : (
-                    <TableWithPagination
-                        columns={batchColumns}
-                        dataSource={batchesArray.map(batch => ({ ...batch, key: batch.id }))}
-                        loading={batchLoading}
-                        currentPage={currentPage}
-                        pageSize={pageSize}
-                        total={totalBatches}
-                        onPageChange={handlePaginationChange}
-                    />
-                )}
+                <TableWithPagination
+                    columns={batchColumns}
+                    dataSource={batchesArray.map(batch => ({ ...batch, key: batch.id }))}
+                    loading={batchLoading}
+                    currentPage={currentPage}
+                    pageSize={pageSize}
+                    total={totalBatches}
+                    onPageChange={handlePaginationChange}
+                    locale={{
+                        emptyText: <NoDataFound type="nodata" description="No batches found" style={{ height: 'calc(100vh - 408px)' }} />
+                    }}
+                />
             </div>
 
             {/* Batch Create/Edit Modal */}

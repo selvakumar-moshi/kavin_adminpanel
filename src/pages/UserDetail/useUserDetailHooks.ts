@@ -3,8 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
-import { getUserById, updateUser, updateEnrollmentStatus, getCourses } from '../../services/SuperSalesAction';
-import superSalesAPI from '../../services/SuperSalesAPI';
+import { getUserById, updateUser, updateEnrollmentStatus, getCourses } from '../../services/LearningAction';
+import superSalesAPI from '../../services/LearningAPI';
 import type { UserDetailRecord } from './Constants';
 import { EDIT_USER_VALIDATION_RULES } from '../../utils/validationUtils';
 import type { CourseRecord, BatchRecord } from '../Course/Constant';
@@ -33,7 +33,7 @@ export const useUserDetailManagement = () => {
     const [updatingEnrollmentId, setUpdatingEnrollmentId] = useState<string | null>(null);
 
     const { UserDetailData, CoursesData, apiStatus } = useSelector(
-        (state: RootState) => state.superSales
+        (state: RootState) => state.learning
     );
 
     const userDetail = UserDetailData as UserDetailRecord | null;

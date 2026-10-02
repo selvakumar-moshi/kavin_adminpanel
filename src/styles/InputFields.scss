@@ -74,12 +74,12 @@
   }
 
   &__input {
-    height: 37px;
+    height: 33px;
     border: 1px solid #b3b3b3;
     border-radius: 5px;
     font-family: var(--font-family);
     font-size: 14px;
-    padding: 8px 15px;
+    padding: 4px 15px;
 
     &::placeholder {
       color: #d9d9d9;
@@ -136,12 +136,12 @@
 
   &__input2 {
     width: 300px;
-    height: 35px;
+    height: 34px;
     border: 1px solid #C5C5C7;
     border-radius: 100px;
     font-family: var(--font-family);
     font-size: 14px;
-    padding: 8px 15px;
+    padding: 4px 15px;
 
     &::placeholder {
       color: var(--dropdown-field-placeholder);
@@ -198,7 +198,7 @@
     border-radius: 100px;
     font-family: var(--font-family);
     font-size: 14px;
-    padding: 8px 15px;
+    padding: 4px 15px;
 
     &::placeholder {
       color: #d9d9d9;

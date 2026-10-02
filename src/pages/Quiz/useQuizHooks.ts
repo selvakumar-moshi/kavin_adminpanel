@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
-import { getQuizzes, deleteQuiz, publishQuiz } from '../../services/SuperSalesAction';
+import { getQuizzes, deleteQuiz, publishQuiz } from '../../services/LearningAction';
 import type { QuizRecord } from './Constant';
 import { getQuizTableColumns, dayjsToISOString, QUIZ_SEARCH_INPUT_FIELDS } from './Constant';
 import { QUIZ_FILTER_FIELDS } from '../../utils/filterUtils';
@@ -29,7 +29,7 @@ export const useQuizManagement = () => {
     const activeFilterCount = Object.values(appliedFilters).filter(value => value && value.trim() !== '').length;
 
     const { QuizzesData, apiStatus } = useSelector(
-        (state: RootState) => state.superSales
+        (state: RootState) => state.learning
     );
 
     // Server-paginated response: { items: QuizRecord[], pageNumber, pageSize, totalCount, totalPages }

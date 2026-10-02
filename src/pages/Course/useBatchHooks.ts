@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
-import { getBatches, createBatch, updateBatch, deleteBatch } from '../../services/SuperSalesAction';
+import { getBatches, createBatch, updateBatch, deleteBatch } from '../../services/LearningAction';
 import type { BatchRecord } from './Constant';
 import { getBatchTableColumns, BATCH_SEARCH_INPUT_FIELDS, dayjsToISOString } from './Constant';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
@@ -23,7 +23,7 @@ export const useBatchManagement = (courseId: string | undefined) => {
     const [searchValue, setSearchValue] = useState('');
 
     const { BatchesData, apiStatus } = useSelector(
-        (state: RootState) => state.superSales
+        (state: RootState) => state.learning
     );
 
     // Server-paginated response: { items: BatchRecord[], pageNumber, pageSize, totalCount, totalPages }

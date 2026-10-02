@@ -4,14 +4,14 @@ import Logout_Icon from "../../assets/Logout_Icon.svg";
 import coachingLogo from "../../assets/coaching.png";
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../../services/CSuperSales';
+import { logout } from '../../services/CLearning';
 import type { RootState } from '../../services/Store';
 
 const HeaderContainer = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { SSLoginData } = useSelector((state: RootState) => state.superSales);
+  const { SSLoginData } = useSelector((state: RootState) => state.learning);
   const loggedInUser = SSLoginData?.user;
 
   const handleLogout = () =>{

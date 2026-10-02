@@ -13,6 +13,7 @@ export interface UserRecord {
     email: string;
     role: string;
     profileImage?: string | null;
+    district?: string;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -66,6 +67,14 @@ export const getUserTableColumns = (): ITableColumn[] => [
         render: (email: string) => renderTruncatedCellWithTooltip(email),
     },
     {
+        title: 'District',
+        dataIndex: 'district',
+        key: 'district',
+        searchType: 'text',
+        disableFutureDates: true,
+        sorter: (a: UserRecord, b: UserRecord) => compareText(a.district, b.district),
+    },
+    {
         title: 'Phone Number',
         dataIndex: 'phoneNumber',
         key: 'phoneNumber',
@@ -86,15 +95,6 @@ export const getUserTableColumns = (): ITableColumn[] => [
         searchType: 'date',
         disableFutureDates: true,
         sorter: (a: UserRecord, b: UserRecord) => compareText(a.createdAt, b.createdAt),
-        render: (text: string) => formatDate(text),
-    },
-    {
-        title: 'Updated At',
-        dataIndex: 'updatedAt',
-        key: 'updatedAt',
-        searchType: 'date',
-        disableFutureDates: true,
-        sorter: (a: UserRecord, b: UserRecord) => compareText(a.updatedAt, b.updatedAt),
         render: (text: string) => formatDate(text),
     },
 ];

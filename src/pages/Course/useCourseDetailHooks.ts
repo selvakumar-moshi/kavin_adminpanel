@@ -3,9 +3,20 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
-import { getCourseById, updateCourse, deleteCourse } from '../../services/SuperSalesAction';
+import { getCourseById, updateCourse, deleteCourse } from '../../services/LearningAction';
+import superSalesAPI from '../../services/LearningAPI';
 import type { CourseDetailRecord } from './Constant';
 import { COURSE_VALIDATION_RULES } from '../../utils/validationUtils';
+
+// Pulls a filename out of a Content-Disposition header (e.g. attachment; filename="enrollments.xlsx")
+const parseFileNameFromContentDisposition = (contentDisposition: string | undefined): string | null => {
+    if (!contentDisposition) return null;
+    const match = contentDisposition.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+    return match?.[1] ? decodeURIComponent(match[1]) : null;
+};
+
+// Strips characters that aren't safe in a downloaded filename
+const toSafeFileNameSegment = (value: string): string => value.trim().replace(/[^a-zA-Z0-9-_]+/g, '-');
 
 export const useCourseDetailManagement = () => {
     const { id } = useParams<{ id: string }>();
@@ -18,9 +29,10 @@ export const useCourseDetailManagement = () => {
     const [formValues, setFormValues] = useState<Record<string, string>>({});
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [operationType, setOperationType] = useState<'update' | 'delete' | null>(null);
+    const [isDownloadingEnrollments, setIsDownloadingEnrollments] = useState(false);
 
     const { CourseDetailData, apiStatus } = useSelector(
-        (state: RootState) => state.superSales
+        (state: RootState) => state.learning
     );
 
     const courseDetail = CourseDetailData as CourseDetailRecord | null;
@@ -157,6 +169,30 @@ export const useCourseDetailManagement = () => {
         dispatch(deleteCourse({ id: courseDetail.id }) as any);
     };
 
+    const handleDownloadEnrollments = async () => {
+        if (!courseDetail || isDownloadingEnrollments) return;
+
+        setIsDownloadingEnrollments(true);
+        try {
+            const res = await superSalesAPI.getEnrollmentDownload(courseDetail.id);
+            const fallbackName = `Course-${toSafeFileNameSegment(courseDetail.courseName)}.xlsx`;
+            const fileName = parseFileNameFromContentDisposition(res.headers?.['content-disposition']) || fallbackName;
+
+            const url = URL.createObjectURL(res.data as Blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        } catch (error: any) {
+            showError(error?.response?.data?.message || error?.message || 'Failed to download enrollments');
+        } finally {
+            setIsDownloadingEnrollments(false);
+        }
+    };
+
     // Enabled once a value differs from the loaded course
     const hasFormChanges = Boolean(courseDetail) && (
         formValues.courseName !== (courseDetail?.courseName || '') ||
@@ -180,6 +216,8 @@ export const useCourseDetailManagement = () => {
         handleInputChange,
         handleEditSubmit,
         handleDeleteConfirm,
+        handleDownloadEnrollments,
+        isDownloadingEnrollments,
         toastMessages,
         hideToast,
     };

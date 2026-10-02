@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
-import { getNotifications, createNotification, updateNotification, deleteNotification } from '../../services/SuperSalesAction';
+import { getNotifications, createNotification, updateNotification, deleteNotification } from '../../services/LearningAction';
 import type { NotificationRecord } from './Constant';
 import { getNotificationTableColumns, dayjsToISOString, NOTIFICATION_SEARCH_INPUT_FIELDS } from './Constant';
 import { NOTIFICATION_FILTER_FIELDS } from '../../utils/filterUtils';
@@ -27,7 +27,7 @@ export const useNotificationManagement = () => {
     const activeFilterCount = Object.values(appliedFilters).filter(value => value && value.trim() !== '').length;
 
     const { NotificationsData, apiStatus } = useSelector(
-        (state: RootState) => state.superSales
+        (state: RootState) => state.learning
     );
 
     // Server-paginated response: { items: NotificationRecord[], pageNumber, pageSize, totalCount, totalPages }

@@ -23,6 +23,7 @@ export interface QuizQuestion {
     optionDImageUrl?: string;
     optionDImageKey?: string;
     correctOption: string;
+    mark: string;
 }
 
 // Client-side image state for a question and its options: `images` holds whatever should be
@@ -99,6 +100,7 @@ export interface QuizRecord {
     courseName: string;
     title: string;
     status: string;
+    quizToView: string;
     publishedAt: string | null;
     questions: QuizQuestion[];
     questionCount: string;
@@ -161,6 +163,7 @@ export const emptyQuestion = (): QuizQuestion => ({
     optionC: '',
     optionD: '',
     correctOption: '',
+    mark: '',
 });
 
 const compareText = (a?: string | null, b?: string | null) =>
@@ -190,6 +193,13 @@ export const getQuizTableColumns = (): ITableColumn[] => [
         sorter: (a: QuizRecord, b: QuizRecord) => compareText(a.questionCount, b.questionCount),
     },
     {
+        title: 'Quiz To View',
+        dataIndex: 'quizToView',
+        key: 'quizToView',
+        searchType: 'text',
+        sorter: (a: QuizRecord, b: QuizRecord) => compareText(a.quizToView, b.quizToView),
+    },
+    {
         title: 'Published At',
         dataIndex: 'publishedAt',
         key: 'publishedAt',
@@ -198,15 +208,15 @@ export const getQuizTableColumns = (): ITableColumn[] => [
         sorter: (a: QuizRecord, b: QuizRecord) => compareText(a.publishedAt, b.publishedAt),
         render: (value: string | null) => (value ? formatDate(value) : '-'),
     },
-    {
-        title: 'Created At',
-        dataIndex: 'createdAt',
-        key: 'createdAt',
-        searchType: 'date',
-        disableFutureDates: true,
-        sorter: (a: QuizRecord, b: QuizRecord) => compareText(a.createdAt, b.createdAt),
-        render: (value: string) => formatDate(value),
-    },
+    // {
+    //     title: 'Created At',
+    //     dataIndex: 'createdAt',
+    //     key: 'createdAt',
+    //     searchType: 'date',
+    //     disableFutureDates: true,
+    //     sorter: (a: QuizRecord, b: QuizRecord) => compareText(a.createdAt, b.createdAt),
+    //     render: (value: string) => formatDate(value),
+    // },
     {
         title: 'Status',
         dataIndex: 'status',

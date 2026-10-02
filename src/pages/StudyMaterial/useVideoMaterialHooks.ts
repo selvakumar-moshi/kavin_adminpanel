@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
-import { getVideoMaterials, createVideoMaterial, updateVideoMaterial, deleteVideoMaterial, getBatches } from '../../services/SuperSalesAction';
+import { getVideoMaterials, createVideoMaterial, updateVideoMaterial, deleteVideoMaterial, getBatches } from '../../services/LearningAction';
 import type { VideoMaterialRecord } from './Constants';
 import { getVideoMaterialTableColumns } from './Constants';
 import type { CourseRecord, BatchRecord } from '../Course/Constant';
@@ -23,7 +23,7 @@ export const useVideoMaterialManagement = (searchTerm = '', appliedFilters: Reco
     const [pageSize, setPageSize] = useState(10);
 
     const { VideoMaterialsData, CoursesData, BatchesData, apiStatus } = useSelector(
-        (state: RootState) => state.superSales
+        (state: RootState) => state.learning
     );
 
     // Server-paginated response: { items: VideoMaterialRecord[], pageNumber, pageSize, totalCount, totalPages }

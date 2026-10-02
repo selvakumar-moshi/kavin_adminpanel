@@ -1,11 +1,11 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import superSalesAPI from "./SuperSalesAPI";
+import learningAPI from "./LearningAPI";
 
 export const getSSLogin = createAsyncThunk<any, { email: string; password: string }>(
     "userManagement/getSSLogin",
     async ({ email, password }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getSSLogin(email, password);
+        const res = await learningAPI.getSSLogin(email, password);
         const token = res?.data?.data?.token;
         const user = res?.data?.data?.user;
         if (token) {
@@ -27,7 +27,7 @@ export const getRegister = createAsyncThunk<any, { firstName: string; lastName: 
     "userManagement/getRegister",
     async ({ firstName, lastName, phoneNumber, email, password }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getRegister(firstName, lastName, phoneNumber, email, password);
+        const res = await learningAPI.getRegister(firstName, lastName, phoneNumber, email, password);
         return res?.data?.data;
       } catch (error: any) {
         // Extract message from error response
@@ -41,7 +41,7 @@ export const getUsers = createAsyncThunk<any, { searchTerm?: string; globalFilte
     "userManagement/getUsers",
     async (params, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getUsers(params?.searchTerm, params?.globalFilter, params?.pageNumber, params?.pageSize);
+        const res = await learningAPI.getUsers(params?.searchTerm, params?.globalFilter, params?.pageNumber, params?.pageSize);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Users";
@@ -54,7 +54,7 @@ export const getUserById = createAsyncThunk<any, string>(
     "userManagement/getUserById",
     async (id, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getUserById(id);
+        const res = await learningAPI.getUserById(id);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch User details";
@@ -67,7 +67,7 @@ export const updateUser = createAsyncThunk<any, { id: string; firstName: string;
     "userManagement/updateUser",
     async ({ id, firstName, lastName, phoneNumber, district, courses }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.updateUser(id, firstName, lastName, phoneNumber, district, courses);
+        const res = await learningAPI.updateUser(id, firstName, lastName, phoneNumber, district, courses);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to update User";
@@ -80,7 +80,7 @@ export const deleteUser = createAsyncThunk<any, { id: string }>(
     "userManagement/deleteUser",
     async ({ id }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.deleteUser(id);
+        const res = await learningAPI.deleteUser(id);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to delete User";
@@ -93,7 +93,7 @@ export const updateEnrollmentStatus = createAsyncThunk<any, { enrollmentId: stri
     "userManagement/updateEnrollmentStatus",
     async ({ enrollmentId, status, paymentMethod = '', transactionReference = '' }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.updateEnrollmentStatus(enrollmentId, status, paymentMethod, transactionReference);
+        const res = await learningAPI.updateEnrollmentStatus(enrollmentId, status, paymentMethod, transactionReference);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to update enrollment status";
@@ -106,7 +106,7 @@ export const getCourses = createAsyncThunk<any, void>(
     "courseManagement/getCourses",
     async (_, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getCourses();
+        const res = await learningAPI.getCourses();
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Courses";
@@ -119,7 +119,7 @@ export const getCourseById = createAsyncThunk<any, string>(
     "courseManagement/getCourseById",
     async (id, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getCourseById(id);
+        const res = await learningAPI.getCourseById(id);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Course details";
@@ -132,7 +132,7 @@ export const createCourse = createAsyncThunk<any, { courseName: string; courseDe
     "courseManagement/createCourse",
     async ({ courseName, courseDescription, courseAmount }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.createCourse(courseName, courseDescription, courseAmount);
+        const res = await learningAPI.createCourse(courseName, courseDescription, courseAmount);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to create Course";
@@ -145,7 +145,7 @@ export const updateCourse = createAsyncThunk<any, { id: string; courseName: stri
     "courseManagement/updateCourse",
     async ({ id, courseName, courseDescription, courseAmount }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.updateCourse(id, courseName, courseDescription, courseAmount);
+        const res = await learningAPI.updateCourse(id, courseName, courseDescription, courseAmount);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to update Course";
@@ -158,7 +158,7 @@ export const deleteCourse = createAsyncThunk<any, { id: string }>(
     "courseManagement/deleteCourse",
     async ({ id }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.deleteCourse(id);
+        const res = await learningAPI.deleteCourse(id);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to delete Course";
@@ -171,7 +171,7 @@ export const getBatches = createAsyncThunk<any, { courseId: string; searchTerm?:
     "courseManagement/getBatches",
     async (params, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getBatches(params.courseId, params.searchTerm, params.globalFilter, params.pageNumber, params.pageSize);
+        const res = await learningAPI.getBatches(params.courseId, params.searchTerm, params.globalFilter, params.pageNumber, params.pageSize);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Batches";
@@ -184,7 +184,7 @@ export const createBatch = createAsyncThunk<any, { title: string; courseId: stri
     "courseManagement/createBatch",
     async ({ title, courseId, batchFrom, batchTo }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.createBatch(title, courseId, batchFrom, batchTo);
+        const res = await learningAPI.createBatch(title, courseId, batchFrom, batchTo);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to create Batch";
@@ -197,7 +197,7 @@ export const updateBatch = createAsyncThunk<any, { id: string; title: string; co
     "courseManagement/updateBatch",
     async ({ id, title, courseId, batchFrom, batchTo }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.updateBatch(id, title, courseId, batchFrom, batchTo);
+        const res = await learningAPI.updateBatch(id, title, courseId, batchFrom, batchTo);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to update Batch";
@@ -210,7 +210,7 @@ export const deleteBatch = createAsyncThunk<any, { id: string }>(
     "courseManagement/deleteBatch",
     async ({ id }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.deleteBatch(id);
+        const res = await learningAPI.deleteBatch(id);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to delete Batch";
@@ -223,7 +223,7 @@ export const getStudyMaterials = createAsyncThunk<any, { searchTerm?: string; co
     "courseManagement/getStudyMaterials",
     async (params, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getStudyMaterials(params?.searchTerm, params?.courseId || '', params?.material || '', params?.globalFilter, params?.pageNumber, params?.pageSize);
+        const res = await learningAPI.getStudyMaterials(params?.searchTerm, params?.courseId || '', params?.material || '', params?.globalFilter, params?.pageNumber, params?.pageSize);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Study Materials";
@@ -236,7 +236,7 @@ export const createStudyMaterial = createAsyncThunk<any, FormData>(
     "courseManagement/createStudyMaterial",
     async (formData, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.createStudyMaterial(formData);
+        const res = await learningAPI.createStudyMaterial(formData);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to create Study Material";
@@ -249,7 +249,7 @@ export const updateStudyMaterial = createAsyncThunk<any, { id: string; formData:
     "courseManagement/updateStudyMaterial",
     async ({ id, formData }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.updateStudyMaterial(id, formData);
+        const res = await learningAPI.updateStudyMaterial(id, formData);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to update Study Material";
@@ -262,7 +262,7 @@ export const deleteStudyMaterial = createAsyncThunk<any, { id: string }>(
     "courseManagement/deleteStudyMaterial",
     async ({ id }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.deleteStudyMaterial(id);
+        const res = await learningAPI.deleteStudyMaterial(id);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to delete Study Material";
@@ -275,7 +275,7 @@ export const getVideoMaterials = createAsyncThunk<any, { searchTerm?: string; co
     "courseManagement/getVideoMaterials",
     async (params, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getVideoMaterials(params?.searchTerm, params?.courseId || '', params?.material || '', params?.globalFilter, params?.pageNumber, params?.pageSize);
+        const res = await learningAPI.getVideoMaterials(params?.searchTerm, params?.courseId || '', params?.material || '', params?.globalFilter, params?.pageNumber, params?.pageSize);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Video Materials";
@@ -288,7 +288,7 @@ export const createVideoMaterial = createAsyncThunk<any, { title: string; descri
     "courseManagement/createVideoMaterial",
     async ({ title, description, courseId, batchId, youtubeLink, materialToView }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.createVideoMaterial(title, description, courseId, batchId, youtubeLink, materialToView);
+        const res = await learningAPI.createVideoMaterial(title, description, courseId, batchId, youtubeLink, materialToView);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to create Video Material";
@@ -301,7 +301,7 @@ export const updateVideoMaterial = createAsyncThunk<any, { id: string; title: st
     "courseManagement/updateVideoMaterial",
     async ({ id, title, description, courseId, batchId, youtubeLink, materialToView }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.updateVideoMaterial(id, title, description, courseId, batchId, youtubeLink, materialToView);
+        const res = await learningAPI.updateVideoMaterial(id, title, description, courseId, batchId, youtubeLink, materialToView);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to update Video Material";
@@ -314,7 +314,7 @@ export const deleteVideoMaterial = createAsyncThunk<any, { id: string }>(
     "courseManagement/deleteVideoMaterial",
     async ({ id }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.deleteVideoMaterial(id);
+        const res = await learningAPI.deleteVideoMaterial(id);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to delete Video Material";
@@ -327,7 +327,7 @@ export const getDashboardCounts = createAsyncThunk<any, void>(
   "userManagement/getDashboardCounts",
   async (_, { rejectWithValue }) => {
       try {
-          const res = await superSalesAPI.getDashboardCounts();
+          const res = await learningAPI.getDashboardCounts();
           return res?.data?.data;
       } catch (error: any) {
           const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Dashboard counts";
@@ -340,7 +340,7 @@ export const getQuizzes = createAsyncThunk<any, { searchTerm?: string; globalFil
     "quizManagement/getQuizzes",
     async (params, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getQuizzes(params?.searchTerm, params?.globalFilter, params?.pageNumber, params?.pageSize);
+        const res = await learningAPI.getQuizzes(params?.searchTerm, params?.globalFilter, params?.pageNumber, params?.pageSize);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Quizzes";
@@ -353,7 +353,7 @@ export const getQuizById = createAsyncThunk<any, string>(
     "quizManagement/getQuizById",
     async (id, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getQuizById(id);
+        const res = await learningAPI.getQuizById(id);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Quiz details";
@@ -366,7 +366,7 @@ export const createQuiz = createAsyncThunk<any, FormData>(
     "quizManagement/createQuiz",
     async (formData, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.createQuiz(formData);
+        const res = await learningAPI.createQuiz(formData);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to create Quiz";
@@ -379,7 +379,7 @@ export const updateQuiz = createAsyncThunk<any, { id: string; formData: FormData
     "quizManagement/updateQuiz",
     async ({ id, formData }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.updateQuiz(id, formData);
+        const res = await learningAPI.updateQuiz(id, formData);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to update Quiz";
@@ -392,7 +392,7 @@ export const deleteQuiz = createAsyncThunk<any, { id: string }>(
     "quizManagement/deleteQuiz",
     async ({ id }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.deleteQuiz(id);
+        const res = await learningAPI.deleteQuiz(id);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to delete Quiz";
@@ -405,7 +405,7 @@ export const publishQuiz = createAsyncThunk<any, { id: string; expiresAt: string
     "quizManagement/publishQuiz",
     async ({ id, expiresAt }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.publishQuiz(id, expiresAt);
+        const res = await learningAPI.publishQuiz(id, expiresAt);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to publish Quiz";
@@ -418,7 +418,7 @@ export const getQuizRankList = createAsyncThunk<any, { quizId: string }>(
     "quizManagement/getQuizRankList",
     async (params, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getQuizRankList(params.quizId);
+        const res = await learningAPI.getQuizRankList(params.quizId);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch rank list";
@@ -431,7 +431,7 @@ export const getNotifications = createAsyncThunk<any, { searchTerm?: string; glo
     "notificationManagement/getNotifications",
     async ({ searchTerm, globalFilter, pageNumber, pageSize }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.getNotifications(searchTerm, globalFilter, pageNumber, pageSize);
+        const res = await learningAPI.getNotifications(searchTerm, globalFilter, pageNumber, pageSize);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Notifications";
@@ -444,7 +444,7 @@ export const createNotification = createAsyncThunk<any, { title: string; descrip
     "notificationManagement/createNotification",
     async ({ title, description, link, date }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.createNotification(title, description, link, date);
+        const res = await learningAPI.createNotification(title, description, link, date);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to create Notification";
@@ -457,7 +457,7 @@ export const updateNotification = createAsyncThunk<any, { id: string; title: str
     "notificationManagement/updateNotification",
     async ({ id, title, description, link, date }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.updateNotification(id, title, description, link, date);
+        const res = await learningAPI.updateNotification(id, title, description, link, date);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to update Notification";
@@ -470,7 +470,7 @@ export const deleteNotification = createAsyncThunk<any, { id: string }>(
     "notificationManagement/deleteNotification",
     async ({ id }, { rejectWithValue }) => {
       try {
-        const res = await superSalesAPI.deleteNotification(id);
+        const res = await learningAPI.deleteNotification(id);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to delete Notification";

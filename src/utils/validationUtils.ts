@@ -150,6 +150,12 @@ export const QUIZ_VALIDATION_RULES: Record<string, ValidationRule> = {
             required: 'Title is required',
         },
     },
+    quizToView: {
+        required: true,
+        errorMessages: {
+            required: 'Quiz To View is required',
+        },
+    },
 };
 
 export const QUIZ_QUESTION_VALIDATION_RULES: Record<string, ValidationRule> = {
@@ -176,5 +182,13 @@ export const QUIZ_QUESTION_VALIDATION_RULES: Record<string, ValidationRule> = {
     correctOption: {
         required: true,
         errorMessages: { required: 'Required' },
+    },
+    mark: {
+        required: true,
+        pattern: /^\d+(\.\d+)?$/,
+        errorMessages: {
+            required: 'Required',
+            pattern: 'Enter a number like 1 or 1.5',
+        },
     },
 };

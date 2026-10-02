@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../services/Store';
-import { getDashboardCounts, getQuizzes, getQuizRankList } from '../../services/SuperSalesAction';
-import superSalesAPI from '../../services/SuperSalesAPI';
+import { getDashboardCounts, getQuizzes, getQuizRankList } from '../../services/LearningAction';
+import superSalesAPI from '../../services/LearningAPI';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { QuizRecord } from '../Quiz/Constant';
 import type { QuizRankListEntry } from './Constant';
@@ -23,7 +23,7 @@ export const useDashboard = () => {
     const [isDownloadingRankList, setIsDownloadingRankList] = useState(false);
 
     const { DashboardCountsData, QuizzesData, QuizRankListData, apiStatus } = useSelector(
-        (state: RootState) => state.superSales
+        (state: RootState) => state.learning
     );
 
     const [selectedQuizId, setSelectedQuizId] = useState('');

@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
-import { getUsers, deleteUser } from '../../services/SuperSalesAction';
+import { getUsers, deleteUser } from '../../services/LearningAction';
 import type { UserRecord } from './Constants';
 import { SEARCH_INPUT_FIELDS, getUserTableColumns } from './Constants';
 import { USER_FILTER_FIELDS } from '../../utils/filterUtils';
@@ -37,7 +37,7 @@ export const useUserManagement = () => {
 
     // Redux state
     const { UsersData, loading, apiStatus } = useSelector(
-        (state: RootState) => state.superSales
+        (state: RootState) => state.learning
     );
 
     // Server-paginated response: { items: UserRecord[], pageNumber, pageSize, totalCount, totalPages }

@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
-import { getSSLogin, getRegister } from '../../services/SuperSalesAction';
-import { resetSSLogin } from '../../services/CSuperSales';
+import { getSSLogin, getRegister } from '../../services/LearningAction';
+import { resetSSLogin } from '../../services/CLearning';
 import type { RootState } from '../../services/Store';
 import { DEFAULT_REGISTER_PASSWORD } from './Constants';
 import {message} from 'antd';
@@ -29,7 +29,7 @@ export const useLogin = () => {
   const registerMessageShown = useRef(false);
 
   // Get state from Redux
-  const { loading, SSLoginData, RegisterData, apiStatus } = useSelector((state: RootState) => state.superSales);
+  const { loading, SSLoginData, RegisterData, apiStatus } = useSelector((state: RootState) => state.learning);
 
   // Handle login response
   useEffect(() => {

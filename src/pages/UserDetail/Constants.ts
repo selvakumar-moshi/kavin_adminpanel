@@ -29,6 +29,7 @@ export interface EnrolledCourse {
     totalAmount: number;
     paymentMethod: string | null;
     transactionReference: string | null;
+    paymentScreenshot: string | null;
     enrollmentStatus: string;
     verifiedAt: string | null;
     studyMaterials: StudyMaterial[];
@@ -60,7 +61,13 @@ export const ENROLLMENT_STATUS_OPTIONS = [
     { value: 'Pending', label: 'Pending' },
     { value: 'Verified', label: 'Verified' },
     { value: 'Dropped', label: 'Dropped' },
+    { value: 'Rejected', label: 'Rejected' },
 ];
+
+// Shown in the status dropdown only while an enrollment is Pending — Pending/Dropped aren't valid choices from there
+export const PENDING_ENROLLMENT_STATUS_OPTIONS = ENROLLMENT_STATUS_OPTIONS.filter(
+    (option) => option.value === 'Verified' || option.value === 'Rejected'
+);
 
 export const EDIT_USER_FIELDS = [
     {
@@ -102,5 +109,9 @@ export const UserDetailtabs = [
     {
         key: 'Batch',
         label: 'Batch Details',
+    },
+    {
+        key: 'payment',
+        label: 'Payment Details',
     },
 ]

@@ -9,13 +9,13 @@ export interface FilterColumnConfig {
 
 export const USER_FILTER_FIELDS: FilterColumnConfig[] = [
     {
-        key: 'firstName',
-        title: 'First Name',
+        key: 'applicationNo',
+        title: 'Application No',
         displayOrder: 1,
     },
     {
-        key: 'lastName',
-        title: 'Last Name',
+        key: 'firstName',
+        title: 'Username',
         displayOrder: 2,
     },
     {
@@ -24,9 +24,14 @@ export const USER_FILTER_FIELDS: FilterColumnConfig[] = [
         displayOrder: 3,
     },
     {
+        key: 'district',
+        title: 'District',
+        displayOrder: 4,
+    },
+    {
         key: 'phoneNumber',
         title: 'Phone Number',
-        displayOrder: 4,
+        displayOrder: 5,
     },
 ];
 
@@ -36,27 +41,32 @@ export const MATERIAL_FILTER_FIELDS: FilterColumnConfig[] = [
         title: 'Title',
         displayOrder: 1,
     },
-    {
-        key: 'description',
-        title: 'Description',
-        displayOrder: 2,
-    },
+    // {
+    //     key: 'description',
+    //     title: 'Description',
+    //     displayOrder: 2,
+    // },
     {
         key: 'batchTitle',
         title: 'Batch',
         displayOrder: 3,
     },
     {
+        key: 'materialToView',
+        title: 'Material To View',
+        displayOrder: 4,
+    },
+    {
         key: 'createdAt',
         title: 'Created At',
-        displayOrder: 4,
+        displayOrder: 5,
         searchType: 'date',
         disableFutureDates: true,
     },
     {
         key: 'updatedAt',
         title: 'Updated At',
-        displayOrder: 5,
+        displayOrder: 6,
         searchType: 'date',
         disableFutureDates: true,
     },
@@ -74,16 +84,26 @@ export const QUIZ_FILTER_FIELDS: FilterColumnConfig[] = [
         displayOrder: 2,
     },
     {
+        key: 'status',
+        title: 'Status',
+        displayOrder: 3,
+    },
+    {
+        key: 'quizToView',
+        title: 'Quiz To View',
+        displayOrder: 4,
+    },
+    {
         key: 'createdAt',
         title: 'Created At',
-        displayOrder: 3,
+        displayOrder: 5,
         searchType: 'date',
         disableFutureDates: true,
     },
     {
         key: 'publishedAt',
         title: 'Published At',
-        displayOrder: 4,
+        displayOrder: 6,
         searchType: 'date',
         disableFutureDates: true,
     },

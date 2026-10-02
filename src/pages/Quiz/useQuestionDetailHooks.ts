@@ -3,18 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
-import { getQuizById, createQuiz, updateQuiz, getCourses } from '../../services/SuperSalesAction';
-import {
-    emptyQuestion,
-    parsePastedOptionsList,
-    QUESTION_OPTION_KEYS,
-    IMAGE_FIELD_NAMES,
-    IMAGE_URL_FIELD_NAMES,
-    type QuizQuestion,
-    type QuizQuestionImages,
-    type QuizQuestionImageFiles,
-    type QuizRecord,
-} from './Constant';
+import { getQuizById, createQuiz, updateQuiz, getCourses } from '../../services/LearningAction';
+import { emptyQuestion, parsePastedOptionsList, QUESTION_OPTION_KEYS, IMAGE_FIELD_NAMES, IMAGE_URL_FIELD_NAMES, type QuizQuestion, type QuizQuestionImages, type QuizQuestionImageFiles, type QuizRecord } from './Constant';
 import type { CourseRecord } from '../Course/Constant';
 import { QUIZ_VALIDATION_RULES, QUIZ_QUESTION_VALIDATION_RULES, type ValidationRule } from '../../utils/validationUtils';
 
@@ -73,14 +63,17 @@ export const useQuestionDetailManagement = () => {
 
     const [title, setTitle] = useState('');
     const [courseId, setCourseId] = useState('');
+    const [quizToView, setQuizToView] = useState('');
     const [items, setItems] = useState<ListItem[]>(() => [{ type: 'question', question: makeKeyedQuestion() }]);
     const [titleError, setTitleError] = useState('');
     const [courseError, setCourseError] = useState('');
+    const [quizToViewError, setQuizToViewError] = useState('');
     const [questionErrors, setQuestionErrors] = useState<QuestionErrors>({});
     const [isSaving, setIsSaving] = useState(false);
+    const [applyMarkToAll, setApplyMarkToAll] = useState(false);
 
     const { QuizDetailData, CoursesData, apiStatus } = useSelector(
-        (state: RootState) => state.superSales
+        (state: RootState) => state.learning
     );
 
     const quizDetail = QuizDetailData as QuizRecord | null;
@@ -102,6 +95,7 @@ export const useQuestionDetailManagement = () => {
         if (isEditMode && quizDetail && quizDetail.id === id) {
             setTitle(quizDetail.title || '');
             setCourseId(quizDetail.courseId || '');
+            setQuizToView(quizDetail.quizToView || '');
             setItems(
                 quizDetail.questions && quizDetail.questions.length > 0
                     ? quizDetail.questions.map((q) => ({ type: 'question' as const, question: makeKeyedQuestion(q) }))
@@ -139,6 +133,12 @@ export const useQuestionDetailManagement = () => {
         if (courseError) setCourseError('');
     };
 
+    const handleQuizToViewChange = (value: string | string[]) => {
+        const stringValue = Array.isArray(value) ? value[0] || '' : value;
+        setQuizToView(stringValue);
+        if (quizToViewError) setQuizToViewError('');
+    };
+
     const insertItemAfter = (afterKey: number, newItem: ListItem) => {
         setItems((prev) => {
             const idx = prev.findIndex((it) => getItemKey(it) === afterKey);
@@ -174,6 +174,53 @@ export const useQuestionDetailManagement = () => {
             const next = { ...prev, [key]: { ...prev[key] } };
             delete next[key][field];
             return next;
+        });
+    };
+
+    // When "applicable for all question" is checked, editing any question's mark cascades to every question
+    const handleMarkChange = (key: number, value: string) => {
+        setItems((prev) => prev.map((it) => (
+            it.type === 'question' && (applyMarkToAll || it.question._key === key)
+                ? { ...it, question: { ...it.question, mark: value } }
+                : it
+        )));
+        setQuestionErrors((prev) => {
+            const next = { ...prev };
+            let changed = false;
+            Object.keys(next).forEach((k) => {
+                const numKey = Number(k);
+                if ((applyMarkToAll || numKey === key) && next[numKey]?.mark) {
+                    next[numKey] = { ...next[numKey] };
+                    delete next[numKey].mark;
+                    changed = true;
+                }
+            });
+            return changed ? next : prev;
+        });
+    };
+
+    const handleApplyMarkToAllChange = (checked: boolean) => {
+        setApplyMarkToAll(checked);
+        if (!checked) return;
+
+        const firstQuestion = items.find((it): it is { type: 'question'; question: KeyedQuizQuestion } => it.type === 'question');
+        const markValue = firstQuestion?.question.mark || '';
+
+        setItems((prev) => prev.map((it) => (
+            it.type === 'question' ? { ...it, question: { ...it.question, mark: markValue } } : it
+        )));
+        setQuestionErrors((prev) => {
+            const next = { ...prev };
+            let changed = false;
+            Object.keys(next).forEach((k) => {
+                const numKey = Number(k);
+                if (next[numKey]?.mark) {
+                    next[numKey] = { ...next[numKey] };
+                    delete next[numKey].mark;
+                    changed = true;
+                }
+            });
+            return changed ? next : prev;
         });
     };
 
@@ -263,6 +310,12 @@ export const useQuestionDetailManagement = () => {
             isValid = false;
         }
 
+        const quizToViewValidationError = validateSingleField(QUIZ_VALIDATION_RULES, 'quizToView', quizToView);
+        if (quizToViewValidationError) {
+            setQuizToViewError(quizToViewValidationError);
+            isValid = false;
+        }
+
         if (!isEditMode && !courseId) {
             setCourseError('Course is required');
             isValid = false;
@@ -297,6 +350,7 @@ export const useQuestionDetailManagement = () => {
 
         const formData = new FormData();
         formData.append('title', title);
+        formData.append('quizToView', quizToView);
         if (!isEditMode) formData.append('courseId', courseId);
 
         // ASP.NET Core's [FromForm] binder expects dot notation for List<T> items (e.g. "questions[0].questionText"),
@@ -308,6 +362,7 @@ export const useQuestionDetailManagement = () => {
             formData.append(`questions[${index}].optionC`, q.optionC);
             formData.append(`questions[${index}].optionD`, q.optionD);
             formData.append(`questions[${index}].correctOption`, q.correctOption);
+            formData.append(`questions[${index}].mark`, q.mark);
 
             (Object.keys(IMAGE_FIELD_NAMES) as (keyof QuizQuestionImages)[]).forEach((imageKey) => {
                 const file = q.imageFiles[imageKey];
@@ -336,17 +391,23 @@ export const useQuestionDetailManagement = () => {
         isSaving,
         title,
         courseId,
+        quizToView,
         items,
         questionCount: questions.length,
         titleError,
         courseError,
+        quizToViewError,
         questionErrors,
+        applyMarkToAll,
         handleTitleChange,
         handleCourseChange,
+        handleQuizToViewChange,
         addQuestionAfter,
         addSectionAfter,
         removeItem,
         handleQuestionFieldChange,
+        handleMarkChange,
+        handleApplyMarkToAllChange,
         handleSectionFieldChange,
         handleImageChange,
         handleImageRemove,

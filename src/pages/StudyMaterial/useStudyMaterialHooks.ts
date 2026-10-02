@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { UploadFile } from 'antd';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
-import { getStudyMaterials, createStudyMaterial, updateStudyMaterial, deleteStudyMaterial, getBatches,} from '../../services/SuperSalesAction';
+import { getStudyMaterials, createStudyMaterial, updateStudyMaterial, deleteStudyMaterial, getBatches,} from '../../services/LearningAction';
 import type { StudyMaterialRecord } from './Constants';
 import { getStudyMaterialTableColumns } from './Constants';
 import type { CourseRecord, BatchRecord } from '../Course/Constant';
@@ -25,7 +25,7 @@ export const useStudyMaterialManagement = (searchTerm = '', appliedFilters: Reco
     const [pageSize, setPageSize] = useState(10);
 
     const { StudyMaterialsData, CoursesData, BatchesData, apiStatus } = useSelector(
-        (state: RootState) => state.superSales
+        (state: RootState) => state.learning
     );
 
     // Server-paginated response: { items: StudyMaterialRecord[], pageNumber, pageSize, totalCount, totalPages }

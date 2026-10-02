@@ -7,7 +7,7 @@ interface PrivateRouteProps {
 }
 
 const PrivateRoute = ({ children }: PrivateRouteProps) => {
-  const isAuthenticated = useSelector((state: RootState) => state.superSales.isAuthenticated);
+  const isAuthenticated = useSelector((state: RootState) => state.learning.isAuthenticated);
   
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };

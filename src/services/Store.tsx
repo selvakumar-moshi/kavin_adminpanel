@@ -1,10 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
-import SuperSalesReducer from "./CSuperSales";
+import LearningReducer from "./CLearning";
 
 export const Store = configureStore({
     reducer: {
-        superSales: SuperSalesReducer,
+        learning: LearningReducer,
     },
 });
 

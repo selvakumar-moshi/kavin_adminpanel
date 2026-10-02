@@ -139,6 +139,10 @@
     font-family: var(--font-family);
   }
 }
+.ant-select-single{
+  height: 36px;
+}
+
 .ant-select-single:not(.ant-select-customize) .ant-select-content-has-value{
   font-weight: 500;
   font-family: var(--font-family);

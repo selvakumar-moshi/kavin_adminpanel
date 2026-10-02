@@ -4,12 +4,14 @@ import { CloseCircleFilled, PictureOutlined } from '@ant-design/icons';
 import Button from '../../components/Button/Button';
 import InputFields from '../../components/InputFields/InputFields';
 import DropdownField from '../../components/DropdownField/DropdownField';
+import Checkbox from '../../components/Checkbox/Checkbox';
 import Loader from '../../components/Loader/Loader';
 import ToastMessages from '../../components/ToastMessages';
 import Breadcrumbs from '../../components/Breadcrumb/Breadcrumbs';
 import PageTitle from '../../components/PageTitle';
 import { useQuestionDetailManagement, getItemKey } from './useQuestionDetailHooks';
 import { QUIZ_TITLE_FIELD, CORRECT_OPTION_CHOICES, QUESTION_ITEM_RAIL_ACTIONS, type QuizQuestion, type QuizQuestionImages } from './Constant';
+import { MATERIAL_TO_VIEW_OPTIONS } from '../StudyMaterial/Constants';
 import delete_Icon from '../../assets/delete_Icon2.svg';
 
 const QuestionDetail = () => {
@@ -21,17 +23,23 @@ const QuestionDetail = () => {
         isSaving,
         title,
         courseId,
+        quizToView,
         items,
         questionCount,
         titleError,
         courseError,
+        quizToViewError,
         questionErrors,
+        applyMarkToAll,
         handleTitleChange,
         handleCourseChange,
+        handleQuizToViewChange,
         addQuestionAfter,
         addSectionAfter,
         removeItem,
         handleQuestionFieldChange,
+        handleMarkChange,
+        handleApplyMarkToAllChange,
         handleSectionFieldChange,
         handleImageChange,
         handleImageRemove,
@@ -169,6 +177,22 @@ const QuestionDetail = () => {
                             onChange={(_, value) => handleCourseChange(value)}
                         />
                     )}
+
+                    <DropdownField
+                        fields={[
+                            {
+                                name: 'quizToView',
+                                label: 'Quiz To View',
+                                placeholder: 'Select quiz to view',
+                                required: true,
+                                options: MATERIAL_TO_VIEW_OPTIONS,
+                                disabled: isSaving,
+                            },
+                        ]}
+                        values={{ quizToView }}
+                        errors={quizToViewError ? { quizToView: quizToViewError } : {}}
+                        onChange={(_, value) => handleQuizToViewChange(value)}
+                    />
                 </div>
 
                 <div className="question-detail-questions">
@@ -261,6 +285,7 @@ const QuestionDetail = () => {
                             const errors = questionErrors[key] || {};
                             const textFieldName = `question-${key}-text`;
                             const correctOptionFieldName = `question-${key}-correctOption`;
+                            const markFieldName = `question-${key}-mark`;
 
                             return (
                                 <div
@@ -370,23 +395,50 @@ const QuestionDetail = () => {
                                             })}
                                         </div>
 
-                                        <div className="question-detail-card__field question-detail-card__field--correct">
-                                            <DropdownField
-                                                className="question-detail-card__correct-option-dropdown"
-                                                data-testid={correctOptionFieldName}
-                                                fields={[{
-                                                    name: correctOptionFieldName,
-                                                    label: 'Correct Option',
-                                                    placeholder: 'Select correct option',
-                                                    required: true,
-                                                    options: CORRECT_OPTION_CHOICES,
-                                                    disabled: isSaving,
-                                                }]}
-                                                values={{ [correctOptionFieldName]: question.correctOption || '' }}
-                                                errors={errors.correctOption ? { [correctOptionFieldName]: errors.correctOption } : {}}
-                                                onChange={(_, value) => handleQuestionFieldChange(key, 'correctOption', value as string)}
-                                            />
-                                            {errors.correctOption && <div className="form-fields-section__error-message">{errors.correctOption}</div>}
+                                        <div className="question-detail-card__correct-mark-row">
+                                            <div className="question-detail-card__field question-detail-card__field--correct">
+                                                <DropdownField
+                                                    className="question-detail-card__correct-option-dropdown"
+                                                    data-testid={correctOptionFieldName}
+                                                    fields={[{
+                                                        name: correctOptionFieldName,
+                                                        label: 'Correct Option',
+                                                        placeholder: 'Select correct option',
+                                                        required: true,
+                                                        options: CORRECT_OPTION_CHOICES,
+                                                        disabled: isSaving,
+                                                    }]}
+                                                    values={{ [correctOptionFieldName]: question.correctOption || '' }}
+                                                    errors={errors.correctOption ? { [correctOptionFieldName]: errors.correctOption } : {}}
+                                                    onChange={(_, value) => handleQuestionFieldChange(key, 'correctOption', value as string)}
+                                                />
+                                                {errors.correctOption && <div className="form-fields-section__error-message">{errors.correctOption}</div>}
+                                            </div>
+
+                                            <div className="question-detail-card__field question-detail-card__field--mark">
+                                                <InputFields
+                                                    fields={[{
+                                                        name: markFieldName,
+                                                        label: 'Mark',
+                                                        placeholder: 'Enter mark, e.g. 1 or 1.5',
+                                                        required: true,
+                                                    }]}
+                                                    values={{ [markFieldName]: question.mark || '' }}
+                                                    errors={errors.mark ? { [markFieldName]: errors.mark } : {}}
+                                                    onChange={(_, value) => handleMarkChange(key, value)}
+                                                    disabled={isSaving || (applyMarkToAll && currentQuestionNumber !== 1)}
+                                                />
+                                            </div>
+                                            <div>
+                                                {currentQuestionNumber === 1 && (
+                                                    <Checkbox
+                                                       label="If you check this, will be applicable for all Question"
+                                                       checked={applyMarkToAll}
+                                                       onChange={handleApplyMarkToAllChange}
+                                                       disabled={isSaving}
+                                                    />
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                     {rail}

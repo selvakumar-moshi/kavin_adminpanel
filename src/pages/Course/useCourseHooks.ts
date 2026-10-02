@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
-import { getCourses, createCourse, updateCourse, deleteCourse } from '../../services/SuperSalesAction';
+import { getCourses, createCourse, updateCourse, deleteCourse } from '../../services/LearningAction';
 import type { CourseRecord } from './Constant';
 import { COURSE_VALIDATION_RULES } from '../../utils/validationUtils';
 
@@ -21,7 +21,7 @@ export const useCourseManagement = () => {
     const [operationType, setOperationType] = useState<'create' | 'edit' | 'delete' | null>(null);
 
     const { CoursesData, apiStatus } = useSelector(
-        (state: RootState) => state.superSales
+        (state: RootState) => state.learning
     );
 
     const coursesArray = Array.isArray(CoursesData) ? CoursesData : [];
