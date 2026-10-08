@@ -48,5 +48,13 @@
     width: auto;
     min-width: 80px;
     max-width: 200px;
+
+    // antd paints a white, 6px-radius box on the inner selector; on a 26px-radius pill that box
+    // sticks out past the curved corners and hides the border there, so it must follow the pill.
+    .ant-select-selector {
+      background: transparent !important;
+      border-radius: inherit !important;
+      padding-inline: 14px !important;
+    }
   }
 }

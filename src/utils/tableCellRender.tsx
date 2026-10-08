@@ -2,7 +2,7 @@ import React from "react";
 import { Tooltip } from "antd";
 import type { TooltipProps } from "antd";
 
-const DEFAULT_MAX_LENGTH = 30;
+const DEFAULT_MAX_LENGTH = 20;
 
 // On smaller screens the character cap keeps text short enough that a table column never needs
 // to grow wide enough to trigger horizontal scroll. On larger screens there's enough spare
@@ -10,9 +10,9 @@ const DEFAULT_MAX_LENGTH = 30;
 // as the default for every `renderTruncatedCellWithTooltip` call that doesn't pass its own `maxLength`.
 const RESPONSIVE_MAX_LENGTH_BREAKPOINTS: { minWidth: number; maxLength: number }[] = [
   { minWidth: 2560, maxLength: Infinity },
-  { minWidth: 1920, maxLength: 65 },
-  { minWidth: 1700, maxLength: 55 },
-  { minWidth: 1600, maxLength: 40 },
+  { minWidth: 1920, maxLength: 60 },
+  { minWidth: 1700, maxLength: 45 },
+  { minWidth: 1600, maxLength: 30 },
 ];
 
 export function getResponsiveMaxLength(): number {

@@ -1,9 +1,14 @@
-import type { ReactNode } from 'react';
+﻿import type { ReactNode } from 'react';
 import dayjs from 'dayjs';
 import { PlusOutlined, PictureOutlined } from '@ant-design/icons';
 import type { ITableColumn } from '../../components/Table/ITable';
 import { formatDate } from '../../utils/dateUtils';
 import StatusBadge from '../../components/Table/StatusBadge';
+import { renderTruncatedCellWithTooltip } from '../../utils/tableCellRender';
+import { compareText } from './quizTableUtils';
+import { competitiveScopeColumns } from './competitive/columns';
+import { schoolBookScopeColumns } from './schoolBook/columns';
+import { previousYearScopeColumns } from './previousYear/columns';
 
 export interface QuizQuestion {
     questionNumber?: number;
@@ -28,7 +33,7 @@ export interface QuizQuestion {
 
 // Client-side image state for a question and its options: `images` holds whatever should be
 // previewed (an existing S3 URL loaded on edit, or a data URL for a freshly picked file), while
-// `imageFiles` holds only newly picked files — the ones that actually need to be uploaded.
+// `imageFiles` holds only newly picked files â€” the ones that actually need to be uploaded.
 export interface QuizQuestionImages {
     question?: string;
     optionA?: string;
@@ -94,13 +99,57 @@ export const parsePastedOptionsList = (text: string): string[] =>
         .map((line) => line.trim())
         .filter(Boolean);
 
+// School Book Revision quiz options come from GET /Quiz/categories:
+// Subject -> (optional) Category -> Standard -> (optional) Part. A level with an empty list is not shown.
+export interface QuizStandardOption {
+    standard: number;
+    parts: string[];
+}
+
+export interface QuizCategoryOption {
+    category: string;
+    standards: QuizStandardOption[];
+}
+
+export interface QuizSubjectOption {
+    subject: string;
+    categories: QuizCategoryOption[];
+    standards: QuizStandardOption[];
+}
+
+// "Quiz To View" value for which a batch applies (a Free quiz has no batch)
+export const QUIZ_TO_VIEW_PAID = 'Paid';
+
+export const QUIZ_COPY_TITLE_FIELD = [
+    {
+        name: 'title',
+        label: 'Title',
+        placeholder: 'Enter quiz title',
+        required: true,
+        type: 'text' as const,
+    },
+];
+
 export interface QuizRecord {
     id: string;
     courseId: string;
     courseName: string;
+    batchId?: string;
+    batchTitle?: string;
     title: string;
     status: string;
     quizToView: string;
+    quizType?: string;
+    // Previous Year quizzes only
+    folderId?: string | null;
+    folderName?: string | null;
+    subFolderId?: string | null;
+    subFolderName?: string | null;
+    // School Book quizzes only
+    subject?: string | null;
+    category?: string | null;
+    standard?: number | string | null;
+    part?: string | null;
     publishedAt: string | null;
     questions: QuizQuestion[];
     questionCount: string;
@@ -166,26 +215,42 @@ export const emptyQuestion = (): QuizQuestion => ({
     mark: '',
 });
 
-const compareText = (a?: string | null, b?: string | null) =>
-    (a || '').toLowerCase().localeCompare((b || '').toLowerCase());
+// quizType / tab key of the School Book tab
+export const QUIZ_TYPE_SCHOOL = 'school';
 
-export const getQuizTableColumns = (): ITableColumn[] => [
-    {
-        title: 'Course',
-        dataIndex: 'courseName',
-        key: 'courseName',
-        searchType: 'text',
-        sorter: (a: QuizRecord, b: QuizRecord) => compareText(a.courseName, b.courseName),
-    },
+// quizType / tab key of the Previous Year tab
+export const QUIZ_TYPE_PREVIOUS_YEAR = 'previousYear';
+
+// Name of each quiz type as used in page titles ("Add Competitive Quiz", "Add School Quiz", ...)
+export const QUIZ_TYPE_LABELS: Record<string, string> = {
+    competitive: 'Competitive',
+    school: 'School',
+    previousYear: 'Previous Year',
+};
+
+// Title / breadcrumb text of the Add and Edit Quiz pages, e.g. "Add Previous Year Quiz"
+export const getQuizPageTitle = (isEdit: boolean, quizType?: string) =>
+    [isEdit ? 'Edit' : 'Add', QUIZ_TYPE_LABELS[quizType ?? ''], 'Quiz'].filter(Boolean).join(' ');
+
+// The columns that differ per tab live next to that tab's code (competitive/, schoolBook/, previousYear/)
+const getQuizScopeColumns = (quizType?: string): ITableColumn[] => {
+    if (quizType === QUIZ_TYPE_PREVIOUS_YEAR) return previousYearScopeColumns;
+    if (quizType === QUIZ_TYPE_SCHOOL) return schoolBookScopeColumns;
+    return competitiveScopeColumns;
+};
+
+export const getQuizTableColumns = (quizType?: string): ITableColumn[] => [
+    ...getQuizScopeColumns(quizType),
     {
         title: 'Title',
         dataIndex: 'title',
         key: 'title',
         searchType: 'text',
         sorter: (a: QuizRecord, b: QuizRecord) => compareText(a.title, b.title),
+        render: (title: string) => renderTruncatedCellWithTooltip(title),
     },
     {
-        title: 'Questions',
+        title: 'Quest Count',
         dataIndex: 'questions',
         key: 'questionCount',
         searchType: 'text',
@@ -193,7 +258,7 @@ export const getQuizTableColumns = (): ITableColumn[] => [
         sorter: (a: QuizRecord, b: QuizRecord) => compareText(a.questionCount, b.questionCount),
     },
     {
-        title: 'Quiz To View',
+        title: 'View',
         dataIndex: 'quizToView',
         key: 'quizToView',
         searchType: 'text',
@@ -206,17 +271,8 @@ export const getQuizTableColumns = (): ITableColumn[] => [
         searchType: 'date',
         disableFutureDates: true,
         sorter: (a: QuizRecord, b: QuizRecord) => compareText(a.publishedAt, b.publishedAt),
-        render: (value: string | null) => (value ? formatDate(value) : '-'),
+        render: (value: string) => (value ? formatDate(value) : '-'),
     },
-    // {
-    //     title: 'Created At',
-    //     dataIndex: 'createdAt',
-    //     key: 'createdAt',
-    //     searchType: 'date',
-    //     disableFutureDates: true,
-    //     sorter: (a: QuizRecord, b: QuizRecord) => compareText(a.createdAt, b.createdAt),
-    //     render: (value: string) => formatDate(value),
-    // },
     {
         title: 'Status',
         dataIndex: 'status',
@@ -233,4 +289,10 @@ export const getQuizTableColumns = (): ITableColumn[] => [
         sorter: (a: QuizRecord, b: QuizRecord) => Number(a.isExpired) - Number(b.isExpired),
         render: (isExpired: boolean) => <StatusBadge status={isExpired ? 'Expired' : 'Active'} />,
     },
+];
+
+export const Quiz_TAB_ITEMS = [
+    { key: 'competitive', label: 'Competitive/Daily' },
+    { key: 'school', label: 'School Book' },
+    { key: 'previousYear', label: 'Previous Year' },
 ];

@@ -15,6 +15,8 @@ export interface FileUploadSectionProps {
   onFileChange?: (fileList: UploadFile[]) => void;
   onDeleteFile?: (fileName: string) => void;
   fileList?: UploadFile[];
+  /** Restricts this uploader to these extensions (e.g. ['.docx']); defaults to every supported type */
+  allowedExtensions?: string[];
 }
 
 const FileUploadSection: React.FC<FileUploadSectionProps> = ({
@@ -26,6 +28,7 @@ const FileUploadSection: React.FC<FileUploadSectionProps> = ({
   onDeleteFile,
   fileList: controlledFileList,
   required,
+  allowedExtensions,
 }) => {
   const [internalFileList, setInternalFileList] = useState<UploadFile[]>([]);
   const [validationError, setValidationError] = useState<string>("");
@@ -37,11 +40,12 @@ const FileUploadSection: React.FC<FileUploadSectionProps> = ({
       setValidationError("");
 
       // 1. VALIDATE FILE EXTENSION FIRST
-      const { isValid, extension } = validateFileExtension(file.name);
-      
+      const { isValid: isSupported, extension } = validateFileExtension(file.name);
+      const isValid = isSupported && (!allowedExtensions || allowedExtensions.includes(extension));
+
       if (!isValid) {
-        const errorMsg = extension 
-          ? `Unsupported file format. Allowed formats: ${getFormattedAllowedExtensions()}`
+        const errorMsg = extension
+          ? `Unsupported file format. Allowed formats: ${allowedExtensions ? allowedExtensions.join(', ') : getFormattedAllowedExtensions()}`
           : "This file has no extension. Please upload a valid file.";
         
         setValidationError(errorMsg);
@@ -74,7 +78,7 @@ const FileUploadSection: React.FC<FileUploadSectionProps> = ({
     },
     fileList,
     multiple: false,
-    accept: getAllowedExtensions().join(','),
+    accept: (allowedExtensions ?? getAllowedExtensions()).join(','),
   };
 
   const handleDeleteFile = (fileName: string) => {

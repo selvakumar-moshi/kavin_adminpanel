@@ -6,6 +6,8 @@ import yearIcon from "../../assets/yearIcon.svg";
 import GroupsIcon from "../../assets/Groups.svg";
 import report_Icon from "../../assets/report_Icon.svg";
 import industry_Icon from "../../assets/industry_Icon.svg";
+import schoolIcon from "../../assets/school_Icon.svg";
+import { Tooltip } from "antd";
 
 export interface MenuItem {
   id: string;
@@ -15,6 +17,8 @@ export interface MenuItem {
   isActive?: boolean;
   /** Extra route prefixes that should also mark this item active (e.g. a detail page whose path doesn't share the list route's prefix). */
   matchPrefixes?: string[];
+  /** Hover text shown next to the icon */
+  tooltip?: string;
 }
 
 export interface SidebarProps {
@@ -55,6 +59,13 @@ const MENU_ITEMS: MenuItem[] = [
     label: "Quiz",
     icon: tabIcon,
     route: "/quiz",
+  },
+  {
+    id: "schoolbook",
+    label: "Data Structure",
+    icon: schoolIcon,
+    route: "/schoolbook",
+    tooltip: "Data Structure",
   },
   {
     id: "notification",
@@ -106,20 +117,30 @@ const Sidebar: React.FC<SidebarProps> = ({
           <ul className="sidebar__menu-list">
             {MENU_ITEMS.map((item: MenuItem) => {
               const isActive = isMenuItemActive(item);
-              
+
+              const button = (
+                <button
+                  className={`sidebar__menu-button ${
+                    isActive ? "sidebar__menu-button--active" : ""
+                  }`}
+                  onClick={() => handleItemClick(item.route)}
+                  title={collapsed && !item.tooltip ? item.label : undefined}
+                >
+                  <div className="sidebar__icon-container">
+                    {renderIcon(item.icon)}
+                  </div>
+                </button>
+              );
+
               return (
                 <li key={item.id} className="sidebar__menu-item">
-                  <button
-                    className={`sidebar__menu-button ${
-                      isActive ? "sidebar__menu-button--active" : ""
-                    }`}
-                    onClick={() => handleItemClick(item.route)}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <div className="sidebar__icon-container">
-                      {renderIcon(item.icon)}
-                    </div>
-                  </button>
+                  {item.tooltip ? (
+                    <Tooltip title={item.tooltip} placement="right">
+                      {button}
+                    </Tooltip>
+                  ) : (
+                    button
+                  )}
                 </li>
               );
             })}

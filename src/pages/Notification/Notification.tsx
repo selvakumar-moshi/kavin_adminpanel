@@ -5,6 +5,7 @@ import { withSortAndSearch } from '../../components/Table/withSortAndSearch';
 import ActionIcons from '../../components/Table/ActionIcons';
 import PopupModal from '../../components/PopupModal/PopupModal';
 import InputFields from '../../components/InputFields/InputFields';
+import DropdownField from '../../components/DropdownField/DropdownField';
 import DateFieldsSection from '../../components/DateFieldsSection/DateFieldsSection';
 import FilterModal from '../../components/FilterModal/FilterModal';
 import Loader from '../../components/Loader/Loader';
@@ -12,7 +13,7 @@ import ToastMessages from '../../components/ToastMessages';
 import PageTitle from '../../components/PageTitle';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 import { useNotificationManagement } from './useNotification';
-import { getNotificationTableColumns, NOTIFICATION_INPUT_FIELDS, NOTIFICATION_DATE_FIELD, type NotificationRecord } from './Constant';
+import { getNotificationTableColumns, NOTIFICATION_TYPE_FIELD, NOTIFICATION_INPUT_FIELDS, NOTIFICATION_DATE_FIELD, type NotificationRecord } from './Constant';
 import add_Icon from '../../assets/add_Icon.svg';
 import filter_Icon from '../../assets/filter_Icon.svg';
 
@@ -144,9 +145,15 @@ const Notification = () => {
                 primaryButtonLoading={loading}
                 primaryButtonDisabled={loading || !hasFormChanges}
                 contentHeight="auto"
-                minHeight={320}
+                minHeight={400}
             >
                 <div style={{ padding: '0 8px' }}>
+                    <DropdownField
+                        fields={NOTIFICATION_TYPE_FIELD.map(field => ({ ...field, disabled: loading }))}
+                        values={{ notificationType: formValues.notificationType || '' }}
+                        errors={formErrors.notificationType ? { notificationType: formErrors.notificationType } : {}}
+                        onChange={(_, value) => handleInputChange('notificationType', Array.isArray(value) ? value[0] || '' : value)}
+                    />
                     <InputFields
                         fields={NOTIFICATION_INPUT_FIELDS}
                         values={formValues}

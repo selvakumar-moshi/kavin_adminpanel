@@ -19,6 +19,13 @@ export interface VideoMaterial {
     courseId: string;
 }
 
+export interface AllowedBatch {
+    batchId: string;
+    title: string;
+    batchFrom: string;
+    batchTo: string;
+}
+
 export interface EnrolledCourse {
     enrollmentId: string;
     courseId: string;
@@ -34,6 +41,7 @@ export interface EnrolledCourse {
     verifiedAt: string | null;
     studyMaterials: StudyMaterial[];
     videoMaterials: VideoMaterial[];
+    allowedBatches?: AllowedBatch[];
 }
 
 export interface UserDetailRecord {

@@ -1,0 +1,95 @@
+// Folders tab: folders on the left, the selected folder's sub folders on the right
+
+.folder-structure {
+  margin-top: 10px;
+  font-family: var(--font-family);
+
+  &__layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  &__panel {
+    padding: 14px;
+    border: 1px solid #ececec;
+    border-radius: 12px;
+    background: #fff;
+
+    &--folders {
+      flex: 0 0 320px;
+      width: 320px;
+    }
+
+    &--subs {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+
+    &:hover {
+      background: #faf6f2;
+    }
+
+    // The folder whose sub folders are showing
+    &--active {
+      background: #fff3e8;
+      border-color: #f3d3b4;
+      font-weight: 500;
+    }
+
+    // Sub folder rows aren't clickable
+    &--plain {
+      cursor: default;
+      border-bottom: 1px solid #f0f0f0;
+      border-radius: 0;
+
+      &:hover {
+        background: transparent;
+      }
+    }
+  }
+
+  &__item-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__item-actions {
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 2px;
+  }
+
+  &__empty {
+    padding: 16px 4px;
+    color: #8e8e8e;
+    font-size: 13px;
+  }
+}

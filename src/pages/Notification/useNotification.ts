@@ -132,6 +132,7 @@ export const useNotificationManagement = () => {
     const openEditModal = (notification: NotificationRecord) => {
         setSelectedNotification(notification);
         setFormValues({
+            notificationType: notification.notificationType || '',
             title: notification.title || '',
             description: notification.description || '',
             link: notification.link || '',
@@ -224,6 +225,7 @@ export const useNotificationManagement = () => {
                 description: formValues.description,
                 link: formValues.link,
                 date,
+                notificationType: formValues.notificationType,
             }) as any);
         } else {
             setOperationType('create');
@@ -232,6 +234,7 @@ export const useNotificationManagement = () => {
                 description: formValues.description,
                 link: formValues.link,
                 date,
+                notificationType: formValues.notificationType,
             }) as any);
         }
     };
@@ -245,12 +248,14 @@ export const useNotificationManagement = () => {
     // Create: enabled once any field has a value. Edit: enabled once a value differs from the loaded notification.
     const hasFormChanges = selectedNotification
         ? (
+            String(formValues.notificationType || '') !== (selectedNotification.notificationType || '') ||
             String(formValues.title || '') !== (selectedNotification.title || '') ||
             String(formValues.description || '') !== (selectedNotification.description || '') ||
             String(formValues.link || '') !== (selectedNotification.link || '') ||
             dayjsToISOString(formValues.date) !== dayjsToISOString(selectedNotification.date)
         )
         : (
+            Boolean(formValues.notificationType) ||
             Boolean(String(formValues.title || '').trim()) ||
             Boolean(String(formValues.description || '').trim()) ||
             Boolean(String(formValues.link || '').trim()) ||

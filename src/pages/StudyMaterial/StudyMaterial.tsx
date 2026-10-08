@@ -140,7 +140,7 @@ const StudyMaterial: React.FC<StudyMaterialProps> = ({ searchTerm = '', appliedF
                 primaryButtonLoading={loading}
                 primaryButtonDisabled={loading || !hasFormChanges}
                 contentHeight="auto"
-                minHeight={450}
+                minHeight={520}
             >
                 <div style={{ padding: '0 8px' }}>
                     <InputFields

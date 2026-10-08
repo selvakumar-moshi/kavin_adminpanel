@@ -73,6 +73,7 @@ export const getUserTableColumns = (): ITableColumn[] => [
         searchType: 'text',
         disableFutureDates: true,
         sorter: (a: UserRecord, b: UserRecord) => compareText(a.district, b.district),
+        render: (district: string) => renderTruncatedCellWithTooltip(district),
     },
     {
         title: 'Phone Number',

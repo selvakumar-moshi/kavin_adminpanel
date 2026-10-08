@@ -112,6 +112,8 @@ export const useBatchManagement = (courseId: string | undefined) => {
             title: batch.title || '',
             batchFrom: batch.batchFrom || null,
             batchTo: batch.batchTo || null,
+            whatsAppLink: batch.whatsAppLink || '',
+            telegramLink: batch.telegramLink || '',
         });
         setBatchFormErrors({});
         setIsBatchModalVisible(true);
@@ -207,6 +209,9 @@ export const useBatchManagement = (courseId: string | undefined) => {
         const batchFrom = dayjsToISOString(batchFormValues.batchFrom);
         const batchTo = dayjsToISOString(batchFormValues.batchTo);
 
+        const whatsAppLink = String(batchFormValues.whatsAppLink || '').trim();
+        const telegramLink = String(batchFormValues.telegramLink || '').trim();
+
         if (selectedBatch) {
             setOperationType('edit');
             dispatch(updateBatch({
@@ -215,6 +220,8 @@ export const useBatchManagement = (courseId: string | undefined) => {
                 courseId,
                 batchFrom,
                 batchTo,
+                whatsAppLink,
+                telegramLink,
             }) as any);
         } else {
             setOperationType('create');
@@ -223,6 +230,8 @@ export const useBatchManagement = (courseId: string | undefined) => {
                 courseId,
                 batchFrom,
                 batchTo,
+                whatsAppLink,
+                telegramLink,
             }) as any);
         }
     };
@@ -238,12 +247,16 @@ export const useBatchManagement = (courseId: string | undefined) => {
         ? (
             String(batchFormValues.title || '') !== (selectedBatch.title || '') ||
             dayjsToISOString(batchFormValues.batchFrom) !== dayjsToISOString(selectedBatch.batchFrom) ||
-            dayjsToISOString(batchFormValues.batchTo) !== dayjsToISOString(selectedBatch.batchTo)
+            dayjsToISOString(batchFormValues.batchTo) !== dayjsToISOString(selectedBatch.batchTo) ||
+            String(batchFormValues.whatsAppLink || '') !== (selectedBatch.whatsAppLink || '') ||
+            String(batchFormValues.telegramLink || '') !== (selectedBatch.telegramLink || '')
         )
         : (
             Boolean(String(batchFormValues.title || '').trim()) ||
             Boolean(batchFormValues.batchFrom) ||
-            Boolean(batchFormValues.batchTo)
+            Boolean(batchFormValues.batchTo) ||
+            Boolean(String(batchFormValues.whatsAppLink || '').trim()) ||
+            Boolean(String(batchFormValues.telegramLink || '').trim())
         );
 
     return {

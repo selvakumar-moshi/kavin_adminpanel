@@ -9,6 +9,9 @@ import type { UserDetailRecord } from './Constants';
 import { EDIT_USER_VALIDATION_RULES } from '../../utils/validationUtils';
 import type { CourseRecord, BatchRecord } from '../Course/Constant';
 
+// Joins an enrollment and one of its allowed batches into a single dropdown option value
+export const ALLOWED_BATCH_SEPARATOR = '::';
+
 export interface SelectedCourseEntry {
     courseId: string;
     batchId: string;
@@ -28,6 +31,9 @@ export const useUserDetailManagement = () => {
     const [selectedCourses, setSelectedCourses] = useState<SelectedCourseEntry[]>([]);
     const [batchesByCourse, setBatchesByCourse] = useState<Record<string, BatchRecord[]>>({});
     const [batchesLoadingByCourse, setBatchesLoadingByCourse] = useState<Record<string, boolean>>({});
+
+    // Allowed (extra) batches picked for already-purchased enrollments, as `${enrollmentId}${ALLOWED_BATCH_SEPARATOR}${batchId}`
+    const [allowedBatchSelections, setAllowedBatchSelections] = useState<string[]>([]);
 
     // Enrollment whose status-change API call is currently in flight
     const [updatingEnrollmentId, setUpdatingEnrollmentId] = useState<string | null>(null);
@@ -60,6 +66,7 @@ export const useUserDetailManagement = () => {
             setIsEditModalVisible(false);
             setIsUpdating(false);
             setSelectedCourses([]);
+            setAllowedBatchSelections([]);
             setBatchesByCourse({});
             setBatchesLoadingByCourse({});
             if (id) {
@@ -100,6 +107,7 @@ export const useUserDetailManagement = () => {
         });
         setFormErrors({});
         setSelectedCourses([]);
+        setAllowedBatchSelections([]);
         setBatchesByCourse({});
         setBatchesLoadingByCourse({});
         setIsEditModalVisible(true);
@@ -110,6 +118,7 @@ export const useUserDetailManagement = () => {
         setFormValues({});
         setFormErrors({});
         setSelectedCourses([]);
+        setAllowedBatchSelections([]);
         setBatchesByCourse({});
         setBatchesLoadingByCourse({});
     };
@@ -154,6 +163,10 @@ export const useUserDetailManagement = () => {
                 return newErrors;
             });
         }
+    };
+
+    const handleAllowedBatchChange = (selections: string[]) => {
+        setAllowedBatchSelections(selections);
     };
 
     const validateSingleField = (field: string, rawValue: string): string => {
@@ -221,7 +234,14 @@ export const useUserDetailManagement = () => {
             lastName: formValues.lastName,
             phoneNumber: formValues.phoneNumber,
             district: formValues.district,
-            courses: selectedCourses,
+            courses: [
+                ...selectedCourses,
+                ...allowedBatchSelections.flatMap(selection => {
+                    const [enrollmentId, batchId] = selection.split(ALLOWED_BATCH_SEPARATOR);
+                    const enrollment = (userDetail.courses || []).find(c => c.enrollmentId === enrollmentId);
+                    return enrollment && batchId ? [{ courseId: enrollment.courseId, batchId }] : [];
+                }),
+            ],
         }) as any);
     };
 
@@ -236,13 +256,16 @@ export const useUserDetailManagement = () => {
         formValues.lastName !== (userDetail?.lastName || '') ||
         formValues.phoneNumber !== (userDetail?.phoneNumber || '') ||
         formValues.district !== (userDetail?.district || '') ||
-        selectedCourses.length > 0
+        selectedCourses.length > 0 ||
+        allowedBatchSelections.length > 0
     );
 
     return {
         userDetail,
         coursesArray,
         selectedCourses,
+        allowedBatchSelections,
+        handleAllowedBatchChange,
         batchesByCourse,
         batchesLoadingByCourse,
         loading: detailStatus?.loading || false,

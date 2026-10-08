@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import type { UploadFile } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
-import { getQuizById, createQuiz, updateQuiz, getCourses } from '../../services/LearningAction';
+import { getQuizById, createQuiz, updateQuiz, getCourses, getBatches } from '../../services/LearningAction';
+import superSalesAPI from '../../services/LearningAPI';
 import { emptyQuestion, parsePastedOptionsList, QUESTION_OPTION_KEYS, IMAGE_FIELD_NAMES, IMAGE_URL_FIELD_NAMES, type QuizQuestion, type QuizQuestionImages, type QuizQuestionImageFiles, type QuizRecord } from './Constant';
-import type { CourseRecord } from '../Course/Constant';
+import type { CourseRecord, BatchRecord } from '../Course/Constant';
 import { QUIZ_VALIDATION_RULES, QUIZ_QUESTION_VALIDATION_RULES, type ValidationRule } from '../../utils/validationUtils';
 
 type QuestionErrors = Record<number, Partial<Record<keyof QuizQuestion, string>>>;
@@ -13,6 +15,32 @@ type QuestionErrors = Record<number, Partial<Record<keyof QuizQuestion, string>>
 // Client-only identity + image state — `images`/`imageFiles` are never sent as-is (handleSubmit
 // rebuilds the multipart payload from imageFiles, and derives text fields directly from `question`)
 export type KeyedQuizQuestion = QuizQuestion & { _key: number; images: QuizQuestionImages; imageFiles: QuizQuestionImageFiles };
+
+// "Quiz To View" value that makes Course and Batch applicable
+const PAID_QUIZ = 'Paid';
+// School Book Revision quizzes are always created as Free
+const SCHOOL_QUIZ_TO_VIEW = 'Free';
+// `quizType` values (same as the Quiz tab keys)
+const DEFAULT_QUIZ_TYPE = 'competitive';
+const FOLDER_QUIZ_TYPE = 'previousYear';
+const FOLDER_QUIZ_TO_VIEW = 'Free';
+const SCHOOL_QUIZ_TYPE = 'school';
+
+// Shape of /Quiz/import's `data.questions` / `data.warnings` entries
+interface ImportedQuestion {
+    documentNumber: number;
+    questionText: string;
+    optionA: string;
+    optionB: string;
+    optionC: string;
+    optionD: string;
+    correctOption: string;
+}
+
+interface ImportWarning {
+    documentNumber: number;
+    reason: string;
+}
 
 // Client-only "Title and description" organizer block — never sent to the API, purely for editor layout
 export interface KeyedSection {
@@ -31,12 +59,13 @@ export const getItemKey = (item: ListItem): number => (item.type === 'question' 
 let itemKeySeed = 0;
 const nextItemKey = () => ++itemKeySeed;
 
-export const useQuestionDetailManagement = () => {
+export const useQuestionDetailManagement = (onSaved?: () => void) => {
     const { id } = useParams<{ id: string }>();
     const isEditMode = Boolean(id);
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { messages: toastMessages, showError, hideToast } = useToastMessages();
+    const location = useLocation();
+    const { messages: toastMessages, showSuccess, showError, hideToast } = useToastMessages();
 
     // Hydrates preview state from an existing question's S3 URLs (edit mode); blank for a new question
     const makeKeyedQuestion = (q?: QuizQuestion): KeyedQuizQuestion => {
@@ -49,6 +78,8 @@ export const useQuestionDetailManagement = () => {
 
         return {
             ...base,
+            // API returns mark as a number; the form/validation treat it as a string
+            mark: base.mark == null ? '' : String(base.mark),
             _key: nextItemKey(),
             images,
             imageFiles: {},
@@ -63,7 +94,8 @@ export const useQuestionDetailManagement = () => {
 
     const [title, setTitle] = useState('');
     const [courseId, setCourseId] = useState('');
-    const [quizToView, setQuizToView] = useState('');
+    const [batchId, setBatchId] = useState('');
+    const [quizToViewInput, setQuizToView] = useState('');
     const [items, setItems] = useState<ListItem[]>(() => [{ type: 'question', question: makeKeyedQuestion() }]);
     const [titleError, setTitleError] = useState('');
     const [courseError, setCourseError] = useState('');
@@ -72,13 +104,38 @@ export const useQuestionDetailManagement = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [applyMarkToAll, setApplyMarkToAll] = useState(false);
 
-    const { QuizDetailData, CoursesData, apiStatus } = useSelector(
+    // Optional document (PDF etc.) the questions are imported from; also sent to the API when the quiz is created
+    const [quizFileList, setQuizFileList] = useState<UploadFile[]>([]);
+    const [isImporting, setIsImporting] = useState(false);
+    // Problems the import service flagged (e.g. a missing option) — listed under the upload for the admin to check
+    const [importWarnings, setImportWarnings] = useState<ImportWarning[]>([]);
+
+    // Snapshots of the as-loaded values, so editing an existing quiz never gets blocked by
+    // validation rules (e.g. "mark") added after that quiz/question was already saved — only
+    // fields the admin actually changes during this session are held to the current rules.
+    const originalTitleRef = useRef('');
+    const originalQuizToViewRef = useRef('');
+    const originalQuestionValuesRef = useRef<Map<number, QuizQuestion>>(new Map());
+
+    const { QuizDetailData, CoursesData, BatchesData, apiStatus } = useSelector(
         (state: RootState) => state.learning
     );
 
     const quizDetail = QuizDetailData as QuizRecord | null;
+
+    // Create: the tab the Add Quiz button was clicked on (passed through navigation state).
+    // Update: keeps the type the quiz already has. Falls back to "competitive" if neither is known.
+    const createQuizType = (location.state as { quizType?: string } | null)?.quizType;
+    const quizType = (isEditMode ? quizDetail?.quizType : createQuizType) || DEFAULT_QUIZ_TYPE;
+
+    // Previous Year quizzes live in a folder instead of having a Quiz To View / course / batch: they are always Free
+    const isFolderQuiz = quizType === FOLDER_QUIZ_TYPE;
+    const quizToView = isFolderQuiz ? FOLDER_QUIZ_TO_VIEW : quizToViewInput;
+    const isPaid = quizToView === PAID_QUIZ;
     const coursesArray = Array.isArray(CoursesData) ? (CoursesData as CourseRecord[]) : [];
+    const batchesArray = Array.isArray(BatchesData?.items) ? (BatchesData.items as BatchRecord[]) : [];
     const loading = apiStatus.QuizDetailData?.loading || false;
+    const batchesLoading = apiStatus.BatchesData?.loading || false;
     const saveStatus = apiStatus.QuizzesData;
 
     useEffect(() => {
@@ -95,32 +152,48 @@ export const useQuestionDetailManagement = () => {
         if (isEditMode && quizDetail && quizDetail.id === id) {
             setTitle(quizDetail.title || '');
             setCourseId(quizDetail.courseId || '');
+            setBatchId(quizDetail.batchId || '');
             setQuizToView(quizDetail.quizToView || '');
-            setItems(
-                quizDetail.questions && quizDetail.questions.length > 0
-                    ? quizDetail.questions.map((q) => ({ type: 'question' as const, question: makeKeyedQuestion(q) }))
-                    : [{ type: 'question', question: makeKeyedQuestion() }]
-            );
+            originalTitleRef.current = quizDetail.title || '';
+            originalQuizToViewRef.current = quizDetail.quizToView || '';
+            if (quizDetail.courseId) {
+                dispatch(getBatches({ courseId: quizDetail.courseId, pageSize: 100 }) as any);
+            }
+
+            const keyedQuestions = quizDetail.questions && quizDetail.questions.length > 0
+                ? quizDetail.questions.map((q) => makeKeyedQuestion(q))
+                : [makeKeyedQuestion()];
+
+            const originalValues = new Map<number, QuizQuestion>();
+            keyedQuestions.forEach((kq) => originalValues.set(kq._key, { ...kq }));
+            originalQuestionValuesRef.current = originalValues;
+
+            setItems(keyedQuestions.map((question) => ({ type: 'question' as const, question })));
         }
-    }, [isEditMode, quizDetail, id]);
+    }, [isEditMode, quizDetail, id, dispatch]);
 
     useEffect(() => {
         if (!isSaving) return;
 
         if (saveStatus?.success) {
             setIsSaving(false);
-            // Toast is shown by the Quiz list page after landing there — this page unmounts
-            // immediately on navigate, so a toast raised here would vanish before it's seen.
-            navigate('/quiz', {
-                state: { toastMessage: isEditMode ? 'Quiz updated successfully!' : 'Quiz created successfully!' },
-            });
+            if (onSaved) {
+                // Embedded form (School Book Revision): the host page closes the form and shows the toast
+                onSaved();
+            } else {
+                // Toast is shown by the Quiz list page after landing there — this page unmounts
+                // immediately on navigate, so a toast raised here would vanish before it's seen.
+                navigate('/quiz', {
+                    state: { toastMessage: isEditMode ? 'Quiz updated successfully!' : 'Quiz created successfully!', quizType },
+                });
+            }
         }
 
         if (saveStatus?.error) {
             showError(saveStatus.error);
             setIsSaving(false);
         }
-    }, [saveStatus, isSaving, isEditMode, showError, navigate]);
+    }, [saveStatus, isSaving, isEditMode, showError, navigate, onSaved, quizType]);
 
     const handleTitleChange = (_name: string, value: string) => {
         setTitle(value);
@@ -131,12 +204,129 @@ export const useQuestionDetailManagement = () => {
         const stringValue = Array.isArray(value) ? value[0] || '' : value;
         setCourseId(stringValue);
         if (courseError) setCourseError('');
+
+        setBatchId('');
+        if (stringValue) {
+            dispatch(getBatches({ courseId: stringValue, pageSize: 100 }) as any);
+        }
+    };
+
+    const handleBatchChange = (value: string | string[]) => {
+        const stringValue = Array.isArray(value) ? value[0] || '' : value;
+        setBatchId(stringValue);
     };
 
     const handleQuizToViewChange = (value: string | string[]) => {
         const stringValue = Array.isArray(value) ? value[0] || '' : value;
         setQuizToView(stringValue);
         if (quizToViewError) setQuizToViewError('');
+
+        // Course and batch only apply to paid quizzes — switching to Free drops whatever was picked
+        if (stringValue !== PAID_QUIZ) {
+            setBatchId('');
+            if (!isEditMode) setCourseId('');
+            setCourseError('');
+        }
+    };
+
+    const isBlankQuestion = (q: QuizQuestion) =>
+        !q.questionText.trim() && !q.optionA.trim() && !q.optionB.trim() && !q.optionC.trim() && !q.optionD.trim() && !q.correctOption;
+
+    // Keys of the questions that came from the uploaded file, so removing/replacing the file removes exactly those
+    const importedKeysRef = useRef<Set<number>>(new Set());
+    // Bumped on every upload/delete so a slow import response for a file that's since been removed or replaced is ignored
+    const importRequestIdRef = useRef(0);
+
+    // Drops the questions imported from the file; keeps anything the admin typed, and never leaves the list empty
+    const removeImportedItems = () => {
+        const keys = importedKeysRef.current;
+        if (keys.size === 0) return;
+        importedKeysRef.current = new Set();
+
+        setItems((prev) => {
+            const rest = prev.filter((it) => !keys.has(getItemKey(it)));
+            return rest.length > 0 ? rest : [{ type: 'question', question: makeKeyedQuestion() }];
+        });
+        setQuestionErrors((prev) => {
+            const next = { ...prev };
+            keys.forEach((key) => delete next[key]);
+            return next;
+        });
+    };
+
+    // Reads the uploaded document through /Quiz/import and fills the question list from the response.
+    // Blank placeholder questions are replaced; questions the admin already typed are kept and the imported ones follow.
+    const importQuestionsFromFile = async (file: File) => {
+        const requestId = ++importRequestIdRef.current;
+        setIsImporting(true);
+        setImportWarnings([]);
+        try {
+            const res = await superSalesAPI.importQuiz(file);
+            if (requestId !== importRequestIdRef.current) return;
+
+            const data = res?.data?.data;
+            const importedQuestions: ImportedQuestion[] = Array.isArray(data?.questions) ? data.questions : [];
+
+            if (importedQuestions.length === 0) {
+                showError(res?.data?.message || 'No questions could be read from the document');
+                setQuizFileList([]);
+                return;
+            }
+
+            const imported: ListItem[] = importedQuestions.map((q) => ({
+                type: 'question' as const,
+                question: makeKeyedQuestion({
+                    ...emptyQuestion(),
+                    questionText: q.questionText || '',
+                    optionA: q.optionA || '',
+                    optionB: q.optionB || '',
+                    optionC: q.optionC || '',
+                    optionD: q.optionD || '',
+                    correctOption: q.correctOption || '',
+                }),
+            }));
+
+            // Anything from a previous import goes first, so a second upload never stacks on top of the first
+            const previousKeys = importedKeysRef.current;
+            importedKeysRef.current = new Set(imported.map(getItemKey));
+
+            setItems((prev) => [
+                ...prev.filter((it) => !previousKeys.has(getItemKey(it)) && (it.type === 'section' || !isBlankQuestion(it.question))),
+                ...imported,
+            ]);
+            setQuestionErrors((prev) => {
+                const next = { ...prev };
+                previousKeys.forEach((key) => delete next[key]);
+                return next;
+            });
+            showSuccess(res?.data?.message || `${importedQuestions.length} questions imported`);
+
+            setImportWarnings(Array.isArray(data?.warnings) ? data.warnings : []);
+        } catch (error: any) {
+            if (requestId !== importRequestIdRef.current) return;
+            showError(error?.response?.data?.message || error?.message || 'Failed to read questions from the document');
+            setQuizFileList([]);
+        } finally {
+            if (requestId === importRequestIdRef.current) setIsImporting(false);
+        }
+    };
+
+    const handleQuizFileChange = (files: UploadFile[]) => {
+        setQuizFileList(files);
+
+        if (files.length === 0) {
+            // File removed: cancel any import still in flight and clear everything that came from it
+            importRequestIdRef.current += 1;
+            setIsImporting(false);
+            setImportWarnings([]);
+            removeImportedItems();
+            return;
+        }
+
+        const file = files[0]?.originFileObj;
+        if (file) {
+            importQuestionsFromFile(file as File);
+        }
     };
 
     const insertItemAfter = (afterKey: number, newItem: ListItem) => {
@@ -285,7 +475,7 @@ export const useQuestionDetailManagement = () => {
         const rule = rules[field];
         if (!rule) return '';
 
-        const value = (rawValue || '').trim();
+        const value = String(rawValue ?? '').trim();
 
         if (rule.required && !value) {
             return rule.errorMessages.required || 'This field is required';
@@ -304,34 +494,52 @@ export const useQuestionDetailManagement = () => {
     const validate = (): boolean => {
         let isValid = true;
 
-        const titleValidationError = validateSingleField(QUIZ_VALIDATION_RULES, 'title', title);
+        // Edit mode: values the admin left untouched (e.g. an empty mark saved earlier) are not re-validated
+        const titleValidationError = isEditMode && title === originalTitleRef.current
+            ? ''
+            : validateSingleField(QUIZ_VALIDATION_RULES, 'title', title);
         if (titleValidationError) {
             setTitleError(titleValidationError);
             isValid = false;
         }
 
-        const quizToViewValidationError = validateSingleField(QUIZ_VALIDATION_RULES, 'quizToView', quizToView);
+        const quizToViewValidationError = isEditMode && quizToView === originalQuizToViewRef.current
+            ? ''
+            : validateSingleField(QUIZ_VALIDATION_RULES, 'quizToView', quizToView);
         if (quizToViewValidationError) {
             setQuizToViewError(quizToViewValidationError);
             isValid = false;
         }
 
-        if (!isEditMode && !courseId) {
+        if (!isEditMode && isPaid && !courseId) {
             setCourseError('Course is required');
             isValid = false;
         }
 
-        if (questions.length === 0) {
+        if (!validateQuestions()) {
             isValid = false;
         }
 
+        return isValid;
+    };
+
+    // Checks every question (and that there is at least one); shows the errors on the cards
+    const validateQuestions = (): boolean => {
+        let isValid = questions.length > 0;
+
         const newQuestionErrors: QuestionErrors = {};
         questions.forEach((q) => {
+            const original = isEditMode ? originalQuestionValuesRef.current.get(q._key) : undefined;
             const fieldErrors: Partial<Record<keyof QuizQuestion, string>> = {};
             (Object.keys(QUIZ_QUESTION_VALIDATION_RULES) as (keyof QuizQuestion)[]).forEach((field) => {
+                if (original && original[field] === q[field]) return;
                 const error = validateSingleField(QUIZ_QUESTION_VALIDATION_RULES, field, q[field] as string);
                 if (error) fieldErrors[field] = error;
             });
+            // Option D may be left empty, but then it can't be the correct answer
+            if (q.correctOption === 'D' && !q.optionD.trim()) {
+                fieldErrors.correctOption = 'Option D is empty';
+            }
             if (Object.keys(fieldErrors).length > 0) {
                 newQuestionErrors[q._key] = fieldErrors;
                 isValid = false;
@@ -342,19 +550,9 @@ export const useQuestionDetailManagement = () => {
         return isValid;
     };
 
-    const handleSubmit = () => {
-        if (!validate()) {
-            showError(questions.length === 0 ? 'Please add at least one question' : 'Please fix the errors in the form');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('quizToView', quizToView);
-        if (!isEditMode) formData.append('courseId', courseId);
-
-        // ASP.NET Core's [FromForm] binder expects dot notation for List<T> items (e.g. "questions[0].questionText"),
-        // not bracket-in-bracket — IFormFile properties in particular only bind on an exact path match.
+    // ASP.NET Core's [FromForm] binder expects dot notation for List<T> items (e.g. "questions[0].questionText"),
+    // not bracket-in-bracket — IFormFile properties in particular only bind on an exact path match.
+    const appendQuestionsToFormData = (formData: FormData) => {
         questions.forEach((q, index) => {
             formData.append(`questions[${index}].questionText`, q.questionText);
             formData.append(`questions[${index}].optionA`, q.optionA);
@@ -369,6 +567,54 @@ export const useQuestionDetailManagement = () => {
                 if (file) formData.append(`questions[${index}].${IMAGE_FIELD_NAMES[imageKey]}`, file);
             });
         });
+    };
+
+    // School Book Revision quiz: sent with its title, always as a Free quiz (no course/batch), the
+    // subject / category / standard / part picked on that form, and the questions
+    const submitSchoolBookQuiz = (fields: Record<string, string>) => {
+        const titleValidationError = validateSingleField(QUIZ_VALIDATION_RULES, 'title', title);
+        if (titleValidationError) setTitleError(titleValidationError);
+
+        // Run the question check even when the title failed, so every error shows at once
+        const questionsValid = validateQuestions();
+        if (titleValidationError || !questionsValid) {
+            showError(questions.length === 0 ? 'Please add at least one question' : 'Please fix the errors in the form');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('quizToView', SCHOOL_QUIZ_TO_VIEW);
+        formData.append('quizType', SCHOOL_QUIZ_TYPE);
+        Object.entries(fields).forEach(([name, value]) => formData.append(name, value));
+        appendQuestionsToFormData(formData);
+
+        setIsSaving(true);
+        dispatch(createQuiz(formData) as any);
+    };
+
+    // `extraFields` are added to the request as-is (e.g. the subject / standard / part of a School Book quiz)
+    const handleSubmit = (extraFields?: Record<string, string>) => {
+        if (!validate()) {
+            showError(questions.length === 0 ? 'Please add at least one question' : 'Please fix the errors in the form');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('quizToView', quizToView);
+        formData.append('quizType', quizType);
+        if (extraFields) Object.entries(extraFields).forEach(([name, value]) => formData.append(name, value));
+        // Course / batch only exist for paid quizzes; a free quiz is sent without them
+        if (isPaid) {
+            formData.append('batchId', batchId);
+            if (!isEditMode) formData.append('courseId', courseId);
+        }
+
+        // const quizFile = quizFileList[0]?.originFileObj;
+        // if (!isEditMode && quizFile) formData.append('file', quizFile);
+
+        appendQuestionsToFormData(formData);
 
         setIsSaving(true);
 
@@ -379,19 +625,26 @@ export const useQuestionDetailManagement = () => {
         }
     };
 
+    // Back to the list on the tab this quiz belongs to
     const handleCancel = () => {
-        navigate('/quiz');
+        navigate('/quiz', { state: { quizType } });
     };
 
     return {
         isEditMode,
         quizDetail,
         coursesArray,
+        batchesArray,
+        batchesLoading,
         loading,
         isSaving,
         title,
         courseId,
+        batchId,
         quizToView,
+        isPaid,
+        quizType,
+        isFolderQuiz,
         items,
         questionCount: questions.length,
         titleError,
@@ -399,8 +652,13 @@ export const useQuestionDetailManagement = () => {
         quizToViewError,
         questionErrors,
         applyMarkToAll,
+        quizFileList,
+        isImporting,
+        importWarnings,
+        handleQuizFileChange,
         handleTitleChange,
         handleCourseChange,
+        handleBatchChange,
         handleQuizToViewChange,
         addQuestionAfter,
         addSectionAfter,
@@ -413,6 +671,7 @@ export const useQuestionDetailManagement = () => {
         handleImageRemove,
         applySmartOptionsPaste,
         handleSubmit,
+        submitSchoolBookQuiz,
         handleCancel,
         toastMessages,
         hideToast,

@@ -99,7 +99,7 @@ const CourseDetail = () => {
                             <InfoItem icon={person_add_Icon} label="Created At:" value={courseDetail.createdAt ? formatDate(courseDetail.createdAt) : ''} />
                             <InfoItem icon={person_add_Icon} label="Updated At:" value={courseDetail.updatedAt ? formatDate(courseDetail.updatedAt) : ''} />
                             <div
-                                className="quiz-rank-list__download"
+                                className="quiz-rank-list__download quiz-rank-list__download--white-icon"
                                 onClick={isDownloadingEnrollments ? undefined : handleDownloadEnrollments}
                                 aria-disabled={isDownloadingEnrollments}
                             >

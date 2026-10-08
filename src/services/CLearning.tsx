@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getSSLogin, getRegister, deleteUser, updateUser, getUsers, getUserById, updateEnrollmentStatus, getCourses, getCourseById, createCourse, updateCourse, deleteCourse, getBatches, createBatch, updateBatch, deleteBatch, getStudyMaterials, createStudyMaterial, updateStudyMaterial, deleteStudyMaterial, getVideoMaterials, createVideoMaterial, updateVideoMaterial, deleteVideoMaterial, getDashboardCounts, getQuizzes, getQuizById, createQuiz, updateQuiz, deleteQuiz, publishQuiz, getQuizRankList, getNotifications, createNotification, updateNotification, deleteNotification} from "./LearningAction";
+import { getSSLogin, getRegister, deleteUser, updateUser, getUsers, getUserById, updateEnrollmentStatus, getCourses, getCourseById, createCourse, updateCourse, deleteCourse, getBatches, createBatch, updateBatch, deleteBatch, getStudyMaterials, createStudyMaterial, updateStudyMaterial, deleteStudyMaterial, getVideoMaterials, createVideoMaterial, updateVideoMaterial, deleteVideoMaterial, getDashboardCounts, getQuizzes, getQuizById, createQuiz, updateQuiz, deleteQuiz, publishQuiz, copyQuiz, getQuizRankList, getNotifications, createNotification, updateNotification, deleteNotification} from "./LearningAction";
 import { initialState } from "./ILearning";
 
 const LearningSlice = createSlice({
@@ -596,6 +596,23 @@ const LearningSlice = createSlice({
                 state.apiStatus.QuizzesData.loading = false;
                 state.apiStatus.QuizzesData.success = false;
                 state.apiStatus.QuizzesData.error = action.payload as string || "Failed to publish Quiz";
+            });
+
+        builder
+            .addCase(copyQuiz.pending, (state) => {
+                state.apiStatus.QuizzesData.loading = true;
+                state.apiStatus.QuizzesData.success = false;
+                state.apiStatus.QuizzesData.error = null;
+            })
+            .addCase(copyQuiz.fulfilled, (state) => {
+                state.apiStatus.QuizzesData.loading = false;
+                state.apiStatus.QuizzesData.success = true;
+                state.apiStatus.QuizzesData.error = null;
+            })
+            .addCase(copyQuiz.rejected, (state, action) => {
+                state.apiStatus.QuizzesData.loading = false;
+                state.apiStatus.QuizzesData.success = false;
+                state.apiStatus.QuizzesData.error = action.payload as string || "Failed to copy Quiz";
             });
 
         builder

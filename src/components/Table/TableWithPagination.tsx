@@ -38,6 +38,7 @@ const TableComponent: React.FC<TableComponentProps> = ({
   className,
   style,
   rowSelection,
+  expandable,
   scroll,
   // maxHeight = 400,
   
@@ -123,6 +124,7 @@ const TableComponent: React.FC<TableComponentProps> = ({
           bordered={bordered}
           showHeader={showHeader}
           rowSelection={rowSelection}
+          expandable={expandable}
           scroll={scroll}
           className="custom-table__ant-table"
           locale={locale}

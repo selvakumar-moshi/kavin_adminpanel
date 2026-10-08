@@ -1,5 +1,6 @@
 import type { ITableColumn } from '../../components/Table/ITable';
 import dayjs from 'dayjs';
+import { renderTruncatedCellWithTooltip } from '../../utils/tableCellRender';
 
 export interface CourseRecord {
     id: string;
@@ -45,6 +46,8 @@ export interface BatchRecord {
     courseName?: string;
     batchFrom: string;
     batchTo: string;
+    whatsAppLink?: string | null;
+    telegramLink?: string | null;
     createdAt?: string;
     updatedAt?: string | null;
     isExpired: boolean;
@@ -66,6 +69,23 @@ export const BATCH_TITLE_FIELD = [
         label: 'Batch Title',
         placeholder: 'Enter batch title',
         required: true,
+        type: 'text' as const,
+    },
+];
+
+export const BATCH_LINK_FIELDS = [
+    {
+        name: 'whatsAppLink',
+        label: 'WhatsApp Link',
+        placeholder: 'Enter WhatsApp link',
+        hint: 'eg: https://chat.whatsapp.com/AbCdEf123456',
+        type: 'text' as const,
+    },
+    {
+        name: 'telegramLink',
+        label: 'Telegram Link',
+        placeholder: 'Enter Telegram link',
+        hint: 'eg: https://t.me/yourgroupname',
         type: 'text' as const,
     },
 ];
@@ -96,6 +116,7 @@ export const getBatchTableColumns = (): ITableColumn[] => [
         key: 'title',
         searchType: 'text',
         sorter: (a: BatchRecord, b: BatchRecord) => compareText(a.title, b.title),
+        render: (title: string) => renderTruncatedCellWithTooltip(title),
     },
     {
         title: 'Batch From',

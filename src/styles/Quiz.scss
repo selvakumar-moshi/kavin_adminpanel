@@ -10,6 +10,13 @@
   }
 }
 
+.school-book{
+  .custom-table{
+    top: 170px;
+    left: 402px;
+  }
+}
+
 .question-detail-container {
   display: flex;
   flex-direction: column;
@@ -314,4 +321,38 @@
       }
     }
   }
+}
+
+// Quiz questions/options are often typed in Tamil. Discover Sans has no Tamil glyphs, so list Noto Sans Tamil
+// (loaded in index.html) right after it — Latin text still renders in Discover Sans. Inputs set their own
+// font-family, so they're targeted explicitly.
+.question-detail-container {
+  &,
+  input,
+  textarea,
+  .ant-input,
+  .ant-select-selection-item,
+  .ant-select-selection-placeholder {
+    font-family: 'Noto Sans Tamil', sans-serif;
+  }
+}
+
+.question-detail-form__importing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-family: var(--font-family);
+  font-size: 12px;
+  color: #8e8e8e;
+}
+
+.question-detail-form__import-warnings {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-family: var(--font-family);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #b26a00;
+  list-style: disc;
 }

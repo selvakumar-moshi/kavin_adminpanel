@@ -1,0 +1,262 @@
+// School Book Revision: one subjects table whose rows open to show categories and standards,
+// plus a strip of parts above it
+
+.school-book {
+  // First-run checklist (parts -> standards -> subjects)
+  &__guide {
+    margin: 4px 0 16px;
+    padding: 16px 20px;
+    border: 1px solid #f3d3b4;
+    border-radius: 12px;
+    background: #fff8f1;
+    font-family: var(--font-family);
+  }
+
+  &__guide-title {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  &__guide-text {
+    margin: 2px 0 12px;
+    font-size: 13px;
+    color: #6b6b6b;
+  }
+
+  &__guide-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__guide-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__guide-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 26px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--btn-primary-bg);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  &__guide-step--done &__guide-badge {
+    background: #4caf50;
+  }
+
+  &__guide-step-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+
+    span {
+      color: #6b6b6b;
+    }
+  }
+
+  &__guide-step--done &__guide-step-text {
+    opacity: 0.6;
+  }
+
+  // Parts and standards in a column on the left, the subjects table taking the rest on the right
+  &__layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-top: 10px
+  }
+
+  &__side {
+    flex: 0 0 300px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid #ececec;
+    border-radius: 12px;
+    background: #fff;
+
+    .school-book__parts {
+      margin: 0;
+    }
+  }
+
+  &__main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  // A group (Parts / Standards): a head line with the title and its "+ Add" pill, then the pills wrapping below it
+  &__parts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 4px 0 16px;
+    font-family: var(--font-family);
+  }
+
+  &__parts_head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__chips {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__parts-label {
+    font-weight: 600;
+    font-size: 14px;
+    margin-right: 4px;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 6px 3px 12px;
+    border: 1px solid #d9d9d9;
+    border-radius: 100px;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  &__chip-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #8e8e8e;
+    cursor: pointer;
+
+    &:hover {
+      background: #f0f0f0;
+      color: var(--btn-primary-bg);
+    }
+  }
+
+  // "+ Add ..." as a small dashed pill / text link
+  &__add {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 12px;
+    border: 1px dashed var(--btn-primary-bg);
+    border-radius: 100px;
+    background: transparent;
+    color: var(--btn-primary-bg);
+    font-family: var(--font-family);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(236, 125, 22, 0.08);
+    }
+  }
+
+  &__summary {
+    color: #8e8e8e;
+    font-size: 13px;
+  }
+
+  // Content of an opened subject row
+  &__detail {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 4px 8px 8px 40px;
+    font-family: var(--font-family);
+  }
+
+  &__section-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 6px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+  }
+
+  // A category inside an opened subject: its own header line, then its standards indented below
+  &__category {
+    margin-bottom: 8px;
+  }
+
+  &__category-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px solid #e6e6e6;
+    font-size: 14px;
+  }
+
+  &__category-name {
+    flex: 0 0 168px;
+    font-weight: 600;
+  }
+
+  &__category-head &__row-actions {
+    margin-left: auto;
+  }
+
+  &__category-body {
+    padding-left: 24px;
+  }
+
+  &__row-name {
+    flex: 0 0 180px;
+    font-weight: 500;
+  }
+
+  &__row-info {
+    flex: 1;
+    min-width: 0;
+    color: #6b6b6b;
+  }
+
+  &__row-actions {
+    flex: 0 0 auto;
+  }
+
+  &__empty {
+    color: #8e8e8e;
+    font-size: 13px;
+  }
+}

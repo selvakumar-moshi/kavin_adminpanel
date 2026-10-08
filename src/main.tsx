@@ -31,6 +31,8 @@ import './styles/DateFieldsSection.scss';
 import './styles/StudyMaterial.scss';
 import './styles/ColumnSearchModal.scss';
 import './styles/Quiz.scss';
+import './styles/SchoolBook.scss';
+import './styles/FolderStructure.scss';
 import './styles/StatusBadge.scss';
 import './styles/Dashboard.scss';
 import './styles/NoDataFound.scss';

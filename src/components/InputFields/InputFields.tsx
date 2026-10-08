@@ -15,6 +15,8 @@ export interface InputField {
   disabled?: boolean;
   status?: "error" | "success" | "warning" | "info" | "default";
   visibilityToggle?: boolean;
+  /** Small helper text shown under the input (e.g. "eg: https://..."). */
+  hint?: string;
 }
 
 export interface InputFieldsProps {
@@ -115,6 +117,9 @@ const InputFields: React.FC<InputFieldsProps> = ({
                         <div className="ant-form-item-extra">
                           {(values[field.name] || '').length}/{field.maxLength} characters
                         </div>
+                      )}
+                      {field.hint && !errors[field.name] && (
+                        <div className="ant-form-item-extra form-fields-section__hint">{field.hint}</div>
                       )}
                       {errors[field.name] && (
                         <div className="form-fields-section__error-message">

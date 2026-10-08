@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Spin, Tooltip } from "antd";
+import { CopyOutlined } from "@ant-design/icons";
 import pngEdit from "../../assets/pngEdit.svg";
 import pngDelete from "../../assets/pngDelete.svg";
 import publish_Icon from "../../assets/publish_Icon.svg"
@@ -45,6 +46,8 @@ const ActionIcons: React.FC<ActionIconsProps> = ({
         return <img src={pngDelete} alt="Delete" className="action-icon-img" />;
       case "publish":
         return <img src={publish_Icon} alt="Publish" className="action-icon-img" />;
+      case "copy":
+        return <CopyOutlined className="action-icon-img" style={{ fontSize: 18 }} />;
       default:
         return null;
     }

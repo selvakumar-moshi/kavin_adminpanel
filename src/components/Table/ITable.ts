@@ -34,6 +34,8 @@ export interface ITableProps {
   style?: React.CSSProperties;
   onRow?: (record: ITableData, index: number) => object;
   rowSelection?: object;
+  /** Ant Design `expandable` config (e.g. `expandedRowRender`) for rows that open to show more */
+  expandable?: object;
   scroll?: {
     x?: number | string;
     y?: number | string;

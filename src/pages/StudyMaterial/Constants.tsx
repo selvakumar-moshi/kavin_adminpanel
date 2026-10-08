@@ -1,6 +1,7 @@
 import { FilePdfOutlined, YoutubeOutlined } from '@ant-design/icons';
 import type { ITableColumn } from '../../components/Table/ITable';
 import { formatDate } from '../../utils/dateUtils';
+import { renderTruncatedCellWithTooltip } from '../../utils/tableCellRender';
 
 const compareText = (a?: string | null, b?: string | null) =>
     (a || '').toLowerCase().localeCompare((b || '').toLowerCase());
@@ -58,6 +59,7 @@ export const getStudyMaterialTableColumns = (getCourseName: (courseId: string) =
         key: 'title',
         searchType: 'text',
         sorter: (a: StudyMaterialRecord, b: StudyMaterialRecord) => compareText(a.title, b.title),
+        render: (title: string) => renderTruncatedCellWithTooltip(title) 
     },
     // {
     //     title: 'Description',
@@ -71,7 +73,7 @@ export const getStudyMaterialTableColumns = (getCourseName: (courseId: string) =
         title: 'Course',
         dataIndex: 'courseId',
         key: 'courseId',
-        render: (courseId: string) => getCourseName(courseId),
+        render: (courseId: string) => renderTruncatedCellWithTooltip(getCourseName(courseId)),
     },
     {
         title: 'Batch',
@@ -79,7 +81,7 @@ export const getStudyMaterialTableColumns = (getCourseName: (courseId: string) =
         key: 'batchTitle',
         searchType: 'text',
         sorter: (a: StudyMaterialRecord, b: StudyMaterialRecord) => compareText(a.batchTitle, b.batchTitle),
-        render: (value: string | null) => value || 'All batches',
+        render: (value: string) => renderTruncatedCellWithTooltip(value),
     },
     {
         title: 'PDF',
@@ -92,7 +94,7 @@ export const getStudyMaterialTableColumns = (getCourseName: (courseId: string) =
         ),
     },
     {
-        title: 'Material To View',
+        title: 'View',
         dataIndex: 'materialToView',
         key: 'materialToView',
         searchType: 'text',
@@ -176,7 +178,7 @@ export const getVideoMaterialTableColumns = (getCourseName: (courseId: string) =
         title: 'Course',
         dataIndex: 'courseId',
         key: 'courseId',
-        render: (courseId: string) => getCourseName(courseId),
+        render: (courseId: string) => renderTruncatedCellWithTooltip(getCourseName(courseId)),
     },
     {
         title: 'Batch',
@@ -184,7 +186,7 @@ export const getVideoMaterialTableColumns = (getCourseName: (courseId: string) =
         key: 'batchTitle',
         searchType: 'text',
         sorter: (a: VideoMaterialRecord, b: VideoMaterialRecord) => compareText(a.batchTitle, b.batchTitle),
-        render: (value: string | null) => value || 'All batches',
+        render: (value: string | null) => renderTruncatedCellWithTooltip(value || 'All batches'),
     },
     {
         title: 'Video',

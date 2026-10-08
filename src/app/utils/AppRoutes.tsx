@@ -8,8 +8,8 @@ import Material from '../../pages/StudyMaterial/Material';
 import Course from '../../pages/Course/Course';
 import CourseDetail from '../../pages/Course/CourseDetail';
 import Quiz from '../../pages/Quiz/Quiz';
-import QuestionDetail from '../../pages/Quiz/QuestionDetail';
-import Notification from '../../pages/Notification/Notification';
+import QuestionDetail from '../../pages/Quiz/QuestionDetail';import Notification from '../../pages/Notification/Notification';
+import SchoolBookRevision from '../../pages/DataStructure/DataStructure';
 
 const ProtectedLayout = () => {
   return <LayoutContainter />;
@@ -66,6 +66,10 @@ const router = createBrowserRouter([
       {
         path: "/quiz/:id",
         element: <QuestionDetail />,
+      },
+      {
+        path: "/schoolbook",
+        element: <SchoolBookRevision />,
       },
       {
         path: "/notification",

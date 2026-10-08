@@ -5,8 +5,13 @@ import { useDashboard } from './useDashboard';
 import PageTitle from '../../components/PageTitle';
 import DropdownField from '../../components/DropdownField/DropdownField';
 import ToastMessages from '../../components/ToastMessages';
-import { CATEGORY_COLORS } from './Constant';
+import { CATEGORY_COLORS, RANK_QUIZ_TYPE_OPTIONS, RANK_QUIZ_TO_VIEW_OPTIONS } from './Constant';
 import download_Icon from '../../assets/pngDownload.svg';
+
+// The chart is drawn on a canvas, which can't resolve `var(--font-family)` — so read the variable's actual value
+const CHART_FONT_FAMILY =
+  (typeof document !== 'undefined'
+    && getComputedStyle(document.documentElement).getPropertyValue('--font-family').trim());
 
 const Dashboard = () => {
   const {
@@ -14,11 +19,18 @@ const Dashboard = () => {
     totalCourses,
     totalBatch,
     userCount,
-    totalQuestion,
+    // totalQuestion,
+    totalQuiz,
     totalStudyMaterial,
     totalVideoMaterial,
-    quizzesArray,
+    quizType,
+    quizToView,
+    showQuizToView,
+    quizOptions,
+    quizzesLoading,
     selectedQuizId,
+    handleQuizTypeChange,
+    handleQuizToViewChange,
     handleQuizChange,
     rankList,
     rankListLoading,
@@ -34,10 +46,9 @@ const Dashboard = () => {
     { type: 'Users', value: userCount },
     { type: 'Study Materials', value: totalStudyMaterial },
     { type: 'Video Materials', value: totalVideoMaterial },
-    { type: 'Questions', value: totalQuestion },
+    // { type: 'Questions', value: totalQuestion },
+    { type: 'Quiz', value: totalQuiz },
   ];
-
-  const quizOptions = quizzesArray.map((quiz) => ({ value: quiz.id, label: `${quiz.title} (${quiz.courseName})` }));
 
   return (
     <div>
@@ -60,11 +71,13 @@ const Dashboard = () => {
                   label={{
                     text: (d: { type: string; value: number }) => `${d.type}\n${d.value}`,
                     position: 'outside',
+                    fontFamily: CHART_FONT_FAMILY,
                   }}
                   legend={{
                     color: {
                       position: 'bottom',
                       layout: { justifyContent: 'center' },
+                      itemLabelFontFamily: CHART_FONT_FAMILY,
                     },
                   }}
                   height={320}
@@ -94,6 +107,37 @@ const Dashboard = () => {
               </div>
             }
           >
+            {/* Quiz Type, then (Competitive only) Quiz To View, then the quizzes that match */}
+            <DropdownField
+              fields={[
+                {
+                    name: 'quizType',
+                    label: 'Quiz Type',
+                    placeholder: 'Select quiz type',
+                    options: RANK_QUIZ_TYPE_OPTIONS,
+                    allowClear: false,
+                },
+              ]}
+              values={{ quizType }}
+              onChange={(_, value) => handleQuizTypeChange(Array.isArray(value) ? value[0] || '' : value)}
+            />
+
+            {showQuizToView && (
+              <DropdownField
+                fields={[
+                  {
+                      name: 'quizToView',
+                      label: 'Quiz To View',
+                      placeholder: 'Select Free or Paid',
+                      options: RANK_QUIZ_TO_VIEW_OPTIONS,
+                      allowClear: false,
+                  },
+                ]}
+                values={{ quizToView }}
+                onChange={(_, value) => handleQuizToViewChange(Array.isArray(value) ? value[0] || '' : value)}
+              />
+            )}
+
             <DropdownField
               fields={[
                 {
@@ -101,6 +145,7 @@ const Dashboard = () => {
                     label: 'Quiz',
                     placeholder: 'Select a quiz to view its rank list',
                     options: quizOptions,
+                    loading: quizzesLoading,
                 },
               ]}
               values={{ quizId: selectedQuizId }}
@@ -109,7 +154,7 @@ const Dashboard = () => {
 
             <Spin spinning={rankListLoading}>
               {!selectedQuizId ? (
-                <Empty description="Select a quiz to view its rank list" />
+                <Empty description={quizzesLoading ? 'Loading quizzes...' : quizOptions.length === 0 ? 'No quiz found for this selection' : 'Select a quiz to view its rank list'} />
               ) : rankList.length === 0 ? (
                 <Empty description="No submissions yet for this quiz" />
               ) : (

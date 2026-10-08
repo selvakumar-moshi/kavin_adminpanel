@@ -54,6 +54,10 @@ class LearningAPI {
         return Super_Sales.delete(`/Course/${id}`);
     }
 
+    getAllEnrollment(){
+        return Super_Sales.get(`/Enrollment`);
+    }
+
     getEnrollmentDownload(courseId: string) {
         return Super_Sales.get(`/Enrollment/course/${courseId}/download`, { responseType: 'blob' });
     }
@@ -68,12 +72,12 @@ class LearningAPI {
         });
     }
 
-    createBatch(title: string, courseId: string, batchFrom: string, batchTo: string) {
-        return Super_Sales.post('/Batch', { title, courseId, batchFrom, batchTo });
+    createBatch(title: string, courseId: string, batchFrom: string, batchTo: string, whatsAppLink: string, telegramLink: string) {
+        return Super_Sales.post('/Batch', { title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink });
     }
 
-    updateBatch(id: string, title: string, courseId: string, batchFrom: string, batchTo: string) {
-        return Super_Sales.put(`/Batch/${id}`, { title, courseId, batchFrom, batchTo });
+    updateBatch(id: string, title: string, courseId: string, batchFrom: string, batchTo: string, whatsAppLink: string, telegramLink: string) {
+        return Super_Sales.put(`/Batch/${id}`, { title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink });
     }
 
     deleteBatch(id: string) {
@@ -138,12 +142,14 @@ class LearningAPI {
         return Super_Sales.get('/Dashboard/counts');
     }
 
-    getQuizzes(searchTerm?: string, globalFilter?: Record<string, string>, pageNumber?: number, pageSize?: number) {
+    getQuizzes(searchTerm?: string, globalFilter?: Record<string, string>, pageNumber?: number, pageSize?: number, quizType?: string) {
         return Super_Sales.post('/quiz/search', {
             searchTerm: searchTerm || '',
             globalFilter: globalFilter || {},
             pageNumber: pageNumber || 1,
             pageSize: pageSize || 10,
+            // Only sent when a tab is active (e.g. "competitive" / "school"); other callers still get every quiz
+            ...(quizType ? { quizType } : {}),
         });
     }
 
@@ -175,8 +181,82 @@ class LearningAPI {
         return Super_Sales.post(`/quiz/${id}/publish`, { expiresAt });
     }
 
-    getQuizRankList(quizId: string) {
-        return Super_Sales.get(`/Quiz/${quizId}/rank-list`, {});
+    // School Book Revision structure: `path` is one of "subjects" | "categories" | "standard" | "parts"
+    getQuizStructure(path: string, params?: Record<string, string>) {
+        return Super_Sales.get(`/QuizStructure/${path}`, { params });
+    }
+
+    createQuizStructure(path: string, body: Record<string, unknown>) {
+        return Super_Sales.post(`/QuizStructure/${path}`, body);
+    }
+
+    updateQuizStructure(path: string, id: string, body: Record<string, unknown>) {
+        return Super_Sales.put(`/QuizStructure/${path}/${id}`, body);
+    }
+
+    deleteQuizStructure(path: string, id: string) {
+        return Super_Sales.delete(`/QuizStructure/${path}/${id}`);
+    }
+
+    getFolders() {
+        return Super_Sales.get('/Folder');
+    }
+
+    createFolder(name: string) {
+        return Super_Sales.post('/Folder', { name });
+    }
+
+    updateFolder(id: string, name: string) {
+        return Super_Sales.put(`/Folder/${id}`, { name });
+    }
+
+    deleteFolder(id: string) {
+        return Super_Sales.delete(`/Folder/${id}`);
+    }
+
+    getSubFolders(folderId: string) {
+        return Super_Sales.get('/SubFolder', { params: { folderId } });
+    }
+
+    createSubFolder(name: string, folderId: string) {
+        return Super_Sales.post('/SubFolder', { name, folderId });
+    }
+
+    updateSubFolder(id: string, name: string, folderId: string) {
+        return Super_Sales.put(`/SubFolder/${id}`, { name, folderId });
+    }
+
+    deleteSubFolder(id: string) {
+        return Super_Sales.delete(`/SubFolder/${id}`);
+    }
+
+    getQuizCategories() {
+        return Super_Sales.get('/Quiz/categories');
+    }
+
+    importQuiz(file: File) {
+        const formData = new FormData();
+        formData.append('file', file);
+        return Super_Sales.post('/Quiz/import', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    }
+
+    copyQuiz(quizId: string, batchId: string, title: string, quizToView: string) {
+        return Super_Sales.post('/Quiz/copy', { quizId, batchId, title, quizToView });
+    }
+
+    getQuizRankList(quizId: string, batchId?: string, quizType?: string, quizToView?: string) {
+        // Only the filters that apply are sent, e.g. /Quiz/{id}/rank-list?batchId=..&quizType=competitive&quizToView=Paid
+        return Super_Sales.get(`/Quiz/${quizId}/rank-list`, {
+            params: {
+                ...(batchId ? { batchId } : {}),
+                ...(quizType ? { quizType } : {}),
+                ...(quizToView ? { quizToView } : {}),
+            },
+        });
     }
     getQuizRankListDownload(quizId: string) {
         return Super_Sales.get(`/Quiz/${quizId}/rank-list/download`, { responseType: 'blob' });
@@ -191,12 +271,12 @@ class LearningAPI {
         });
     }
 
-    createNotification(title: string, description: string, link: string, date: string) {
-        return Super_Sales.post('/Notification', { title, description, link, date });
+    createNotification(title: string, description: string, link: string, date: string, notificationType: string) {
+        return Super_Sales.post('/Notification', { title, description, link, date, notificationType });
     }
 
-    updateNotification(id: string, title: string, description: string, link: string, date: string) {
-        return Super_Sales.put(`/Notification/${id}`, { title, description, link, date });
+    updateNotification(id: string, title: string, description: string, link: string, date: string, notificationType: string) {
+        return Super_Sales.put(`/Notification/${id}`, { title, description, link, date, notificationType });
     }
 
     deleteNotification(id: string) {

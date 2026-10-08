@@ -72,6 +72,23 @@ export const BATCH_VALIDATION_RULES: Record<string, ValidationRule> = {
             maxLength: 'Batch Title must not exceed 100 characters.',
         },
     },
+    // Optional — only checked when filled in
+    whatsAppLink: {
+        maxLength: 500,
+        pattern: /^https?:\/\/(chat\.whatsapp\.com|wa\.me|api\.whatsapp\.com|whatsapp\.com)\/\S+$/i,
+        errorMessages: {
+            maxLength: 'WhatsApp Link must not exceed 500 characters.',
+            pattern: 'Enter a valid WhatsApp link, eg: https://chat.whatsapp.com/AbCdEf123456',
+        },
+    },
+    telegramLink: {
+        maxLength: 500,
+        pattern: /^https?:\/\/(t\.me|telegram\.me|telegram\.dog)\/\S+$/i,
+        errorMessages: {
+            maxLength: 'Telegram Link must not exceed 500 characters.',
+            pattern: 'Enter a valid Telegram link, eg: https://t.me/yourgroupname',
+        },
+    },
 };
 
 export const STUDY_MATERIAL_VALIDATION_RULES: Record<string, ValidationRule> = {
@@ -117,6 +134,12 @@ export const VIDEO_MATERIAL_VALIDATION_RULES: Record<string, ValidationRule> = {
 };
 
 export const NOTIFICATION_VALIDATION_RULES: Record<string, ValidationRule> = {
+    notificationType: {
+        required: true,
+        errorMessages: {
+            required: 'Notification Type is required',
+        },
+    },
     title: {
         required: true,
         maxLength: 200,
@@ -175,9 +198,9 @@ export const QUIZ_QUESTION_VALIDATION_RULES: Record<string, ValidationRule> = {
         required: true,
         errorMessages: { required: 'Required' },
     },
+    // Optional: a question may have only three options (e.g. imported from a document with Option D missing)
     optionD: {
-        required: true,
-        errorMessages: { required: 'Required' },
+        errorMessages: {},
     },
     correctOption: {
         required: true,

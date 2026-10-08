@@ -11,7 +11,7 @@ import ToastMessages from '../../components/ToastMessages';
 import Breadcrumbs from '../../components/Breadcrumb/Breadcrumbs';
 import StatusBadge from '../../components/Table/StatusBadge';
 import InfoItem from '../../components/InfoItem/InfoItem';
-import { useUserDetailManagement } from './useUserDetailHooks';
+import { useUserDetailManagement, ALLOWED_BATCH_SEPARATOR } from './useUserDetailHooks';
 import { usePageBodyClass } from '../../utils/pageBodyClass';
 import { EDIT_USER_FIELDS, PENDING_ENROLLMENT_STATUS_OPTIONS, UserDetailtabs, DISTRICT_OPTIONS } from './Constants';
 import { formatDate } from '../../utils/dateUtils';
@@ -47,6 +47,8 @@ const UserDetail = () => {
         handleInputChange,
         handleCourseSelectionChange,
         handleCourseBatchChange,
+        allowedBatchSelections,
+        handleAllowedBatchChange,
         handleEditSubmit,
         updatingEnrollmentId,
         handleStatusChange,
@@ -105,6 +107,14 @@ const UserDetail = () => {
     // that would resend existing enrollments and we have no confirmed contract for what the
     // backend does with a courseId it already has (risk of duplicating/altering an enrollment).
     const purchasedCourseIds = new Set((userDetail?.courses || []).map(c => c.courseId));
+
+    // One combined list of every purchased course's allowed batches; the label carries the course name
+    const allowedBatchOptions = (userDetail?.courses || []).flatMap((c) =>
+        (c.allowedBatches || []).map((batch) => ({
+            value: `${c.enrollmentId}${ALLOWED_BATCH_SEPARATOR}${batch.batchId}`,
+            label: `${batch.title} - ${c.courseName} (${formatDate(batch.batchFrom)} - ${formatDate(batch.batchTo)})`,
+        }))
+    );
     const availableCourseOptions = coursesArray.map(course => ({
         value: course.id,
         label: course.courseName,
@@ -401,6 +411,23 @@ const UserDetail = () => {
                                                 .filter((c) => c.batchTitle)
                                                 .map((c) => c.enrollmentId),
                                         }}
+                                    />
+                                )}
+                                {/* Other batches of an already-purchased course that the backend lists as allowed — selectable, sent on Update */}
+                                {allowedBatchOptions.length > 0 && (
+                                    <DropdownField
+                                        fields={[
+                                            {
+                                                name: 'allowedBatches',
+                                                label: 'Allowed Batches',
+                                                placeholder: 'Select batch',
+                                                mode: 'multiple',
+                                                options: allowedBatchOptions,
+                                                disabled: isUpdating,
+                                            },
+                                        ]}
+                                        values={{ allowedBatches: allowedBatchSelections }}
+                                        onChange={(_, value) => handleAllowedBatchChange(Array.isArray(value) ? value : [value])}
                                     />
                                 )}
                                 {selectedCourses.map((entry) => {

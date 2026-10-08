@@ -1,12 +1,14 @@
 import type { ITableColumn } from '../../components/Table/ITable';
 import { formatDate } from '../../utils/dateUtils';
 import dayjs from 'dayjs';
+import { renderTruncatedCellWithTooltip } from '../../utils/tableCellRender';
 
 export interface NotificationRecord {
     id: string;
     title: string;
     description: string;
     link: string;
+    notificationType?: string;
     date: string;
     createdAt?: string;
     updatedAt?: string | null;
@@ -19,6 +21,21 @@ export const NOTIFICATION_SEARCH_INPUT_FIELDS = [
         placeholder: 'Search by title, description or link',
         type: 'text' as const,
         search: true,
+    },
+];
+
+export const NOTIFICATION_TYPE_OPTIONS = [
+    { value: 'Push Notification', label: 'Push Notification' },
+    { value: 'Job Notification', label: 'Job Notification' },
+];
+
+export const NOTIFICATION_TYPE_FIELD = [
+    {
+        name: 'notificationType',
+        label: 'Notification Type',
+        placeholder: 'Select Notification Type',
+        required: true,
+        options: NOTIFICATION_TYPE_OPTIONS,
     },
 ];
 
@@ -73,6 +90,14 @@ export const getNotificationTableColumns = (): ITableColumn[] => [
         key: 'title',
         searchType: 'text',
         sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.title, b.title),
+        render: (title: string) => renderTruncatedCellWithTooltip(title),
+    },
+    {
+        title: 'Notification Type',
+        dataIndex: 'notificationType',
+        key: 'notificationType',
+        searchType: 'text',
+        sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.notificationType, b.notificationType),
     },
     {
         title: 'Description',
@@ -80,6 +105,7 @@ export const getNotificationTableColumns = (): ITableColumn[] => [
         key: 'description',
         searchType: 'text',
         sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.description, b.description),
+        render: (description: string) => renderTruncatedCellWithTooltip(description),
     },
     {
         title: 'Link',
@@ -87,7 +113,7 @@ export const getNotificationTableColumns = (): ITableColumn[] => [
         key: 'link',
         searchType: 'text',
         render: (link: string) => (
-            <a href={link} target="_blank" rel="noopener noreferrer">{link}</a>
+            <a href={link} target="_blank" rel="noopener noreferrer">{renderTruncatedCellWithTooltip(link)}</a>
         ),
     },
     {
@@ -107,13 +133,13 @@ export const getNotificationTableColumns = (): ITableColumn[] => [
         sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.createdAt, b.createdAt),
         render: (value: string) => (value ? formatDate(value) : '-'),
     },
-    {
-        title: 'Updated At',
-        dataIndex: 'updatedAt',
-        key: 'updatedAt',
-        searchType: 'date',
-        disableFutureDates: true,
-        sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.updatedAt, b.updatedAt),
-        render: (value: string | null) => (value ? formatDate(value) : '-'),
-    },
+    // {
+    //     title: 'Updated At',
+    //     dataIndex: 'updatedAt',
+    //     key: 'updatedAt',
+    //     searchType: 'date',
+    //     disableFutureDates: true,
+    //     sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.updatedAt, b.updatedAt),
+    //     render: (value: string | null) => (value ? formatDate(value) : '-'),
+    // },
 ];

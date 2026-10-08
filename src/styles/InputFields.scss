@@ -175,6 +175,10 @@
     top: -14px;
   }
 
+  &__hint.ant-form-item-extra {
+    text-align: left;
+  }
+
   &__error-message {
     display: flex;
     align-items: flex-start;

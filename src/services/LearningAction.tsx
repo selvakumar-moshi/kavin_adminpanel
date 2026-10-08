@@ -180,11 +180,11 @@ export const getBatches = createAsyncThunk<any, { courseId: string; searchTerm?:
   }
 );
 
-export const createBatch = createAsyncThunk<any, { title: string; courseId: string; batchFrom: string; batchTo: string }>(
+export const createBatch = createAsyncThunk<any, { title: string; courseId: string; batchFrom: string; batchTo: string; whatsAppLink: string; telegramLink: string }>(
     "courseManagement/createBatch",
-    async ({ title, courseId, batchFrom, batchTo }, { rejectWithValue }) => {
+    async ({ title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink }, { rejectWithValue }) => {
       try {
-        const res = await learningAPI.createBatch(title, courseId, batchFrom, batchTo);
+        const res = await learningAPI.createBatch(title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to create Batch";
@@ -193,11 +193,11 @@ export const createBatch = createAsyncThunk<any, { title: string; courseId: stri
   }
 );
 
-export const updateBatch = createAsyncThunk<any, { id: string; title: string; courseId: string; batchFrom: string; batchTo: string }>(
+export const updateBatch = createAsyncThunk<any, { id: string; title: string; courseId: string; batchFrom: string; batchTo: string; whatsAppLink: string; telegramLink: string }>(
     "courseManagement/updateBatch",
-    async ({ id, title, courseId, batchFrom, batchTo }, { rejectWithValue }) => {
+    async ({ id, title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink }, { rejectWithValue }) => {
       try {
-        const res = await learningAPI.updateBatch(id, title, courseId, batchFrom, batchTo);
+        const res = await learningAPI.updateBatch(id, title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to update Batch";
@@ -336,11 +336,11 @@ export const getDashboardCounts = createAsyncThunk<any, void>(
   }
 );
 
-export const getQuizzes = createAsyncThunk<any, { searchTerm?: string; globalFilter?: Record<string, string>; pageNumber?: number; pageSize?: number } | undefined>(
+export const getQuizzes = createAsyncThunk<any, { searchTerm?: string; globalFilter?: Record<string, string>; pageNumber?: number; pageSize?: number; quizType?: string } | undefined>(
     "quizManagement/getQuizzes",
     async (params, { rejectWithValue }) => {
       try {
-        const res = await learningAPI.getQuizzes(params?.searchTerm, params?.globalFilter, params?.pageNumber, params?.pageSize);
+        const res = await learningAPI.getQuizzes(params?.searchTerm, params?.globalFilter, params?.pageNumber, params?.pageSize, params?.quizType);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Quizzes";
@@ -414,11 +414,24 @@ export const publishQuiz = createAsyncThunk<any, { id: string; expiresAt: string
   }
 );
 
-export const getQuizRankList = createAsyncThunk<any, { quizId: string }>(
+export const copyQuiz = createAsyncThunk<any, { quizId: string; batchId: string; title: string; quizToView: string }>(
+    "quizManagement/copyQuiz",
+    async ({ quizId, batchId, title, quizToView }, { rejectWithValue }) => {
+      try {
+        const res = await learningAPI.copyQuiz(quizId, batchId, title, quizToView);
+        return res?.data?.data || res?.data;
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || error.message || "Failed to copy Quiz";
+        return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const getQuizRankList = createAsyncThunk<any, { quizId: string; batchId?: string; quizType?: string; quizToView?: string }>(
     "quizManagement/getQuizRankList",
     async (params, { rejectWithValue }) => {
       try {
-        const res = await learningAPI.getQuizRankList(params.quizId);
+        const res = await learningAPI.getQuizRankList(params.quizId, params.batchId, params.quizType, params.quizToView);
         return res?.data?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to fetch rank list";
@@ -440,11 +453,11 @@ export const getNotifications = createAsyncThunk<any, { searchTerm?: string; glo
   }
 );
 
-export const createNotification = createAsyncThunk<any, { title: string; description: string; link: string; date: string }>(
+export const createNotification = createAsyncThunk<any, { title: string; description: string; link: string; date: string; notificationType: string }>(
     "notificationManagement/createNotification",
-    async ({ title, description, link, date }, { rejectWithValue }) => {
+    async ({ title, description, link, date, notificationType }, { rejectWithValue }) => {
       try {
-        const res = await learningAPI.createNotification(title, description, link, date);
+        const res = await learningAPI.createNotification(title, description, link, date, notificationType);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to create Notification";
@@ -453,11 +466,11 @@ export const createNotification = createAsyncThunk<any, { title: string; descrip
   }
 );
 
-export const updateNotification = createAsyncThunk<any, { id: string; title: string; description: string; link: string; date: string }>(
+export const updateNotification = createAsyncThunk<any, { id: string; title: string; description: string; link: string; date: string; notificationType: string }>(
     "notificationManagement/updateNotification",
-    async ({ id, title, description, link, date }, { rejectWithValue }) => {
+    async ({ id, title, description, link, date, notificationType }, { rejectWithValue }) => {
       try {
-        const res = await learningAPI.updateNotification(id, title, description, link, date);
+        const res = await learningAPI.updateNotification(id, title, description, link, date, notificationType);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to update Notification";
