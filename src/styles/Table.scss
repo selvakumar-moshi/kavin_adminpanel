@@ -286,3 +286,13 @@
     }
   }
 }
+// Every table value is shown capitalised ("test batch" -> "Test Batch"). Display only, the data itself is untouched.
+.custom-table .ant-table-tbody > tr > td {
+  text-transform: capitalize;
+}
+
+// Opt out for values that must keep their own case (links, e-mail addresses): put `keep-case` on the element
+.custom-table .keep-case,
+.custom-table .keep-case * {
+  text-transform: none;
+}

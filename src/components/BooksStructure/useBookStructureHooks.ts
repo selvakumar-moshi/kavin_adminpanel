@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import superSalesAPI from '../../services/LearningAPI';
+import { toTitleCase } from '../../utils/textUtils';
 import { useToastMessages } from '../ToastMessages/useToastMessages';
 import { STRUCTURE_META, NAME_MAX_LENGTH, formatStandard, type StructureTab, type StructureRecord, type RawStandardEntry, type EmbeddedStandardParts, type SubjectRecord, type CategoryRecord, type StandardRecord, type PartRecord } from './Constant';
 
@@ -340,10 +341,10 @@ export const useSchoolBookRevisionManagement = () => {
         : `${selectedRecord ? 'Edit' : 'Add'} ${singular}`;
 
     const deleteMessage = removeTarget
-        ? `Remove ${formatStandard(removeTarget.standard)} from ${removeTarget.owner.name}?`
+        ? `Remove ${formatStandard(removeTarget.standard)} from ${toTitleCase(removeTarget.owner.name)}?`
         : selectedRecord
             ? `Are you sure you want to delete the ${singular.toLowerCase()} "${
-                'standard' in selectedRecord ? formatStandard(selectedRecord.standard) : selectedRecord.name
+                'standard' in selectedRecord ? formatStandard(selectedRecord.standard) : toTitleCase(selectedRecord.name)
             }"?`
             : '';
 

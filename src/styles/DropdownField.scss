@@ -177,3 +177,9 @@
     color: var(--dropdown-success-color);
   }
 }
+// Dropdown values and options are shown capitalised everywhere (the options list is rendered in a portal,
+// so it is styled globally rather than under .dropdown-field). Placeholders keep their own text.
+.ant-select-selection-item,
+.ant-select-item-option-content {
+  text-transform: capitalize;
+}

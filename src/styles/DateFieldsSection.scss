@@ -96,3 +96,23 @@
     }
   }
 }
+
+// Put the date fields side by side (e.g. Batch From | Batch To); they stack again on a narrow screen
+.date-fields-section--row {
+  .date-fields-section__fields-container {
+    display: flex;
+    gap: 16px;
+  }
+
+  .date-fields-section__field {
+    flex: 1;
+    min-width: 0;
+  }
+
+  @media (max-width: 480px) {
+    .date-fields-section__fields-container {
+      flex-direction: column;
+      gap: 0;
+    }
+  }
+}

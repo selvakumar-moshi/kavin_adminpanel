@@ -24,8 +24,11 @@ export const NOTIFICATION_SEARCH_INPUT_FIELDS = [
     },
 ];
 
+// Only this type is scheduled for a time of day; the others (Job Notification) are just dated
+export const PUSH_NOTIFICATION_TYPE = 'Push Notification';
+
 export const NOTIFICATION_TYPE_OPTIONS = [
-    { value: 'Push Notification', label: 'Push Notification' },
+    { value: PUSH_NOTIFICATION_TYPE, label: 'Push Notification' },
     { value: 'Job Notification', label: 'Job Notification' },
 ];
 
@@ -113,7 +116,7 @@ export const getNotificationTableColumns = (): ITableColumn[] => [
         key: 'link',
         searchType: 'text',
         render: (link: string) => (
-            <a href={link} target="_blank" rel="noopener noreferrer">{renderTruncatedCellWithTooltip(link)}</a>
+            <a href={link} target="_blank" rel="noopener noreferrer" className="keep-case">{renderTruncatedCellWithTooltip(link)}</a>
         ),
     },
     {

@@ -1,55 +1,64 @@
+// Course cards: calm by default, an accent border on hover, and a round arrow that fills in when it is hovered
 .course-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
+  gap: 20px;
 }
 
 .course-card {
-  cursor: pointer;
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 100px;
+  padding: 18px 20px;
+  border: 1px solid transparent;
+  border-radius: 12px;
   background: #ffffff;
-  border: 1px solid #e8e8e8;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 3px 2px 14.3px 0px #0000001a;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 
-  &:hover {
+  &:hover,
+  &:focus-visible {
     border-color: #3d3d8f;
-    box-shadow: 0 2px 8px rgba(61, 61, 143, 0.12);
-  }
-
-  &__top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 8px;
+    box-shadow: 0 6px 18px rgba(61, 61, 143, 0.14);
+    transform: translateY(-1px);
+    outline: none;
   }
 
   &__title {
     font-family: var(--font-family);
     font-size: 18px;
     font-weight: 600;
+    color: #2b2b52;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-transform: capitalize;
   }
 
-  &__actions {
-    flex-shrink: 0;
-  }
-
-  // Grows to absorb whatever space is left in the (grid-stretched) equal-height
-  // card, so the amount line always sits flush with the bottom across cards
-  // regardless of how many lines the description wraps to.
+  // Grows to take the space left in the (grid-stretched) equal-height card, so the footer always sits at the bottom
   &__description {
     flex: 1;
+    margin: 6px 0 12px;
     font-family: var(--font-family);
     font-size: 14px;
     font-weight: 500;
+    color: #6b6b7b;
+    line-height: 1.4;
     word-break: break-word;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    margin: 8px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-transform: capitalize;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
   }
 
   &__amount {
@@ -58,11 +67,45 @@
     font-size: 16px;
   }
 
+  &__arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid #d9d9e6;
+    border-radius: 50%;
+    color: #6b6b7b;
+    font-size: 14px;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  }
+
+  // Card hovered: the arrow picks up the accent colour; arrow hovered: it fills in
+  &:hover &__arrow,
+  &:focus-visible &__arrow {
+    border-color: #3d3d8f;
+    color: #3d3d8f;
+  }
+
+  // The arrow glyph (not the circle) tilts up on hover, like the reference's "↗"
+  &__arrow .anticon {
+    transition: transform 0.18s ease;
+  }
+
+  &__arrow:hover {
+    background: #3d3d8f;
+    border-color: #3d3d8f;
+    color: #ffffff !important;
+
+    .anticon {
+      transform: rotate(-45deg);
+    }
+  }
+
   .dot-icon{
     padding: 0 10px;
   }
 }
-
 .course-detail-container2{
   position: relative;
 

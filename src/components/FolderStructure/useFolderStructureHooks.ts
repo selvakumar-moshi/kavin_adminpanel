@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import superSalesAPI from '../../services/LearningAPI';
 import { useToastMessages } from '../ToastMessages/useToastMessages';
+import { toTitleCase } from '../../utils/textUtils';
 import { FOLDER_LABELS, NAME_MAX_LENGTH, type FolderKind, type FolderRecord, type SubFolderRecord } from './Constant';
 
 const toList = <T,>(res: any): T[] => (Array.isArray(res?.data?.data) ? res.data.data : []);
@@ -174,8 +175,8 @@ export const useFolderStructureManagement = () => {
 
     const deleteMessage = deleteTarget?.record
         ? deleteTarget.kind === 'folder'
-            ? `Delete the folder "${deleteTarget.record.name}"? Sub folders inside it may be removed too.`
-            : `Delete the sub folder "${deleteTarget.record.name}"?`
+            ? `Are you sure you want to delete the folder "${toTitleCase(deleteTarget.record.name)}"? Sub folders inside it may be removed too.`
+            : `Are you sure you want to delete the sub folder "${toTitleCase(deleteTarget.record.name)}"?`
         : '';
 
     return {

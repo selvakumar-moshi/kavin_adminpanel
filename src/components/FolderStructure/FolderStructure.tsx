@@ -5,6 +5,7 @@ import InputFields from '../InputFields/InputFields';
 import ToastMessages from '../ToastMessages';
 import { useFolderStructureManagement } from './useFolderStructureHooks';
 import { FOLDER_NAME_FIELD, type FolderRecord, type SubFolderRecord } from './Constant';
+import { toTitleCase } from '../../utils/textUtils';
 
 // "Folders" tab: pick a folder on the left, manage the sub folders inside it on the right
 const FolderStructure = () => {
@@ -122,7 +123,7 @@ const FolderStructure = () => {
                 <section className="folder-structure__panel folder-structure__panel--subs">
                     <div className="folder-structure__head">
                         <span className="folder-structure__title">
-                            {selectedFolder ? `Sub Folders in "${selectedFolder.name}"` : 'Sub Folders'}
+                            {selectedFolder ? <>Sub Folders in "{toTitleCase(selectedFolder.name)}"</> : 'Sub Folders'}
                         </span>
                         {selectedFolder && (
                             <button type="button" className="school-book__add" onClick={() => openAddModal('subfolder')}>

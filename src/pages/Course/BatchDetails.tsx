@@ -157,6 +157,7 @@ const BatchDetails: React.FC<BatchDetailsProps> = ({ courseId }) => {
                         disabled={batchLoading}
                     />
                     <DateFieldsSection
+                        className="date-fields-section--row"
                         fields={BATCH_DATE_FIELDS}
                         values={batchFormValues}
                         errors={batchFormErrors}

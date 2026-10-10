@@ -380,3 +380,7 @@
 .ant-modal .ant-modal-container{
   padding: 0px !important;
 }
+// The name inside a delete / confirm message ("... delete the batch <b>"test batch35"</b>?") is capitalised
+.popup-modal__content-content-text b {
+  text-transform: capitalize;
+}

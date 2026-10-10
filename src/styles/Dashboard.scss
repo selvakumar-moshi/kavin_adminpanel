@@ -3,6 +3,35 @@
   font-family: var(--font-family);
 }
 
+// Quiz Rank List filter bar: Quiz Type and Quiz To View keep a fixed width, the Quiz dropdown takes the rest.
+// Quiz To View only exists for Competitive quizzes, so without it the bar has two columns.
+.dashboard_list {
+  display: grid;
+  grid-template-columns: 180px 140px minmax(0, 1fr);
+  align-items: end;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+
+  // The dropdowns carry their own bottom margin for stacked forms; here the grid gap does the spacing
+  .dropdown-field__field {
+    margin-bottom: 0;
+  }
+
+  &--no-view {
+    grid-template-columns: 180px minmax(0, 1fr);
+  }
+
+  // On a narrow card the three stack, each full width
+  @media (max-width: 768px) {
+    &,
+    &--no-view {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
 .quiz-rank-list {
   max-height: 340px;
   overflow-y: auto;
@@ -65,3 +94,4 @@
     color: #2a78d6;
   }
 }
+

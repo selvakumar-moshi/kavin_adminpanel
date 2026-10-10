@@ -13,7 +13,7 @@ import ToastMessages from '../../components/ToastMessages';
 import PageTitle from '../../components/PageTitle';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 import { useNotificationManagement } from './useNotification';
-import { getNotificationTableColumns, NOTIFICATION_TYPE_FIELD, NOTIFICATION_INPUT_FIELDS, NOTIFICATION_DATE_FIELD, type NotificationRecord } from './Constant';
+import { getNotificationTableColumns, NOTIFICATION_TYPE_FIELD, NOTIFICATION_INPUT_FIELDS, NOTIFICATION_DATE_FIELD, PUSH_NOTIFICATION_TYPE, type NotificationRecord } from './Constant';
 import add_Icon from '../../assets/add_Icon.svg';
 import filter_Icon from '../../assets/filter_Icon.svg';
 
@@ -60,6 +60,9 @@ const Notification = () => {
         toastMessages,
         hideToast,
     } = useNotificationManagement();
+
+    // The date picker only asks for a time on Push Notifications
+    const isPushNotification = formValues.notificationType === PUSH_NOTIFICATION_TYPE;
 
     const baseColumns = withSortAndSearch(getNotificationTableColumns(), {
         sortState,
@@ -145,7 +148,9 @@ const Notification = () => {
                 primaryButtonLoading={loading}
                 primaryButtonDisabled={loading || !hasFormChanges}
                 contentHeight="auto"
-                minHeight={400}
+                minHeight={430}
+                // The form is taller than PopupModal's default 431px cap, so it scrolled; let it grow up to the window height instead
+                maxHeight={480}
             >
                 <div style={{ padding: '0 8px' }}>
                     <DropdownField
@@ -163,8 +168,9 @@ const Notification = () => {
                     />
                     <DateFieldsSection
                         fields={NOTIFICATION_DATE_FIELD}
-                        showTime
-                        format="YYYY-MM-DD HH:mm"
+                        // Only a Push Notification goes out at a set time; a Job Notification just has a date
+                        showTime={isPushNotification}
+                        format={isPushNotification ? 'YYYY-MM-DD HH:mm' : 'YYYY-MM-DD'}
                         values={formValues}
                         errors={formErrors}
                         onChange={handleInputChange}

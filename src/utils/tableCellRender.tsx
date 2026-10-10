@@ -1,6 +1,7 @@
 import React from "react";
 import { Tooltip } from "antd";
 import type { TooltipProps } from "antd";
+import { EMPTY_VALUE_TEXT } from "../components/EmptyValue/EmptyValue";
 
 const DEFAULT_MAX_LENGTH = 20;
 
@@ -67,7 +68,8 @@ export function renderTruncatedCellWithTooltip(
   const maxLength = options?.maxLength ?? getResponsiveMaxLength();
   const full = String(value ?? "");
   const truncated = truncateTableCellText(full, maxLength);
-  const display = truncated || (options?.emptyDisplay ?? "");
+  // A blank value shows the shared "no value" text (see EmptyValue) unless the column overrides it
+  const display = truncated || (options?.emptyDisplay ?? EMPTY_VALUE_TEXT);
   const {
     className,
     tooltipPlacement = "topLeft",

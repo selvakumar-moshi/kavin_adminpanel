@@ -1,4 +1,7 @@
+import { Tooltip } from 'antd';
+import { ArrowRightOutlined } from '@ant-design/icons';
 import Button from '../../components/Button/Button';
+import EmptyValue from '../../components/EmptyValue/EmptyValue';
 import PopupModal from '../../components/PopupModal/PopupModal';
 import InputFields from '../../components/InputFields/InputFields';
 import Loader from '../../components/Loader/Loader';
@@ -58,13 +61,28 @@ const Course = () => {
                                 key={course.id}
                                 className="course-card"
                                 onClick={() => handleCardClick(course.id)}
+                                onKeyDown={(event) => {
+                                    if (event.key === 'Enter' || event.key === ' ') {
+                                        event.preventDefault();
+                                        handleCardClick(course.id);
+                                    }
+                                }}
+                                role="button"
+                                tabIndex={0}
                                 data-testid={`course-card-${course.id}`}
                             >
-                                <div className="course-card__top">
-                                    <div className="course-card__title">{course.courseName}</div>
+                                <div className="course-card__title" title={course.courseName}>{course.courseName}</div>
+                                <EmptyValue className="course-card__description" value={course.courseDescription} fallback="No description" />
+
+                                <div className="course-card__footer">
+                                    <div className="course-card__amount">₹{course.courseAmount.toLocaleString()}</div>
+                                    {/* The whole card opens the course; the arrow is the visible "go" affordance */}
+                                    <Tooltip title="Open course" placement="top">
+                                        <span className="course-card__arrow" aria-hidden="true">
+                                            <ArrowRightOutlined />
+                                        </span>
+                                    </Tooltip>
                                 </div>
-                                <div className="course-card__description"> {course.courseDescription} </div>
-                                <div className="course-card__amount">₹{course.courseAmount.toLocaleString()}</div>
                             </div>
                         );
                     })}

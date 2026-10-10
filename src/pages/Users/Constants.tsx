@@ -64,7 +64,8 @@ export const getUserTableColumns = (): ITableColumn[] => [
         key: 'email',
         searchType: 'text',
         sorter: (a: UserRecord, b: UserRecord) => compareText(a.email, b.email),
-        render: (email: string) => renderTruncatedCellWithTooltip(email),
+        // E-mail addresses keep their own case
+        render: (email: string) => renderTruncatedCellWithTooltip(email, { className: 'keep-case' }),
     },
     {
         title: 'District',

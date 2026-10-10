@@ -44,7 +44,9 @@ export const useDashboard = () => {
     const [quizType, setQuizType] = useState(RANK_QUIZ_TYPE_COMPETITIVE);
     const [quizToView, setQuizToView] = useState('Paid');
     const [selectedQuizId, setSelectedQuizId] = useState('');
-    const [typeQuizzes, setTypeQuizzes] = useState<QuizRecord[]>([]);
+    // The loaded quizzes remember which type they were loaded for, so the previous type's list is never used
+    // (or sent to the rank list API) while the new type's quizzes are still loading
+    const [loadedQuizzes, setLoadedQuizzes] = useState<{ type: string; items: QuizRecord[] }>({ type: '', items: [] });
     const [quizzesLoading, setQuizzesLoading] = useState(false);
 
     useEffect(() => {
@@ -59,7 +61,7 @@ export const useDashboard = () => {
             .then((res) => {
                 if (cancelled) return;
                 const items = res?.data?.data?.items;
-                setTypeQuizzes(Array.isArray(items) ? items : []);
+                setLoadedQuizzes({ type: quizType, items: Array.isArray(items) ? items : [] });
             })
             .catch((error: any) => {
                 if (!cancelled) showError(error?.response?.data?.message || error?.message || 'Failed to load quizzes');
@@ -86,6 +88,7 @@ export const useDashboard = () => {
     const showQuizToView = quizType === RANK_QUIZ_TYPE_COMPETITIVE;
 
     // The quizzes offered in the Quiz dropdown: of the chosen type and, for Competitive, of the chosen Free / Paid
+    const typeQuizzes = loadedQuizzes.type === quizType ? loadedQuizzes.items : [];
     const filteredQuizzes = typeQuizzes.filter((quiz) => !showQuizToView || quiz.quizToView === quizToView);
     const quizOptions = filteredQuizzes.map((quiz) => ({ value: quiz.id, label: quizOptionLabel(quiz) }));
 
@@ -104,7 +107,8 @@ export const useDashboard = () => {
     //   School / Previous Year: ?quizType=school&quizToView=Free
     const rankQuizToView = showQuizToView ? quizToView : NON_COMPETITIVE_QUIZ_TO_VIEW;
     useEffect(() => {
-        if (selectedQuizId) {
+        // Only a quiz that is in the current list (so it matches the chosen type and Free / Paid) is requested
+        if (selectedQuiz) {
             dispatch(getQuizRankList({
                 quizId: selectedQuizId,
                 batchId: selectedBatchId || undefined,
@@ -112,7 +116,7 @@ export const useDashboard = () => {
                 quizToView: rankQuizToView,
             }) as any);
         }
-    }, [dispatch, selectedQuizId, selectedBatchId, quizType, rankQuizToView]);
+    }, [dispatch, selectedQuiz?.id, selectedBatchId, quizType, rankQuizToView]);
 
     const handleQuizTypeChange = (value: string) => {
         setQuizType(value);

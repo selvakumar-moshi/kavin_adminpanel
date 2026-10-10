@@ -140,6 +140,7 @@
     background: #fff;
     font-size: 13px;
     font-weight: 500;
+    font-family: var(--font-family);
   }
 
   &__chip-btn {
@@ -184,6 +185,7 @@
   &__summary {
     color: #8e8e8e;
     font-size: 13px;
+    font-family: var(--font-family);
   }
 
   // Content of an opened subject row

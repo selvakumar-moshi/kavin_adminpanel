@@ -4,7 +4,8 @@ import { useToastMessages } from '../../components/ToastMessages/useToastMessage
 import type { RootState } from '../../services/Store';
 import { getNotifications, createNotification, updateNotification, deleteNotification } from '../../services/LearningAction';
 import type { NotificationRecord } from './Constant';
-import { getNotificationTableColumns, dayjsToISOString, NOTIFICATION_SEARCH_INPUT_FIELDS } from './Constant';
+import dayjs from 'dayjs';
+import { getNotificationTableColumns, dayjsToISOString, NOTIFICATION_SEARCH_INPUT_FIELDS, PUSH_NOTIFICATION_TYPE } from './Constant';
 import { NOTIFICATION_FILTER_FIELDS } from '../../utils/filterUtils';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 import { NOTIFICATION_VALIDATION_RULES } from '../../utils/validationUtils';
@@ -215,7 +216,11 @@ export const useNotificationManagement = () => {
             return;
         }
 
-        const date = dayjsToISOString(formValues.date);
+        // A Job Notification is only dated, so any time left over from before the type was switched is dropped
+        const selectedDate = formValues.notificationType === PUSH_NOTIFICATION_TYPE
+            ? formValues.date
+            : dayjs(formValues.date).startOf('day');
+        const date = dayjsToISOString(selectedDate);
 
         if (selectedNotification) {
             setOperationType('edit');

@@ -107,16 +107,16 @@ export const UserDetailtabs = [
         label: 'Purchased Details',
     },
     {
+        key: 'Batch',
+        label: 'Batch Details',
+    },
+    {
         key: 'study',
         label: 'Study Materials',
     },
     {
         key: 'video',
         label: 'Video Materials',
-    },
-    {
-        key: 'Batch',
-        label: 'Batch Details',
     },
     {
         key: 'payment',
