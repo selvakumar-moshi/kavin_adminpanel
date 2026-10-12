@@ -1,4 +1,4 @@
-import { PlusOutlined, EditOutlined, DeleteOutlined, FolderOutlined, FolderOpenOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, FolderOutlined, FolderOpenOutlined, RightOutlined, DownOutlined } from '@ant-design/icons';
 import { Spin, Tooltip } from 'antd';
 import PopupModal from '../PopupModal/PopupModal';
 import InputFields from '../InputFields/InputFields';
@@ -7,7 +7,7 @@ import { useFolderStructureManagement } from './useFolderStructureHooks';
 import { FOLDER_NAME_FIELD, type FolderRecord, type SubFolderRecord } from './Constant';
 import { toTitleCase } from '../../utils/textUtils';
 
-// "Folders" tab: pick a folder on the left, manage the sub folders inside it on the right
+// "Folders" tab: pick a folder on the left; on the right manage its sub folders, each expandable to show its nested sub folders
 const FolderStructure = () => {
     const {
         folders,
@@ -16,6 +16,8 @@ const FolderStructure = () => {
         setSelectedFolderId,
         subFolders,
         subFoldersLoading,
+        expandedIds,
+        toggleExpanded,
         isModalVisible,
         isDeleteModalVisible,
         isEdit,
@@ -26,6 +28,8 @@ const FolderStructure = () => {
         isSaving,
         openAddModal,
         openEditModal,
+        openEditNestedModal,
+        openDeleteNestedModal,
         closeModal,
         handleNameChange,
         handleSubmit,
@@ -88,13 +92,45 @@ const FolderStructure = () => {
         );
     };
 
-    const renderSubFolder = (subFolder: SubFolderRecord) => (
-        <div key={subFolder.id} className="folder-structure__item folder-structure__item--plain">
-            <FolderOutlined />
-            <span className="folder-structure__item-name">{subFolder.name}</span>
-            {renderRowActions(subFolder.name, () => openEditModal('subfolder', subFolder), () => openDeleteModal('subfolder', subFolder))}
-        </div>
-    );
+    const renderSubFolder = (subFolder: SubFolderRecord) => {
+        const isExpanded = expandedIds.has(subFolder.id);
+        return (
+            <div key={subFolder.id} className="folder-structure__group">
+                <div
+                    className="folder-structure__item folder-structure__item--plain folder-structure__item--toggle"
+                    onClick={() => toggleExpanded(subFolder.id)}
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isExpanded}
+                    onKeyDown={(event) => {
+                        if (event.key === 'Enter') toggleExpanded(subFolder.id);
+                    }}
+                >
+                    <span className="folder-structure__chevron">{isExpanded ? <DownOutlined /> : <RightOutlined />}</span>
+                    {isExpanded ? <FolderOpenOutlined /> : <FolderOutlined />}
+                    <span className="folder-structure__item-name">{subFolder.name}</span>
+                    {subFolder.subFolders.length > 0 && <span className="folder-structure__count">{subFolder.subFolders.length}</span>}
+                    {renderRowActions(subFolder.name, () => openEditModal('subfolder', subFolder), () => openDeleteModal('subfolder', subFolder))}
+                </div>
+
+                {isExpanded && (
+                    <div className="folder-structure__nested">
+                        {subFolder.subFolders.map((nestedName, index) => (
+                            <div key={`${nestedName}-${index}`} className="folder-structure__item folder-structure__item--plain folder-structure__item--nested">
+                                <FolderOutlined />
+                                <span className="folder-structure__item-name">{nestedName}</span>
+                                {renderRowActions(nestedName, () => openEditNestedModal(subFolder, index), () => openDeleteNestedModal(subFolder, index))}
+                            </div>
+                        ))}
+                        {subFolder.subFolders.length === 0 && <div className="folder-structure__empty">No nested sub folders yet.</div>}
+                        <button type="button" className="school-book__add folder-structure__add-nested" onClick={() => openAddModal('nested', subFolder)}>
+                            <PlusOutlined /> Add Nested Sub Folder
+                        </button>
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     return (
         <div className="folder-structure">

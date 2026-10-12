@@ -7,6 +7,8 @@ const toValue = (value: string | string[]) => (Array.isArray(value) ? value[0] |
 interface NamedRecord {
     id: string;
     name: string;
+    /** Nested sub folders (each with its own id); only present on sub folders */
+    subFolders?: NamedRecord[];
 }
 
 export interface FolderSelectorOptions {
@@ -16,7 +18,7 @@ export interface FolderSelectorOptions {
     initial?: { folderId?: string | null; subFolderId?: string | null };
 }
 
-// Folder -> Sub Folder dropdowns for quizzes that live in a folder (the "Previous Year" tab)
+// Folder -> Sub Folder -> Nested Sub Folder dropdowns for quizzes that live in a folder (the "Previous Year" tab)
 export const useFolderSelector = ({ enabled = true, initial }: FolderSelectorOptions = {}) => {
     const [folders, setFolders] = useState<NamedRecord[]>([]);
     const [subFolders, setSubFolders] = useState<NamedRecord[]>([]);
@@ -26,6 +28,7 @@ export const useFolderSelector = ({ enabled = true, initial }: FolderSelectorOpt
 
     const [folderId, setFolderId] = useState('');
     const [subFolderId, setSubFolderId] = useState('');
+    const [nestedSubFolderId, setNestedSubFolderId] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     // Editing: start from the saved values once they arrive
@@ -34,6 +37,7 @@ export const useFolderSelector = ({ enabled = true, initial }: FolderSelectorOpt
         if (!initial) return;
         setFolderId(initial.folderId || '');
         setSubFolderId(initial.subFolderId || '');
+        setNestedSubFolderId('');
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialKey]);
 
@@ -81,15 +85,34 @@ export const useFolderSelector = ({ enabled = true, initial }: FolderSelectorOpt
         };
     }, [enabled, folderId]);
 
+    // A saved quiz stores the deepest choice in subFolderId; when that is a nested sub folder, split it back into parent + nested
+    useEffect(() => {
+        if (!subFolderId || subFolders.length === 0 || subFolders.some((item) => item.id === subFolderId)) return;
+        const parent = subFolders.find((item) => item.subFolders?.some((nested) => nested.id === subFolderId));
+        if (parent) {
+            setSubFolderId(parent.id);
+            setNestedSubFolderId(subFolderId);
+        }
+    }, [subFolders, subFolderId]);
+
+    const nestedSubFolders = subFolders.find((item) => item.id === subFolderId)?.subFolders ?? [];
+
     const handleFolderChange = (value: string | string[]) => {
         setFolderId(toValue(value));
         setSubFolderId('');
+        setNestedSubFolderId('');
         setErrors({});
     };
 
     const handleSubFolderChange = (value: string | string[]) => {
         setSubFolderId(toValue(value));
-        setErrors((prev) => ({ ...prev, subFolderId: '' }));
+        setNestedSubFolderId('');
+        setErrors((prev) => ({ ...prev, subFolderId: '', nestedSubFolderId: '' }));
+    };
+
+    const handleNestedSubFolderChange = (value: string | string[]) => {
+        setNestedSubFolderId(toValue(value));
+        setErrors((prev) => ({ ...prev, nestedSubFolderId: '' }));
     };
 
     // A folder is required, and so is a sub folder when the chosen folder has any. Returns the values to send,
@@ -98,17 +121,22 @@ export const useFolderSelector = ({ enabled = true, initial }: FolderSelectorOpt
         const nextErrors: Record<string, string> = {};
         if (!folderId) nextErrors.folderId = 'Folder is required';
         else if (subFolders.length > 0 && !subFolderId) nextErrors.subFolderId = 'Sub Folder is required';
+        else if (nestedSubFolders.length > 0 && !nestedSubFolderId) nextErrors.nestedSubFolderId = 'Nested Sub Folder is required';
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length > 0) return null;
 
-        return { folderId, ...(subFolderId ? { subFolderId } : {}) };
+        // The deepest folder picked is what the quiz is saved under
+        const deepestId = nestedSubFolderId || subFolderId;
+        return { folderId, ...(deepestId ? { subFolderId: deepestId } : {}) };
     };
 
     return {
         folderId,
         subFolderId,
+        nestedSubFolderId,
         folderOptions: folders.map((item) => ({ value: item.id, label: item.name })),
         subFolderOptions: subFolders.map((item) => ({ value: item.id, label: item.name })),
+        nestedSubFolderOptions: nestedSubFolders.map((item) => ({ value: item.id, label: item.name })),
         foldersLoading,
         subFoldersLoading,
         loadError,
@@ -116,6 +144,7 @@ export const useFolderSelector = ({ enabled = true, initial }: FolderSelectorOpt
         showSubFolder: Boolean(folderId),
         handleFolderChange,
         handleSubFolderChange,
+        handleNestedSubFolderChange,
         getFolderFields,
     };
 };

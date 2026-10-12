@@ -6,7 +6,7 @@ import { useToastMessages } from '../../components/ToastMessages/useToastMessage
 import type { RootState } from '../../services/Store';
 import { getQuizById, createQuiz, updateQuiz, getCourses, getBatches } from '../../services/LearningAction';
 import superSalesAPI from '../../services/LearningAPI';
-import { emptyQuestion, parsePastedOptionsList, QUESTION_OPTION_KEYS, IMAGE_FIELD_NAMES, IMAGE_URL_FIELD_NAMES, type QuizQuestion, type QuizQuestionImages, type QuizQuestionImageFiles, type QuizRecord } from './Constant';
+import { isFolderQuizType, emptyQuestion, parsePastedOptionsList, QUESTION_OPTION_KEYS, IMAGE_FIELD_NAMES, IMAGE_URL_FIELD_NAMES, type QuizQuestion, type QuizQuestionImages, type QuizQuestionImageFiles, type QuizRecord } from './Constant';
 import type { CourseRecord, BatchRecord } from '../Course/Constant';
 import { QUIZ_VALIDATION_RULES, QUIZ_QUESTION_VALIDATION_RULES, type ValidationRule } from '../../utils/validationUtils';
 
@@ -22,7 +22,6 @@ const PAID_QUIZ = 'Paid';
 const SCHOOL_QUIZ_TO_VIEW = 'Free';
 // `quizType` values (same as the Quiz tab keys)
 const DEFAULT_QUIZ_TYPE = 'competitive';
-const FOLDER_QUIZ_TYPE = 'previousYear';
 const FOLDER_QUIZ_TO_VIEW = 'Free';
 const SCHOOL_QUIZ_TYPE = 'school';
 
@@ -129,7 +128,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
     const quizType = (isEditMode ? quizDetail?.quizType : createQuizType) || DEFAULT_QUIZ_TYPE;
 
     // Previous Year quizzes live in a folder instead of having a Quiz To View / course / batch: they are always Free
-    const isFolderQuiz = quizType === FOLDER_QUIZ_TYPE;
+    const isFolderQuiz = isFolderQuizType(quizType);
     const quizToView = isFolderQuiz ? FOLDER_QUIZ_TO_VIEW : quizToViewInput;
     const isPaid = quizToView === PAID_QUIZ;
     const coursesArray = Array.isArray(CoursesData) ? (CoursesData as CourseRecord[]) : [];

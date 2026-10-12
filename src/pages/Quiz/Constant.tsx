@@ -222,10 +222,23 @@ export const QUIZ_TYPE_SCHOOL = 'school';
 export const QUIZ_TYPE_PREVIOUS_YEAR = 'previousYear';
 
 // Name of each quiz type as used in page titles ("Add Competitive Quiz", "Add School Quiz", ...)
+// The "Previous/Syllabus" tab holds two kinds of quiz: previous year papers and syllabus wise quizzes
+export const QUIZ_TYPE_SYLLABUS_WISE = 'syllabusWise';
+
+export const PREVIOUS_YEAR_TAB_QUIZ_TYPES = [
+    { value: QUIZ_TYPE_PREVIOUS_YEAR, label: 'Previous Year' },
+    { value: QUIZ_TYPE_SYLLABUS_WISE, label: 'Syllabus Wise' },
+];
+
+// Both are kept in a folder / sub folder (instead of a course / batch or a subject / standard)
+export const isFolderQuizType = (quizType?: string) =>
+    quizType === QUIZ_TYPE_PREVIOUS_YEAR || quizType === QUIZ_TYPE_SYLLABUS_WISE;
+
 export const QUIZ_TYPE_LABELS: Record<string, string> = {
     competitive: 'Competitive',
     school: 'School',
     previousYear: 'Previous Year',
+    syllabusWise: 'Syllabus Wise',
 };
 
 // Title / breadcrumb text of the Add and Edit Quiz pages, e.g. "Add Previous Year Quiz"
@@ -234,7 +247,7 @@ export const getQuizPageTitle = (isEdit: boolean, quizType?: string) =>
 
 // The columns that differ per tab live next to that tab's code (competitive/, schoolBook/, previousYear/)
 const getQuizScopeColumns = (quizType?: string): ITableColumn[] => {
-    if (quizType === QUIZ_TYPE_PREVIOUS_YEAR) return previousYearScopeColumns;
+    if (isFolderQuizType(quizType)) return previousYearScopeColumns;
     if (quizType === QUIZ_TYPE_SCHOOL) return schoolBookScopeColumns;
     return competitiveScopeColumns;
 };
@@ -294,5 +307,5 @@ export const getQuizTableColumns = (quizType?: string): ITableColumn[] => [
 export const Quiz_TAB_ITEMS = [
     { key: 'competitive', label: 'Competitive/Daily' },
     { key: 'school', label: 'School Book' },
-    { key: 'previousYear', label: 'Previous Year' },
+    { key: 'previousYear', label: 'Previous/Syllabus' },
 ];

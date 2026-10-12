@@ -15,7 +15,7 @@ import ToastMessages from '../../components/ToastMessages';
 import PageTitle from '../../components/PageTitle';
 import { useQuizManagement } from './useQuizHooks';
 import SchoolBookQuiz from './schoolBook/SchoolBookQuiz';
-import { getQuizTableColumns, QUIZ_EXPIRES_AT_FIELD, QUIZ_COPY_TITLE_FIELD, QUIZ_TO_VIEW_PAID, type QuizRecord, Quiz_TAB_ITEMS } from './Constant';
+import { getQuizTableColumns, QUIZ_EXPIRES_AT_FIELD, QUIZ_COPY_TITLE_FIELD, QUIZ_TO_VIEW_PAID, QUIZ_TYPE_PREVIOUS_YEAR, PREVIOUS_YEAR_TAB_QUIZ_TYPES, type QuizRecord, Quiz_TAB_ITEMS } from './Constant';
 import { MATERIAL_TO_VIEW_OPTIONS } from '../StudyMaterial/Constants';
 import add_Icon from '../../assets/add_Icon.svg';
 import filter_Icon from '../../assets/filter_Icon.svg';
@@ -72,6 +72,9 @@ const Quiz = () => {
         publishExpiresAtError,
         activeTab,
         setActiveTab,
+        listQuizType,
+        previousYearType,
+        handlePreviousYearTypeChange,
         openCreateQuiz,
         handleSchoolQuizCreated,
         openEditQuiz,
@@ -86,7 +89,7 @@ const Quiz = () => {
         hideToast,
     } = useQuizManagement();
 
-    const baseColumns = withSortAndSearch(getQuizTableColumns(activeTab), {
+    const baseColumns = withSortAndSearch(getQuizTableColumns(listQuizType), {
         sortState,
         onSort: handleSort,
         openSearchColumn,
@@ -152,6 +155,23 @@ const Quiz = () => {
             <div className='report_main'>
                 <TabsComponent items={Quiz_TAB_ITEMS} activeKey={activeTab} onChange={setActiveTab} />
                 <div className="dl_filter_main">
+                    {/* The Previous/Syllabus tab holds two kinds of quiz; this picks which one the table lists */}
+                    {activeTab === QUIZ_TYPE_PREVIOUS_YEAR && (
+                        <DropdownField
+                            className="material-course-filter"
+                            fields={[
+                                {
+                                    name: 'previousYearType',
+                                    label: '',
+                                    placeholder: 'Select type',
+                                    options: PREVIOUS_YEAR_TAB_QUIZ_TYPES,
+                                    allowClear: false,
+                                },
+                            ]}
+                            values={{ previousYearType }}
+                            onChange={(_, value) => handlePreviousYearTypeChange(value)}
+                        />
+                    )}
                     <InputFields
                         fields={searchField.map(field => ({ ...field }))}
                         onChange={handleSearchChange}

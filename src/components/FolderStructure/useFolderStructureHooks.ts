@@ -2,15 +2,29 @@ import { useCallback, useEffect, useState } from 'react';
 import superSalesAPI from '../../services/LearningAPI';
 import { useToastMessages } from '../ToastMessages/useToastMessages';
 import { toTitleCase } from '../../utils/textUtils';
-import { FOLDER_LABELS, NAME_MAX_LENGTH, type FolderKind, type FolderRecord, type SubFolderRecord } from './Constant';
+import {
+    FOLDER_LABELS,
+    NAME_MAX_LENGTH,
+    normalizeSubFolder,
+    toFolderChildrenPayload,
+    toSubFolderChildrenPayload,
+    type FolderKind,
+    type FolderRecord,
+    type SubFolderRecord,
+} from './Constant';
 
-const toList = <T,>(res: any): T[] => (Array.isArray(res?.data?.data) ? res.data.data : []);
+const toList = (res: any): any[] => (Array.isArray(res?.data?.data) ? res.data.data : []);
 const errorText = (error: any, fallback: string) => error?.response?.data?.message || error?.message || fallback;
+const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
-// What the open Add / Edit modal or delete confirmation is about; `record` is null while adding
+// What the open Add / Edit modal or delete confirmation is about:
+//   folder / subfolder: `record` is null while adding
+//   nested: `parent` is the sub folder it lives in, `index` its position there (null while adding)
 interface FolderTarget {
     kind: FolderKind;
     record: FolderRecord | SubFolderRecord | null;
+    parent?: SubFolderRecord;
+    index?: number | null;
 }
 
 export const useFolderStructureManagement = () => {
@@ -24,6 +38,8 @@ export const useFolderStructureManagement = () => {
     const [subFoldersLoading, setSubFoldersLoading] = useState(false);
     // Bumped to reload the selected folder's sub folders after a change
     const [subFoldersVersion, setSubFoldersVersion] = useState(0);
+    // Sub folders opened to show their nested sub folders
+    const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
     const [formTarget, setFormTarget] = useState<FolderTarget | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<FolderTarget | null>(null);
@@ -35,7 +51,7 @@ export const useFolderStructureManagement = () => {
     const loadFolders = useCallback(async () => {
         setFoldersLoading(true);
         try {
-            const list = toList<FolderRecord>(await superSalesAPI.getFolders());
+            const list = toList(await superSalesAPI.getFolders()) as FolderRecord[];
             setFolders(list);
             setSelectedFolderId((current) => (list.some((folder) => folder.id === current) ? current : list[0]?.id ?? ''));
         } catch (error: any) {
@@ -60,7 +76,7 @@ export const useFolderStructureManagement = () => {
         setSubFoldersLoading(true);
         superSalesAPI.getSubFolders(selectedFolderId)
             .then((res) => {
-                if (!cancelled) setSubFolders(toList<SubFolderRecord>(res));
+                if (!cancelled) setSubFolders(toList(res).map(normalizeSubFolder));
             })
             .catch((error: any) => {
                 if (!cancelled) showError(errorText(error, 'Failed to load sub folders'));
@@ -76,15 +92,32 @@ export const useFolderStructureManagement = () => {
 
     const selectedFolder = folders.find((folder) => folder.id === selectedFolderId) ?? null;
 
-    const openAddModal = (kind: FolderKind) => {
-        setFormTarget({ kind, record: null });
+    const toggleExpanded = (subFolderId: string) => {
+        setExpandedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(subFolderId)) next.delete(subFolderId);
+            else next.add(subFolderId);
+            return next;
+        });
+    };
+
+    // --- Add / Edit modal ---------------------------------------------------------------------------------------
+
+    const openAddModal = (kind: FolderKind, parent?: SubFolderRecord) => {
+        setFormTarget({ kind, record: null, parent, index: null });
         setName('');
         setNameError('');
     };
 
-    const openEditModal = (kind: FolderKind, record: FolderRecord | SubFolderRecord) => {
+    const openEditModal = (kind: 'folder' | 'subfolder', record: FolderRecord | SubFolderRecord) => {
         setFormTarget({ kind, record });
         setName(record.name);
+        setNameError('');
+    };
+
+    const openEditNestedModal = (parent: SubFolderRecord, index: number) => {
+        setFormTarget({ kind: 'nested', record: null, parent, index });
+        setName(parent.subFolders[index] ?? '');
         setNameError('');
     };
 
@@ -99,6 +132,17 @@ export const useFolderStructureManagement = () => {
         if (nameError) setNameError('');
     };
 
+    // Another item with the same name next to this one (same folder / same sub folder), ignoring the item being edited
+    const findDuplicate = (target: FolderTarget, value: string): boolean => {
+        if (target.kind === 'folder') {
+            return folders.some((folder) => folder.id !== target.record?.id && sameName(folder.name, value));
+        }
+        if (target.kind === 'subfolder') {
+            return subFolders.some((subFolder) => subFolder.id !== target.record?.id && sameName(subFolder.name, value));
+        }
+        return (target.parent?.subFolders ?? []).some((nestedName, index) => index !== target.index && sameName(nestedName, value));
+    };
+
     const handleSubmit = async () => {
         if (!formTarget) return;
 
@@ -111,31 +155,48 @@ export const useFolderStructureManagement = () => {
             setNameError(`Name must not exceed ${NAME_MAX_LENGTH} characters.`);
             return;
         }
+        if (findDuplicate(formTarget, trimmed)) {
+            setNameError(`A ${FOLDER_LABELS[formTarget.kind].toLowerCase()} named "${toTitleCase(trimmed)}" already exists here`);
+            return;
+        }
 
-        const { kind, record } = formTarget;
+        const { kind, record, parent, index } = formTarget;
         const label = FOLDER_LABELS[kind];
+        const isEditing = kind === 'nested' ? index !== null && index !== undefined : Boolean(record);
 
         setIsSaving(true);
         try {
             if (kind === 'folder') {
                 if (record) {
-                    await superSalesAPI.updateFolder(record.id, trimmed);
+                    // The update body carries the folder's sub folders, so send the current ones back unchanged
+                    const current = toList(await superSalesAPI.getSubFolders(record.id)).map(normalizeSubFolder);
+                    await superSalesAPI.updateFolder(record.id, trimmed, toFolderChildrenPayload(current));
                 } else {
-                    const res = await superSalesAPI.createFolder(trimmed);
+                    const res = await superSalesAPI.createFolder(trimmed, []);
                     // Jump to the folder that was just created so its sub folders can be added straight away
                     const createdId = res?.data?.data?.id;
                     if (createdId) setSelectedFolderId(createdId);
                 }
                 await loadFolders();
-            } else {
+            } else if (kind === 'subfolder') {
                 if (record) {
-                    await superSalesAPI.updateSubFolder(record.id, trimmed, (record as SubFolderRecord).folderId);
+                    const subFolder = record as SubFolderRecord;
+                    await superSalesAPI.updateSubFolder(subFolder.id, trimmed, subFolder.folderId, toSubFolderChildrenPayload(subFolder.subFolders));
                 } else {
-                    await superSalesAPI.createSubFolder(trimmed, selectedFolderId);
+                    await superSalesAPI.createSubFolder(trimmed, selectedFolderId, []);
                 }
                 setSubFoldersVersion((version) => version + 1);
+            } else if (parent) {
+                // A nested sub folder is saved through the sub folder it sits in
+                const names = isEditing
+                    ? parent.subFolders.map((nestedName, position) => (position === index ? trimmed : nestedName))
+                    : [...parent.subFolders, trimmed];
+                await superSalesAPI.updateSubFolder(parent.id, parent.name, parent.folderId, toSubFolderChildrenPayload(names));
+                // Open the sub folder so the new item is visible straight away
+                setExpandedIds((prev) => new Set(prev).add(parent.id));
+                setSubFoldersVersion((version) => version + 1);
             }
-            showSuccess(`${label} ${record ? 'updated' : 'created'} successfully!`);
+            showSuccess(`${label} ${isEditing ? 'updated' : 'created'} successfully!`);
             closeModal();
         } catch (error: any) {
             showError(errorText(error, `Failed to save ${label.toLowerCase()}`));
@@ -144,23 +205,32 @@ export const useFolderStructureManagement = () => {
         }
     };
 
-    const openDeleteModal = (kind: FolderKind, record: FolderRecord | SubFolderRecord) => setDeleteTarget({ kind, record });
+    // --- Delete ---------------------------------------------------------------------------------------------------
+
+    const openDeleteModal = (kind: 'folder' | 'subfolder', record: FolderRecord | SubFolderRecord) => setDeleteTarget({ kind, record });
+    const openDeleteNestedModal = (parent: SubFolderRecord, index: number) => setDeleteTarget({ kind: 'nested', record: null, parent, index });
     const closeDeleteModal = () => setDeleteTarget(null);
 
     const handleDeleteConfirm = async () => {
-        if (!deleteTarget?.record) return;
+        if (!deleteTarget) return;
 
-        const { kind, record } = deleteTarget;
+        const { kind, record, parent, index } = deleteTarget;
         const label = FOLDER_LABELS[kind];
 
         setIsSaving(true);
         try {
-            if (kind === 'folder') {
+            if (kind === 'folder' && record) {
                 await superSalesAPI.deleteFolder(record.id);
                 await loadFolders();
-            } else {
+            } else if (kind === 'subfolder' && record) {
                 await superSalesAPI.deleteSubFolder(record.id);
                 setSubFoldersVersion((version) => version + 1);
+            } else if (kind === 'nested' && parent) {
+                const names = parent.subFolders.filter((_nestedName, position) => position !== index);
+                await superSalesAPI.updateSubFolder(parent.id, parent.name, parent.folderId, toSubFolderChildrenPayload(names));
+                setSubFoldersVersion((version) => version + 1);
+            } else {
+                return;
             }
             showSuccess(`${label} deleted successfully!`);
             closeDeleteModal();
@@ -171,13 +241,28 @@ export const useFolderStructureManagement = () => {
         }
     };
 
-    const modalTitle = formTarget ? `${formTarget.record ? 'Edit' : 'Add'} ${FOLDER_LABELS[formTarget.kind]}` : '';
+    // Texts for the two modals; a nested sub folder says which sub folder it belongs to
+    const isEdit = formTarget
+        ? formTarget.kind === 'nested' ? formTarget.index !== null && formTarget.index !== undefined : Boolean(formTarget.record)
+        : false;
 
-    const deleteMessage = deleteTarget?.record
-        ? deleteTarget.kind === 'folder'
-            ? `Are you sure you want to delete the folder "${toTitleCase(deleteTarget.record.name)}"? Sub folders inside it may be removed too.`
-            : `Are you sure you want to delete the sub folder "${toTitleCase(deleteTarget.record.name)}"?`
+    const modalTitle = formTarget
+        ? formTarget.kind === 'nested'
+            ? `${isEdit ? 'Edit' : 'Add'} Nested Sub Folder in "${toTitleCase(formTarget.parent?.name)}"`
+            : `${isEdit ? 'Edit' : 'Add'} ${FOLDER_LABELS[formTarget.kind]}`
         : '';
+
+    const deleteMessage = (() => {
+        if (!deleteTarget) return '';
+        if (deleteTarget.kind === 'nested') {
+            const nestedName = deleteTarget.parent?.subFolders[deleteTarget.index ?? -1] ?? '';
+            return `Are you sure you want to delete the nested sub folder "${toTitleCase(nestedName)}"?`;
+        }
+        if (!deleteTarget.record) return '';
+        return deleteTarget.kind === 'folder'
+            ? `Are you sure you want to delete the folder "${toTitleCase(deleteTarget.record.name)}"? Sub folders inside it may be removed too.`
+            : `Are you sure you want to delete the sub folder "${toTitleCase(deleteTarget.record.name)}"? Nested sub folders inside it may be removed too.`;
+    })();
 
     return {
         folders,
@@ -186,9 +271,11 @@ export const useFolderStructureManagement = () => {
         setSelectedFolderId,
         subFolders,
         subFoldersLoading,
+        expandedIds,
+        toggleExpanded,
         isModalVisible: Boolean(formTarget),
         isDeleteModalVisible: Boolean(deleteTarget),
-        isEdit: Boolean(formTarget?.record),
+        isEdit,
         modalTitle,
         deleteMessage,
         name,
@@ -196,10 +283,12 @@ export const useFolderStructureManagement = () => {
         isSaving,
         openAddModal,
         openEditModal,
+        openEditNestedModal,
         closeModal,
         handleNameChange,
         handleSubmit,
         openDeleteModal,
+        openDeleteNestedModal,
         closeDeleteModal,
         handleDeleteConfirm,
         toastMessages,

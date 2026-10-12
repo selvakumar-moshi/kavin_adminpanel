@@ -137,6 +137,7 @@ const QuestionDetail = () => {
                             disabled={isSaving}
                             onFolderChange={folderSelector.handleFolderChange}
                             onSubFolderChange={folderSelector.handleSubFolderChange}
+                            onNestedSubFolderChange={folderSelector.handleNestedSubFolderChange}
                         />
                     ) : (
                         <CompetitiveQuizFields

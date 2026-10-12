@@ -6,7 +6,7 @@ import type { RootState } from '../../services/Store';
 import { getQuizzes, deleteQuiz, publishQuiz, copyQuiz, getBatches } from '../../services/LearningAction';
 import type { QuizRecord } from './Constant';
 import type { BatchRecord } from '../Course/Constant';
-import { getQuizTableColumns, dayjsToISOString, QUIZ_SEARCH_INPUT_FIELDS, QUIZ_TO_VIEW_PAID, QUIZ_TYPE_SCHOOL } from './Constant';
+import { getQuizTableColumns, dayjsToISOString, QUIZ_SEARCH_INPUT_FIELDS, QUIZ_TO_VIEW_PAID, QUIZ_TYPE_SCHOOL, QUIZ_TYPE_PREVIOUS_YEAR, isFolderQuizType } from './Constant';
 import { QUIZ_FILTER_FIELDS } from '../../utils/filterUtils';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 
@@ -33,11 +33,18 @@ export const useQuizManagement = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [searchValue, setSearchValue] = useState('');
-    // Which Quiz tab is showing ("competitive" / "school" / ...); sent to the search API as `quizType`
-    // Coming back from the Add / Edit Quiz page, the tab that quiz belongs to is passed in (so the list opens on it)
+    // Which Quiz tab is showing ("competitive" / "school" / "previousYear"). Coming back from the Add / Edit Quiz page,
+    // the type of that quiz is passed in, so the list opens on its tab (and, for the Previous/Syllabus tab, on its kind)
+    const returnedQuizType = (location.state as { quizType?: string } | null)?.quizType;
     const [activeTab, setActiveTab] = useState(
-        () => (location.state as { quizType?: string } | null)?.quizType || DEFAULT_QUIZ_TAB
+        () => (isFolderQuizType(returnedQuizType) ? QUIZ_TYPE_PREVIOUS_YEAR : returnedQuizType || DEFAULT_QUIZ_TAB)
     );
+    // The Previous/Syllabus tab shows one kind at a time: "previousYear" (default) or "syllabusWise"
+    const [previousYearType, setPreviousYearType] = useState(
+        () => (isFolderQuizType(returnedQuizType) ? (returnedQuizType as string) : QUIZ_TYPE_PREVIOUS_YEAR)
+    );
+    // What the search API is asked for (`quizType`) and which columns the table shows
+    const listQuizType = activeTab === QUIZ_TYPE_PREVIOUS_YEAR ? previousYearType : activeTab;
     const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
     const [appliedFilters, setAppliedFilters] = useState<Record<string, string>>({});
     const activeFilterCount = Object.values(appliedFilters).filter(value => value && value.trim() !== '').length;
@@ -66,12 +73,12 @@ export const useQuizManagement = () => {
         applyToData,
     } = useClientSideTableSortSearch();
 
-    const displayQuizzes = applyToData(quizzesArray, getQuizTableColumns(activeTab));
+    const displayQuizzes = applyToData(quizzesArray, getQuizTableColumns(listQuizType));
 
     // Search/filter/tab changes always start back at page 1
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchValue, appliedFilters, activeTab]);
+    }, [searchValue, appliedFilters, listQuizType]);
 
     useEffect(() => {
         dispatch(getQuizzes({
@@ -79,9 +86,9 @@ export const useQuizManagement = () => {
             globalFilter: appliedFilters,
             pageNumber: currentPage,
             pageSize,
-            quizType: activeTab,
+            quizType: listQuizType,
         }) as any);
-    }, [dispatch, currentPage, pageSize, searchValue, appliedFilters, activeTab]);
+    }, [dispatch, currentPage, pageSize, searchValue, appliedFilters, listQuizType]);
 
     // Picks up a success toast handed off via navigation state (e.g. from the Create/Edit Quiz
     // page, which unmounts immediately on navigate and can't keep its own toast alive long enough).
@@ -142,7 +149,7 @@ export const useQuizManagement = () => {
                 globalFilter: appliedFilters,
                 pageNumber: currentPage,
                 pageSize,
-                quizType: activeTab,
+                quizType: listQuizType,
             }) as any);
         }
 
@@ -150,7 +157,7 @@ export const useQuizManagement = () => {
             showError(apiStatus.QuizzesData.error);
             setOperationType(null);
         }
-    }, [apiStatus.QuizzesData, operationType, showSuccess, showError, dispatch, currentPage, pageSize, searchValue, appliedFilters, activeTab]);
+    }, [apiStatus.QuizzesData, operationType, showSuccess, showError, dispatch, currentPage, pageSize, searchValue, appliedFilters, listQuizType]);
 
     // A quiz was created from the embedded School Book Revision form: confirm it and reload the list
     const handleSchoolQuizCreated = () => {
@@ -160,13 +167,18 @@ export const useQuizManagement = () => {
             globalFilter: appliedFilters,
             pageNumber: currentPage,
             pageSize,
-            quizType: activeTab,
+            quizType: listQuizType,
         }) as any);
     };
 
+    // The Add Quiz page is tagged with the type being viewed: the tab itself, or on the Previous/Syllabus tab the
+    // kind chosen in its dropdown. That type decides the page's breadcrumb / title and is sent as `quizType` on Create.
     const openCreateQuiz = () => {
-        // The Add Quiz page tags the new quiz with the tab it was opened from
-        navigate('/quiz/create', { state: { quizType: activeTab } });
+        navigate('/quiz/create', { state: { quizType: listQuizType } });
+    };
+
+    const handlePreviousYearTypeChange = (value: string | string[]) => {
+        setPreviousYearType(Array.isArray(value) ? value[0] || QUIZ_TYPE_PREVIOUS_YEAR : value || QUIZ_TYPE_PREVIOUS_YEAR);
     };
     const openEditQuiz = (quiz: QuizRecord) => {
         navigate(`/quiz/${quiz.id}`);
@@ -332,6 +344,9 @@ export const useQuizManagement = () => {
         publishExpiresAtError,
         activeTab,
         setActiveTab,
+        listQuizType,
+        previousYearType,
+        handlePreviousYearTypeChange,
         openCreateQuiz,
         handleSchoolQuizCreated,
         openEditQuiz,

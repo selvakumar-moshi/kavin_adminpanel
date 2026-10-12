@@ -89,6 +89,43 @@
     gap: 2px;
   }
 
+  &__item--toggle {
+    cursor: pointer;
+  }
+
+  &__chevron {
+    display: inline-flex;
+    width: 12px;
+    font-size: 10px;
+    color: #8e8e8e;
+  }
+
+  &__count {
+    flex: 0 0 auto;
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #fff3e8;
+    color: #b8651b;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  // Nested sub folders, indented under their sub folder
+  &__nested {
+    margin: 0 0 6px 22px;
+    padding-left: 12px;
+    border-left: 2px solid #f3d3b4;
+  }
+
+  &__item--nested {
+    border-bottom-style: dashed;
+  }
+
+  &__add-nested {
+    margin: 8px 0 4px;
+  }
+
   &__empty {
     padding: 16px 4px;
     color: #8e8e8e;
