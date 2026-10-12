@@ -1,4 +1,3 @@
-import { Empty } from 'antd';
 import Button from '../../components/Button/Button';
 import TableWithPagination from '../../components/Table/TableWithPagination';
 import { withSortAndSearch } from '../../components/Table/withSortAndSearch';
