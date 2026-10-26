@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import QuizPreviewModal from './QuizPreviewModal';
 import { Badge } from 'antd';
 import TabsComponent from '../../components/Tabs/Tabs';
 import Button from '../../components/Button/Button';
@@ -15,17 +16,14 @@ import ToastMessages from '../../components/ToastMessages';
 import PageTitle from '../../components/PageTitle';
 import { useQuizManagement } from './useQuizHooks';
 import SchoolBookQuiz from './schoolBook/SchoolBookQuiz';
-import { getQuizTableColumns, QUIZ_EXPIRES_AT_FIELD, QUIZ_COPY_TITLE_FIELD, QUIZ_TO_VIEW_PAID, QUIZ_TYPE_PREVIOUS_YEAR, PREVIOUS_YEAR_TAB_QUIZ_TYPES, type QuizRecord, Quiz_TAB_ITEMS } from './Constant';
-import { MATERIAL_TO_VIEW_OPTIONS } from '../StudyMaterial/Constants';
+import { getQuizTableColumns, QUIZ_EXPIRES_AT_FIELD, QUIZ_COPY_TITLE_FIELD, QUIZ_TO_VIEW_PAID, QUIZ_TAB_FREE, QUIZ_TYPE_SCHOOL, FREE_QUIZ_KINDS, usesFolderSelector, type QuizRecord, Quiz_TAB_ITEMS } from './Constant';
 import add_Icon from '../../assets/add_Icon.svg';
 import filter_Icon from '../../assets/filter_Icon.svg';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 
-// Add Quiz on this tab shows the School Book Revision form in place of the list
-const SCHOOL_QUIZ_TAB = 'school';
-
 const Quiz = () => {
     const [showSchoolQuizForm, setShowSchoolQuizForm] = useState(false);
+    const [previewQuiz, setPreviewQuiz] = useState<QuizRecord | null>(null);
 
     const {
         quizzesArray,
@@ -56,9 +54,11 @@ const Quiz = () => {
         isPublishModalVisible,
         isCopyModalVisible,
         copyTitle,
+        copyCourseId,
+        copyCourseOptions,
+        handleCopyCourseChange,
         copyBatchId,
         copyQuizToView,
-        handleCopyQuizToViewChange,
         copyErrors,
         copyBatchOptions,
         copyBatchesLoading,
@@ -73,8 +73,8 @@ const Quiz = () => {
         activeTab,
         setActiveTab,
         listQuizType,
-        previousYearType,
-        handlePreviousYearTypeChange,
+        freeKind,
+        handleFreeKindChange,
         openCreateQuiz,
         handleSchoolQuizCreated,
         openEditQuiz,
@@ -104,13 +104,15 @@ const Quiz = () => {
         {
             title: 'Actions',
             key: 'actions',
-            width: 160,
+            width: 190,
             render: (_: unknown, record: QuizRecord) => (
                 <ActionIcons
-                    actions={['publish', 'copy', 'edit', 'delete']}
+                    actions={['view', 'publish', 'copy', 'edit', 'delete']}
                     disabledActions={record.status === 'Published' ? ['publish'] : []}
                     onActionClick={(action) => {
-                        if (action.toLowerCase() === 'edit') {
+                        if (action.toLowerCase() === 'view') {
+                            setPreviewQuiz(record);
+                        } else if (action.toLowerCase() === 'edit') {
                             openEditQuiz(record);
                         } else if (action.toLowerCase() === 'publish') {
                             openPublishModal(record);
@@ -147,7 +149,7 @@ const Quiz = () => {
             <ToastMessages messages={toastMessages} onMessageClose={hideToast} />
             <div className="report_main">
                 <PageTitle title="Quiz" />
-                <Button icon={<img src={add_Icon} alt="add-icon" />} variant="primary" className="page-title__button" onClick={activeTab === SCHOOL_QUIZ_TAB ? () => setShowSchoolQuizForm(true) : openCreateQuiz}>
+                <Button icon={<img src={add_Icon} alt="add-icon" />} variant="primary" className="page-title__button" onClick={listQuizType === QUIZ_TYPE_SCHOOL ? () => setShowSchoolQuizForm(true) : openCreateQuiz}>
                     Add Quiz
                 </Button>
             </div>
@@ -155,21 +157,21 @@ const Quiz = () => {
             <div className='report_main'>
                 <TabsComponent items={Quiz_TAB_ITEMS} activeKey={activeTab} onChange={setActiveTab} />
                 <div className="dl_filter_main">
-                    {/* The Previous/Syllabus tab holds two kinds of quiz; this picks which one the table lists */}
-                    {activeTab === QUIZ_TYPE_PREVIOUS_YEAR && (
+                    {/* The Free MCQ tab holds several kinds of quiz; this picks which one the table lists */}
+                    {activeTab === QUIZ_TAB_FREE && (
                         <DropdownField
                             className="material-course-filter"
                             fields={[
                                 {
-                                    name: 'previousYearType',
+                                    name: 'freeKind',
                                     label: '',
                                     placeholder: 'Select type',
-                                    options: PREVIOUS_YEAR_TAB_QUIZ_TYPES,
+                                    options: FREE_QUIZ_KINDS,
                                     allowClear: false,
                                 },
                             ]}
-                            values={{ previousYearType }}
-                            onChange={(_, value) => handlePreviousYearTypeChange(value)}
+                            values={{ freeKind }}
+                            onChange={(_, value) => handleFreeKindChange(value)}
                         />
                     )}
                     <InputFields
@@ -197,6 +199,8 @@ const Quiz = () => {
                     emptyText: <NoDataFound type="nodata" description="No quiz found" style={{ height: 'unset' }} />
                 }}
             />
+
+            <QuizPreviewModal quiz={previewQuiz} onClose={() => setPreviewQuiz(null)} />
 
             {/* Delete Confirmation Modal */}
             <PopupModal
@@ -263,6 +267,7 @@ const Quiz = () => {
                 primaryButtonDisabled={loading}
                 contentHeight="auto"
                 minHeight={250}
+                maxHeight="calc(100vh - 200px)"
             >
                 <div style={{ padding: '0 8px' }}>
                     <InputFields
@@ -272,42 +277,42 @@ const Quiz = () => {
                         onChange={handleCopyTitleChange}
                         disabled={loading}
                     />
-                    {/* School Book quizzes are always copied as Free, so the choice isn't offered there */}
-                    {activeTab !== SCHOOL_QUIZ_TAB && (
-                        <DropdownField
-                            fields={[
-                                {
-                                    name: 'quizToView',
-                                    label: 'Quiz To View',
-                                    placeholder: 'Select quiz to view',
-                                    required: true,
-                                    options: MATERIAL_TO_VIEW_OPTIONS,
-                                    disabled: loading,
-                                },
-                            ]}
-                            values={{ quizToView: copyQuizToView }}
-                            errors={copyErrors.quizToView ? { quizToView: copyErrors.quizToView } : {}}
-                            onChange={(_, value) => handleCopyQuizToViewChange(value)}
-                        />
-                    )}
-                    {/* A batch only applies to paid quizzes */}
-                    {copyQuizToView === QUIZ_TO_VIEW_PAID && (
-                        <DropdownField
-                            fields={[
-                                {
-                                    name: 'batchId',
-                                    label: 'Batch',
-                                    placeholder: 'Select batch',
-                                    required: true,
-                                    options: copyBatchOptions,
-                                    loading: copyBatchesLoading,
-                                    disabled: loading,
-                                },
-                            ]}
-                            values={{ batchId: copyBatchId }}
-                            errors={copyErrors.batchId ? { batchId: copyErrors.batchId } : {}}
-                            onChange={(_, value) => handleCopyBatchChange(value)}
-                        />
+                    {/* Course and batch: required for a Paid copy (Competitive tab), optional for a Free one (Daily).
+                        Folder based quizzes (School / Previous Year / Syllabus Wise) have neither. */}
+                    {!usesFolderSelector(listQuizType) && (
+                        <>
+                            <DropdownField
+                                fields={[
+                                    {
+                                        name: 'courseId',
+                                        label: 'Course',
+                                        placeholder: 'Select course',
+                                        required: copyQuizToView === QUIZ_TO_VIEW_PAID,
+                                        options: copyCourseOptions,
+                                        disabled: loading,
+                                    },
+                                ]}
+                                values={{ courseId: copyCourseId }}
+                                errors={copyErrors.courseId ? { courseId: copyErrors.courseId } : {}}
+                                onChange={(_, value) => handleCopyCourseChange(value)}
+                            />
+                            <DropdownField
+                                fields={[
+                                    {
+                                        name: 'batchId',
+                                        label: 'Batch',
+                                        placeholder: 'Select batch',
+                                        required: copyQuizToView === QUIZ_TO_VIEW_PAID,
+                                        options: copyBatchOptions,
+                                        loading: copyBatchesLoading,
+                                        disabled: loading || !copyCourseId,
+                                    },
+                                ]}
+                                values={{ batchId: copyBatchId }}
+                                errors={copyErrors.batchId ? { batchId: copyErrors.batchId } : {}}
+                                onChange={(_, value) => handleCopyBatchChange(value)}
+                            />
+                        </>
                     )}
                 </div>
             </PopupModal>

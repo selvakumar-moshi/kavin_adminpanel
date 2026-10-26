@@ -6,7 +6,7 @@ import { useToastMessages } from '../../components/ToastMessages/useToastMessage
 import type { RootState } from '../../services/Store';
 import { getQuizById, createQuiz, updateQuiz, getCourses, getBatches } from '../../services/LearningAction';
 import superSalesAPI from '../../services/LearningAPI';
-import { isFolderQuizType, emptyQuestion, parsePastedOptionsList, QUESTION_OPTION_KEYS, IMAGE_FIELD_NAMES, IMAGE_URL_FIELD_NAMES, type QuizQuestion, type QuizQuestionImages, type QuizQuestionImageFiles, type QuizRecord } from './Constant';
+import { usesFolderSelector, emptyQuestion, parsePastedOptionsList, QUESTION_OPTION_KEYS, IMAGE_FIELD_NAMES, IMAGE_URL_FIELD_NAMES, type QuizQuestion, type QuizQuestionImages, type QuizQuestionImageFiles, type QuizRecord } from './Constant';
 import type { CourseRecord, BatchRecord } from '../Course/Constant';
 import { QUIZ_VALIDATION_RULES, QUIZ_QUESTION_VALIDATION_RULES, type ValidationRule } from '../../utils/validationUtils';
 
@@ -124,12 +124,15 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
 
     // Create: the tab the Add Quiz button was clicked on (passed through navigation state).
     // Update: keeps the type the quiz already has. Falls back to "competitive" if neither is known.
-    const createQuizType = (location.state as { quizType?: string } | null)?.quizType;
+    const createState = location.state as { quizType?: string; quizToView?: string } | null;
+    const createQuizType = createState?.quizType;
+    // Create: Quiz To View comes from the tab (Competitive = Paid, Free MCQ = Free), so it isn't asked for again
+    const fixedQuizToView = !isEditMode ? createState?.quizToView : undefined;
     const quizType = (isEditMode ? quizDetail?.quizType : createQuizType) || DEFAULT_QUIZ_TYPE;
 
     // Previous Year quizzes live in a folder instead of having a Quiz To View / course / batch: they are always Free
-    const isFolderQuiz = isFolderQuizType(quizType);
-    const quizToView = isFolderQuiz ? FOLDER_QUIZ_TO_VIEW : quizToViewInput;
+    const isFolderQuiz = usesFolderSelector(quizType);
+    const quizToView = isFolderQuiz ? FOLDER_QUIZ_TO_VIEW : fixedQuizToView ?? quizToViewInput;
     const isPaid = quizToView === PAID_QUIZ;
     const coursesArray = Array.isArray(CoursesData) ? (CoursesData as CourseRecord[]) : [];
     const batchesArray = Array.isArray(BatchesData?.items) ? (BatchesData.items as BatchRecord[]) : [];
@@ -183,7 +186,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
                 // Toast is shown by the Quiz list page after landing there — this page unmounts
                 // immediately on navigate, so a toast raised here would vanish before it's seen.
                 navigate('/quiz', {
-                    state: { toastMessage: isEditMode ? 'Quiz updated successfully!' : 'Quiz created successfully!', quizType },
+                    state: { toastMessage: isEditMode ? 'Quiz updated successfully!' : 'Quiz created successfully!', quizType, quizToView },
                 });
             }
         }
@@ -192,7 +195,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
             showError(saveStatus.error);
             setIsSaving(false);
         }
-    }, [saveStatus, isSaving, isEditMode, showError, navigate, onSaved, quizType]);
+    }, [saveStatus, isSaving, isEditMode, showError, navigate, onSaved, quizType, quizToView]);
 
     const handleTitleChange = (_name: string, value: string) => {
         setTitle(value);
@@ -219,13 +222,8 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         const stringValue = Array.isArray(value) ? value[0] || '' : value;
         setQuizToView(stringValue);
         if (quizToViewError) setQuizToViewError('');
-
-        // Course and batch only apply to paid quizzes — switching to Free drops whatever was picked
-        if (stringValue !== PAID_QUIZ) {
-            setBatchId('');
-            if (!isEditMode) setCourseId('');
-            setCourseError('');
-        }
+        // Course and batch are only required for Paid; a Free quiz may still carry them
+        if (stringValue !== PAID_QUIZ) setCourseError('');
     };
 
     const isBlankQuestion = (q: QuizQuestion) =>
@@ -569,7 +567,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
     };
 
     // School Book Revision quiz: sent with its title, always as a Free quiz (no course/batch), the
-    // subject / category / standard / part picked on that form, and the questions
+    // folder / sub folder picked on that form, and the questions
     const submitSchoolBookQuiz = (fields: Record<string, string>) => {
         const titleValidationError = validateSingleField(QUIZ_VALIDATION_RULES, 'title', title);
         if (titleValidationError) setTitleError(titleValidationError);
@@ -592,7 +590,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         dispatch(createQuiz(formData) as any);
     };
 
-    // `extraFields` are added to the request as-is (e.g. the subject / standard / part of a School Book quiz)
+    // `extraFields` are added to the request as-is (e.g. the folder / sub folder of a folder based quiz)
     const handleSubmit = (extraFields?: Record<string, string>) => {
         if (!validate()) {
             showError(questions.length === 0 ? 'Please add at least one question' : 'Please fix the errors in the form');
@@ -604,11 +602,9 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         formData.append('quizToView', quizToView);
         formData.append('quizType', quizType);
         if (extraFields) Object.entries(extraFields).forEach(([name, value]) => formData.append(name, value));
-        // Course / batch only exist for paid quizzes; a free quiz is sent without them
-        if (isPaid) {
-            formData.append('batchId', batchId);
-            if (!isEditMode) formData.append('courseId', courseId);
-        }
+        // Course / batch go with Paid and Free quizzes alike (the course can't change once the quiz exists)
+        if (isPaid || batchId) formData.append('batchId', batchId);
+        if (!isEditMode && courseId) formData.append('courseId', courseId);
 
         // const quizFile = quizFileList[0]?.originFileObj;
         // if (!isEditMode && quizFile) formData.append('file', quizFile);
@@ -626,7 +622,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
 
     // Back to the list on the tab this quiz belongs to
     const handleCancel = () => {
-        navigate('/quiz', { state: { quizType } });
+        navigate('/quiz', { state: { quizType, quizToView } });
     };
 
     return {
@@ -641,6 +637,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         courseId,
         batchId,
         quizToView,
+        isQuizToViewFixed: fixedQuizToView !== undefined,
         isPaid,
         quizType,
         isFolderQuiz,

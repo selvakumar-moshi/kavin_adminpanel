@@ -4,10 +4,11 @@ import Button from '../../components/Button/Button';
 import EmptyValue from '../../components/EmptyValue/EmptyValue';
 import PopupModal from '../../components/PopupModal/PopupModal';
 import InputFields from '../../components/InputFields/InputFields';
+import DropdownField from '../../components/DropdownField/DropdownField';
 import Loader from '../../components/Loader/Loader';
 import ToastMessages from '../../components/ToastMessages';
 import { useCourseManagement } from './useCourseHooks';
-import { COURSE_INPUT_FIELDS, type CourseRecord } from './Constant';
+import { COURSE_INPUT_FIELDS, COURSE_TYPE_OPTIONS, type CourseRecord } from './Constant';
 import add_Icon from '../../assets/add_Icon.svg';
 import PageTitle from '../../components/PageTitle';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
@@ -16,6 +17,8 @@ const Course = () => {
     const {
         coursesArray,
         loading,
+        courseType,
+        handleCourseTypeChange,
         isCreateModalVisible,
         isEditModalVisible,
         isDeleteModalVisible,
@@ -37,21 +40,36 @@ const Course = () => {
         hideToast,
     } = useCourseManagement();
 
-    if (loading && coursesArray.length === 0) {
-        return <Loader size="large" spinning={true} fullScreen={false} />;
-    }
-
     return (
         <div className="course-container">
             <ToastMessages messages={toastMessages} onMessageClose={hideToast} />
             <div className="report_main">
                 <PageTitle title="Courses" />
-                <Button icon={<img src={add_Icon} alt="add-icon" />} variant="primary" className="page-title__button"  onClick={openCreateModal}>
-                    Add Course
-                </Button>
+                <div className="dl_filter_main" style={{ alignItems: 'center' }}>
+                    {/* All / Paid / Free: reloads the courses from the API */}
+                    <DropdownField
+                        className="material-course-filter"
+                        fields={[
+                            {
+                                name: 'courseType',
+                                label: '',
+                                placeholder: 'Select type',
+                                options: COURSE_TYPE_OPTIONS,
+                                allowClear: false,
+                            },
+                        ]}
+                        values={{ courseType }}
+                        onChange={(_, value) => handleCourseTypeChange(value)}
+                    />
+                    <Button icon={<img src={add_Icon} alt="add-icon" />} variant="primary" className="page-title__button"  onClick={openCreateModal}>
+                        Add Course
+                    </Button>
+                </div>
             </div>
 
-            {coursesArray.length === 0 ? (
+            {loading && coursesArray.length === 0 ? (
+                <Loader size="large" spinning={true} fullScreen={false} />
+            ) : coursesArray.length === 0 ? (
                 <NoDataFound type="nodata" description="No courses available" />
             ) : (
                 <div className="course-grid">

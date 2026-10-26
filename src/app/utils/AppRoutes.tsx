@@ -9,7 +9,7 @@ import Course from '../../pages/Course/Course';
 import CourseDetail from '../../pages/Course/CourseDetail';
 import Quiz from '../../pages/Quiz/Quiz';
 import QuestionDetail from '../../pages/Quiz/QuestionDetail';import Notification from '../../pages/Notification/Notification';
-import SchoolBookRevision from '../../pages/DataStructure/DataStructure';
+import DataStructure from '../../pages/DataStructure/DataStructure';
 
 const ProtectedLayout = () => {
   return <LayoutContainter />;
@@ -69,7 +69,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/schoolbook",
-        element: <SchoolBookRevision />,
+        element: <DataStructure />,
       },
       {
         path: "/notification",

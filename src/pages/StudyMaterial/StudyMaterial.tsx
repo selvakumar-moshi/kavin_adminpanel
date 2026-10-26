@@ -153,6 +153,13 @@ const StudyMaterial: React.FC<StudyMaterialProps> = ({ searchTerm = '', appliedF
                     <DropdownField
                         fields={[
                             {
+                                name: 'materialToView',
+                                label: 'Material To View',
+                                placeholder: 'Select access type',
+                                required: true,
+                                options: MATERIAL_TO_VIEW_OPTIONS,
+                            },
+                            {
                                 name: 'courseId',
                                 label: 'Course',
                                 placeholder: 'Select course',
@@ -166,14 +173,7 @@ const StudyMaterial: React.FC<StudyMaterialProps> = ({ searchTerm = '', appliedF
                                 options: batchOptions,
                                 loading: batchesLoading,
                                 disabled: !formValues.courseId,
-                            },
-                            {
-                                name: 'materialToView',
-                                label: 'Material To View',
-                                placeholder: 'Select access type',
-                                required: true,
-                                options: MATERIAL_TO_VIEW_OPTIONS,
-                            },
+                            }
                         ]}
                         values={formValues}
                         errors={formErrors}

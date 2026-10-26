@@ -7,13 +7,15 @@ import PopupModal from '../../components/PopupModal/PopupModal';
 import InputFields from '../../components/InputFields/InputFields';
 import DropdownField from '../../components/DropdownField/DropdownField';
 import DateFieldsSection from '../../components/DateFieldsSection/DateFieldsSection';
+import FileUploadSection from '../../components/FileUploadSection/FileUploadSection';
+import FileUploadDisplay from '../../components/FileUploadDisplay/FileUploadDisplay';
 import FilterModal from '../../components/FilterModal/FilterModal';
 import Loader from '../../components/Loader/Loader';
 import ToastMessages from '../../components/ToastMessages';
 import PageTitle from '../../components/PageTitle';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 import { useNotificationManagement } from './useNotification';
-import { getNotificationTableColumns, NOTIFICATION_TYPE_FIELD, NOTIFICATION_INPUT_FIELDS, NOTIFICATION_DATE_FIELD, PUSH_NOTIFICATION_TYPE, type NotificationRecord } from './Constant';
+import { getNotificationTableColumns, NOTIFICATION_TYPE_FIELD, NOTIFICATION_INPUT_FIELDS, NOTIFICATION_DATE_FIELD, FLASH_NOTIFICATION_TYPE, type NotificationRecord } from './Constant';
 import add_Icon from '../../assets/add_Icon.svg';
 import filter_Icon from '../../assets/filter_Icon.svg';
 
@@ -49,6 +51,10 @@ const Notification = () => {
         formValues,
         formErrors,
         hasFormChanges,
+        fileList,
+        replacingFile,
+        setReplacingFile,
+        handleFileChange,
         openCreateModal,
         openEditModal,
         closeModal,
@@ -62,7 +68,7 @@ const Notification = () => {
     } = useNotificationManagement();
 
     // The date picker only asks for a time on Push Notifications
-    const isPushNotification = formValues.notificationType === PUSH_NOTIFICATION_TYPE;
+    const isPushNotification = formValues.notificationType === FLASH_NOTIFICATION_TYPE;
 
     const baseColumns = withSortAndSearch(getNotificationTableColumns(), {
         sortState,
@@ -150,7 +156,7 @@ const Notification = () => {
                 contentHeight="auto"
                 minHeight={430}
                 // The form is taller than PopupModal's default 431px cap, so it scrolled; let it grow up to the window height instead
-                maxHeight={480}
+                maxHeight="calc(100vh - 200px)"
             >
                 <div style={{ padding: '0 8px' }}>
                     <DropdownField
@@ -167,6 +173,7 @@ const Notification = () => {
                         disabled={loading}
                     />
                     <DateFieldsSection
+                        className="date-fields-section--row"
                         fields={NOTIFICATION_DATE_FIELD}
                         // Only a Push Notification goes out at a set time; a Job Notification just has a date
                         showTime={isPushNotification}
@@ -176,6 +183,20 @@ const Notification = () => {
                         onChange={handleInputChange}
                         disabled={loading}
                     />
+                    {/* Optional file; when editing, the saved one is shown until it is removed */}
+                    {selectedNotification?.attachmentName && fileList.length === 0 && !replacingFile ? (
+                        <FileUploadDisplay
+                            label="File"
+                            fileName={selectedNotification.attachmentName}
+                            onDelete={() => setReplacingFile(true)}
+                        />
+                    ) : (
+                        <FileUploadSection
+                            label="File"
+                            fileList={fileList}
+                            onFileChange={handleFileChange}
+                        />
+                    )}
                 </div>
             </PopupModal>
 

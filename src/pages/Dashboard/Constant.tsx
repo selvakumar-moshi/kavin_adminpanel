@@ -7,6 +7,7 @@ export const RANK_QUIZ_TYPE_OPTIONS = [
     { value: RANK_QUIZ_TYPE_COMPETITIVE, label: 'Competitive' },
     { value: 'school', label: 'School' },
     { value: 'previousYear', label: 'Previous Year' },
+    { value: 'syallbus', label: 'Syallbus Wise' },
 ];
 
 export const RANK_QUIZ_TO_VIEW_OPTIONS = [

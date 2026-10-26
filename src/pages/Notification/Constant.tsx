@@ -9,7 +9,11 @@ export interface NotificationRecord {
     description: string;
     link: string;
     notificationType?: string;
-    date: string;
+    // The attached file, when there is one
+    attachmentName?: string | null;
+    attachmentUrl?: string | null;
+    startDate: string;
+    endDate: string;
     createdAt?: string;
     updatedAt?: string | null;
 }
@@ -25,10 +29,10 @@ export const NOTIFICATION_SEARCH_INPUT_FIELDS = [
 ];
 
 // Only this type is scheduled for a time of day; the others (Job Notification) are just dated
-export const PUSH_NOTIFICATION_TYPE = 'Push Notification';
+export const FLASH_NOTIFICATION_TYPE = 'Flash Notification';
 
 export const NOTIFICATION_TYPE_OPTIONS = [
-    { value: PUSH_NOTIFICATION_TYPE, label: 'Push Notification' },
+    { value: FLASH_NOTIFICATION_TYPE, label: 'Flash Notification' },
     { value: 'Job Notification', label: 'Job Notification' },
 ];
 
@@ -56,7 +60,6 @@ export const NOTIFICATION_INPUT_FIELDS = [
         placeholder: 'Enter notification description',
         required: true,
         type: 'textarea' as const,
-        maxLength: 500,
     },
     {
         name: 'link',
@@ -69,9 +72,15 @@ export const NOTIFICATION_INPUT_FIELDS = [
 
 export const NOTIFICATION_DATE_FIELD = [
     {
-        name: 'date',
-        label: 'Date',
-        placeholder: 'Select date & time',
+        name: 'startDate',
+        label: 'Start Date',
+        placeholder: 'Select start date',
+        required: true,
+    },
+    {
+        name: 'endDate',
+        label: 'End Date',
+        placeholder: 'Select end date',
         required: true,
     },
 ];
@@ -120,11 +129,19 @@ export const getNotificationTableColumns = (): ITableColumn[] => [
         ),
     },
     {
-        title: 'Date',
-        dataIndex: 'date',
-        key: 'date',
+        title: 'Start Date',
+        dataIndex: 'startDate',
+        key: 'startDate',
         searchType: 'date',
-        sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.date, b.date),
+        sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.startDate, b.startDate),
+        render: (value: string) => (value ? formatDate(value) : '-'),
+    },
+    {
+        title: 'End Date',
+        dataIndex: 'endDate',
+        key: 'endDate',
+        searchType: 'date',
+        sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.endDate, b.endDate),
         render: (value: string) => (value ? formatDate(value) : '-'),
     },
     {

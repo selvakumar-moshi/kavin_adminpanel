@@ -15,6 +15,8 @@ export interface InputField {
   disabled?: boolean;
   status?: "error" | "success" | "warning" | "info" | "default";
   visibilityToggle?: boolean;
+  /** Keeps a plain text field as a normal single-line input (by default text fields wrap onto the next line). */
+  singleLine?: boolean;
   /** Small helper text shown under the input (e.g. "eg: https://..."). */
   hint?: string;
 }
@@ -40,21 +42,41 @@ interface CommonInputProps {
   'data-testid': string;
 }
 
+// Plain text fields wrap; search boxes, prefixed inputs and email / number / password stay single-line
+const isWrappingTextField = (field: InputField) =>
+  (field.type === undefined || field.type === 'text') && !field.search && !field.prefix && !field.singleLine;
+
 const renderFieldControl = (
   field: InputField,
   isTextareaField: boolean,
   isPasswordField: boolean,
-  commonInputProps: CommonInputProps
+  commonInputProps: CommonInputProps,
+  onValueChange: (value: string) => void
 ) => {
   if (isTextareaField) {
+    // Textareas have no length limit
     const { prefix: _prefix, ...textareaProps } = commonInputProps;
-    return <Input.TextArea {...textareaProps} maxLength={field.maxLength} rows={4} />;
+    return <Input.TextArea {...textareaProps} rows={4} />;
   }
   if (isPasswordField) {
     return (
       <Input.Password
         {...commonInputProps}
         visibilityToggle={field.visibilityToggle !== false}
+      />
+    );
+  }
+  if (isWrappingTextField(field)) {
+    // A single-line value that wraps onto the next line (the box grows downwards) instead of scrolling sideways
+    const { prefix: _prefix, ...textareaProps } = commonInputProps;
+    return (
+      <Input.TextArea
+        {...textareaProps}
+        className={`${textareaProps.className} form-fields-section__input--wrap`}
+        autoSize={{ minRows: 1 }}
+        maxLength={field.maxLength}
+        onPressEnter={(event) => event.preventDefault()}
+        onChange={(event) => onValueChange(event.target.value.split(/\s*\n+\s*/).join(' '))}
       />
     );
   }
@@ -112,12 +134,7 @@ const InputFields: React.FC<InputFieldsProps> = ({
                       </label>
                     </div>
                     <div className="ant-form-item-control">
-                      {renderFieldControl(field, isTextareaField, isPasswordField, commonInputProps)}
-                      {isTextareaField && field.maxLength && (
-                        <div className="ant-form-item-extra">
-                          {(values[field.name] || '').length}/{field.maxLength} characters
-                        </div>
-                      )}
+                      {renderFieldControl(field, isTextareaField, isPasswordField, commonInputProps, (value) => onChange?.(field.name, value))}
                       {field.hint && !errors[field.name] && (
                         <div className="ant-form-item-extra form-fields-section__hint">{field.hint}</div>
                       )}

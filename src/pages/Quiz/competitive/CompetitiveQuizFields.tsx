@@ -9,9 +9,11 @@ export interface CompetitiveQuizFieldsProps {
     disabled: boolean;
     // Quiz To View
     quizToView: string;
+    /** The tab already decides it (Add Quiz), so the dropdown is hidden */
+    hideQuizToView?: boolean;
     quizToViewError: string;
     onQuizToViewChange: OnChange;
-    // Course and batch (only for paid quizzes)
+    // Course and batch (for Paid and Free quizzes; the course is only required for Paid)
     isPaid: boolean;
     courseName?: string;
     courseId: string;
@@ -29,6 +31,7 @@ const CompetitiveQuizFields = ({
     isEditMode,
     disabled,
     quizToView,
+    hideQuizToView = false,
     quizToViewError,
     onQuizToViewChange,
     isPaid,
@@ -43,6 +46,7 @@ const CompetitiveQuizFields = ({
     onBatchChange,
 }: CompetitiveQuizFieldsProps) => (
     <>
+        {!hideQuizToView && (
         <DropdownField
             fields={[
                 {
@@ -58,9 +62,10 @@ const CompetitiveQuizFields = ({
             errors={quizToViewError ? { quizToView: quizToViewError } : {}}
             onChange={(_, value) => onQuizToViewChange(value)}
         />
+        )}
 
-        {/* Course and batch only apply to paid quizzes */}
-        {isPaid && (
+        {/* Course and batch apply to Paid and Free quizzes */}
+        {(
             <>
                 {isEditMode ? (
                     <div className="question-detail-form__readonly-course">
@@ -73,7 +78,7 @@ const CompetitiveQuizFields = ({
                                 name: 'courseId',
                                 label: 'Course',
                                 placeholder: 'Select course',
-                                required: true,
+                                required: isPaid,
                                 options: courseOptions,
                             },
                         ]}

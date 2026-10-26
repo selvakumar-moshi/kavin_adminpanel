@@ -7,15 +7,13 @@ import PageTitle from '../../components/PageTitle';
 import QuestionsEditor from './QuestionsEditor';
 import QuizDocumentUpload from './QuizDocumentUpload';
 import CompetitiveQuizFields from './competitive/CompetitiveQuizFields';
-import SchoolBookSelectors from './schoolBook/SchoolBookSelectors';
 import PreviousYearQuizFields from './previousYear/PreviousYearQuizFields';
 import { useQuestionDetailManagement } from './useQuestionDetailHooks';
-import { useSchoolBookQuizManagement } from './schoolBook/useSchoolBookQuizHooks';
 import { useFolderSelector } from './previousYear/useFolderSelectorHooks';
-import { QUIZ_TITLE_FIELD, QUIZ_TYPE_SCHOOL, getQuizPageTitle } from './Constant';
+import { QUIZ_TITLE_FIELD, getQuizPageTitle } from './Constant';
 
 // Add / Edit Quiz page. The title, questions editor and Word import are the same for every quiz; the fields on the
-// left that differ per quiz type live in ./competitive, ./schoolBook and ./previousYear.
+// left that differ per quiz type live in ./competitive and ./previousYear.
 const QuestionDetail = () => {
     const {
         isEditMode,
@@ -29,6 +27,7 @@ const QuestionDetail = () => {
         courseId,
         batchId,
         quizToView,
+        isQuizToViewFixed,
         isPaid,
         quizType,
         isFolderQuiz,
@@ -63,16 +62,8 @@ const QuestionDetail = () => {
         hideToast,
     } = useQuestionDetailManagement();
 
-    // Editing a School Book quiz: Subject / Standard / Part (pre-filled, changeable) replace Quiz To View, Course and Batch
-    const isSchoolQuiz = isEditMode && quizDetail?.quizType === QUIZ_TYPE_SCHOOL;
-    const { getSelectionFields, handleCancel: _ignoredCancel, ...schoolSelectors } = useSchoolBookQuizManagement(handleCancel, {
-        enabled: isSchoolQuiz,
-        initial: isSchoolQuiz && quizDetail
-            ? { subject: quizDetail.subject, category: quizDetail.category, standard: quizDetail.standard, part: quizDetail.part }
-            : undefined,
-    });
-
-    // Previous Year quizzes: Folder / Sub Folder replace Quiz To View, Course and Batch (pre-filled when editing)
+    // Previous Year, Syllabus Wise and School Book quizzes: Folder / Sub Folder / Nested Sub Folder replace Quiz To View,
+    // Course and Batch (pre-filled when editing)
     const { getFolderFields, ...folderSelector } = useFolderSelector({
         enabled: isFolderQuiz,
         initial: isEditMode && isFolderQuiz && quizDetail
@@ -82,10 +73,7 @@ const QuestionDetail = () => {
 
     // Each quiz type adds its own fields to the request
     const handleUpdateOrCreate = () => {
-        if (isSchoolQuiz) {
-            const fields = getSelectionFields();
-            if (fields) handleSubmit(fields);
-        } else if (isFolderQuiz) {
+        if (isFolderQuiz) {
             const fields = getFolderFields();
             if (fields) handleSubmit(fields);
         } else {
@@ -129,9 +117,7 @@ const QuestionDetail = () => {
                         disabled={isSaving}
                     />
 
-                    {isSchoolQuiz ? (
-                        <SchoolBookSelectors {...schoolSelectors} disabled={isSaving} />
-                    ) : isFolderQuiz ? (
+                    {isFolderQuiz ? (
                         <PreviousYearQuizFields
                             {...folderSelector}
                             disabled={isSaving}
@@ -144,6 +130,7 @@ const QuestionDetail = () => {
                             isEditMode={isEditMode}
                             disabled={isSaving}
                             quizToView={quizToView}
+                            hideQuizToView={isQuizToViewFixed}
                             quizToViewError={quizToViewError}
                             onQuizToViewChange={handleQuizToViewChange}
                             isPaid={isPaid}

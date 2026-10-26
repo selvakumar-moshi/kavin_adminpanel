@@ -126,9 +126,15 @@ export const NOTIFICATION_FILTER_FIELDS: FilterColumnConfig[] = [
         displayOrder: 3,
     },
     {
-        key: 'date',
-        title: 'Date',
+        key: 'startDate',
+        title: 'Start Date',
         displayOrder: 4,
+        searchType: 'date',
+    },
+    {
+        key: 'endDate',
+        title: 'End Date',
+        displayOrder: 5,
         searchType: 'date',
     },
 ];

@@ -5,8 +5,8 @@ import ToastMessages from '../../../components/ToastMessages';
 import PageTitle from '../../../components/PageTitle';
 import QuestionsEditor from '../QuestionsEditor';
 import QuizDocumentUpload from '../QuizDocumentUpload';
-import SchoolBookSelectors from './SchoolBookSelectors';
-import { useSchoolBookQuizManagement } from './useSchoolBookQuizHooks';
+import PreviousYearQuizFields from '../previousYear/PreviousYearQuizFields';
+import { useFolderSelector } from '../previousYear/useFolderSelectorHooks';
 import { useQuestionDetailManagement } from '../useQuestionDetailHooks';
 import { QUIZ_TITLE_FIELD, QUIZ_TYPE_SCHOOL, getQuizPageTitle } from '../Constant';
 
@@ -22,7 +22,9 @@ export interface SchoolBookQuizProps {
 
 // Add Quiz form for the "School Book Revision" tab, rendered inside the Quiz page (no route of its own)
 const SchoolBookQuiz = ({ onCancel, onCreated }: SchoolBookQuizProps) => {
-    const { getSelectionFields, handleCancel, ...selectors } = useSchoolBookQuizManagement(onCancel);
+    // Same Folder / Sub Folder / Nested Sub Folder selection as a Previous Year quiz
+    const { getFolderFields, ...folderSelector } = useFolderSelector();
+    const handleCancel = onCancel;
 
     // Questions editor + Word import share their state and behaviour with the regular Add Quiz page
     const {
@@ -55,7 +57,7 @@ const SchoolBookQuiz = ({ onCancel, onCreated }: SchoolBookQuizProps) => {
 
     // Every selector that is showing must be chosen before the questions are checked and the quiz is created
     const handleCreate = () => {
-        const fields = getSelectionFields();
+        const fields = getFolderFields();
         if (!fields) return;
         submitSchoolBookQuiz(fields);
     };
@@ -89,7 +91,13 @@ const SchoolBookQuiz = ({ onCancel, onCreated }: SchoolBookQuizProps) => {
                         disabled={isSaving}
                     />
 
-                    <SchoolBookSelectors {...selectors} disabled={isSaving} />
+                    <PreviousYearQuizFields
+                        {...folderSelector}
+                        disabled={isSaving}
+                        onFolderChange={folderSelector.handleFolderChange}
+                        onSubFolderChange={folderSelector.handleSubFolderChange}
+                        onNestedSubFolderChange={folderSelector.handleNestedSubFolderChange}
+                    />
 
                     {/* Questions in the Word file are read and filled into the editor on the right */}
                     <QuizDocumentUpload

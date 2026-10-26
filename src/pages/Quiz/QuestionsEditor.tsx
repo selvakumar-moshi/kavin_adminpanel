@@ -347,8 +347,9 @@ const QuestionsEditor = ({
                                             fields={[{
                                                 name: markFieldName,
                                                 label: 'Mark',
-                                                placeholder: 'Enter mark, e.g. 1 or 1.5',
+                                                placeholder: 'Enter mark, e.g. 1 or 0.5',
                                                 required: true,
+                                                singleLine: true,
                                             }]}
                                             values={{ [markFieldName]: question.mark || '' }}
                                             errors={errors.mark ? { [markFieldName]: errors.mark } : {}}

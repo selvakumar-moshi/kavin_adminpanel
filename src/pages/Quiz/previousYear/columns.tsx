@@ -3,7 +3,7 @@ import { renderTruncatedCellWithTooltip } from '../../../utils/tableCellRender';
 import { compareText } from '../quizTableUtils';
 import type { QuizRecord } from '../Constant';
 
-// Previous Year tab: the quizzes live in a folder and sub folder
+// Previous Year, Syllabus Wise and School Book tabs: the quizzes live in a folder and sub folder
 export const previousYearScopeColumns: ITableColumn[] = [
     {
         title: 'Folder',

@@ -34,8 +34,9 @@ class LearningAPI {
         return Super_Sales.put(`/Enrollment/${enrollmentId}/status`, { status, paymentMethod, transactionReference });
     }
 
-    getCourses() {
-        return Super_Sales.get('/Course');
+    // `courseType` ("All" / "Paid" / "Free") is only sent when given; other callers still get every course
+    getCourses(courseType?: string) {
+        return Super_Sales.get('/Course', { params: courseType ? { courseType } : undefined });
     }
 
     getCourseById(id: string) {
@@ -142,7 +143,7 @@ class LearningAPI {
         return Super_Sales.get('/Dashboard/counts');
     }
 
-    getQuizzes(searchTerm?: string, globalFilter?: Record<string, string>, pageNumber?: number, pageSize?: number, quizType?: string) {
+    getQuizzes(searchTerm?: string, globalFilter?: Record<string, string>, pageNumber?: number, pageSize?: number, quizType?: string, quizToView?: string) {
         return Super_Sales.post('/quiz/search', {
             searchTerm: searchTerm || '',
             globalFilter: globalFilter || {},
@@ -150,6 +151,7 @@ class LearningAPI {
             pageSize: pageSize || 10,
             // Only sent when a tab is active (e.g. "competitive" / "school"); other callers still get every quiz
             ...(quizType ? { quizType } : {}),
+            ...(quizToView ? { quizToView } : {}),
         });
     }
 
@@ -179,23 +181,6 @@ class LearningAPI {
 
     publishQuiz(id: string, expiresAt: string) {
         return Super_Sales.post(`/quiz/${id}/publish`, { expiresAt });
-    }
-
-    // School Book Revision structure: `path` is one of "subjects" | "categories" | "standard" | "parts"
-    getQuizStructure(path: string, params?: Record<string, string>) {
-        return Super_Sales.get(`/QuizStructure/${path}`, { params });
-    }
-
-    createQuizStructure(path: string, body: Record<string, unknown>) {
-        return Super_Sales.post(`/QuizStructure/${path}`, body);
-    }
-
-    updateQuizStructure(path: string, id: string, body: Record<string, unknown>) {
-        return Super_Sales.put(`/QuizStructure/${path}/${id}`, body);
-    }
-
-    deleteQuizStructure(path: string, id: string) {
-        return Super_Sales.delete(`/QuizStructure/${path}/${id}`);
     }
 
     getFolders() {
@@ -230,10 +215,6 @@ class LearningAPI {
         return Super_Sales.delete(`/SubFolder/${id}`);
     }
 
-    getQuizCategories() {
-        return Super_Sales.get('/Quiz/categories');
-    }
-
     importQuiz(file: File) {
         const formData = new FormData();
         formData.append('file', file);
@@ -244,8 +225,8 @@ class LearningAPI {
         });
     }
 
-    copyQuiz(quizId: string, batchId: string, title: string, quizToView: string) {
-        return Super_Sales.post('/Quiz/copy', { quizId, batchId, title, quizToView });
+    copyQuiz(quizId: string, courseId: string, batchId: string, title: string, quizToView: string) {
+        return Super_Sales.post('/Quiz/copy', { quizId, courseId, batchId, title, quizToView });
     }
 
     getQuizRankList(quizId: string, batchId?: string, quizType?: string, quizToView?: string) {
@@ -271,12 +252,21 @@ class LearningAPI {
         });
     }
 
-    createNotification(title: string, description: string, link: string, date: string, notificationType: string) {
-        return Super_Sales.post('/Notification', { title, description, link, date, notificationType });
+    // Sent as multipart form data: title, description, link, startDate, endDate, notificationType and the optional file
+    createNotification(formData: FormData) {
+        return Super_Sales.post('/Notification', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     }
 
-    updateNotification(id: string, title: string, description: string, link: string, date: string, notificationType: string) {
-        return Super_Sales.put(`/Notification/${id}`, { title, description, link, date, notificationType });
+    updateNotification(id: string, formData: FormData) {
+        return Super_Sales.put(`/Notification/${id}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     }
 
     deleteNotification(id: string) {

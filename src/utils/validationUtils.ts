@@ -150,10 +150,8 @@ export const NOTIFICATION_VALIDATION_RULES: Record<string, ValidationRule> = {
     },
     description: {
         required: true,
-        maxLength: 500,
         errorMessages: {
             required: 'Description is required',
-            maxLength: 'Description must not exceed 500 characters.',
         },
     },
     link: {

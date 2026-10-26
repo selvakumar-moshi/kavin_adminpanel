@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
 import { getCourses, createCourse, updateCourse, deleteCourse } from '../../services/LearningAction';
-import type { CourseRecord } from './Constant';
+import { COURSE_TYPE_ALL, type CourseRecord } from './Constant';
 import { COURSE_VALIDATION_RULES } from '../../utils/validationUtils';
 
 export const useCourseManagement = () => {
@@ -19,6 +19,8 @@ export const useCourseManagement = () => {
     const [formValues, setFormValues] = useState<Record<string, string>>({});
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [operationType, setOperationType] = useState<'create' | 'edit' | 'delete' | null>(null);
+    // Which courses the list shows (All / Paid / Free); changing it reloads the list from the API
+    const [courseType, setCourseType] = useState(COURSE_TYPE_ALL);
 
     const { CoursesData, apiStatus } = useSelector(
         (state: RootState) => state.learning
@@ -28,8 +30,12 @@ export const useCourseManagement = () => {
     const loading = apiStatus.CoursesData?.loading || false;
 
     useEffect(() => {
-        dispatch(getCourses() as any);
-    }, [dispatch]);
+        dispatch(getCourses({ courseType }) as any);
+    }, [dispatch, courseType]);
+
+    const handleCourseTypeChange = (value: string | string[]) => {
+        setCourseType((Array.isArray(value) ? value[0] : value) || COURSE_TYPE_ALL);
+    };
 
     useEffect(() => {
         if (!operationType) return;
@@ -49,14 +55,14 @@ export const useCourseManagement = () => {
             setFormErrors({});
             setSelectedCourse(null);
             setOperationType(null);
-            dispatch(getCourses() as any);
+            dispatch(getCourses({ courseType }) as any);
         }
 
         if (apiStatus.CoursesData?.error) {
             showError(apiStatus.CoursesData.error);
             setOperationType(null);
         }
-    }, [apiStatus.CoursesData, operationType, showSuccess, showError, dispatch]);
+    }, [apiStatus.CoursesData, operationType, showSuccess, showError, dispatch, courseType]);
 
     const openCreateModal = () => {
         setFormValues({});
@@ -206,6 +212,8 @@ export const useCourseManagement = () => {
     return {
         coursesArray,
         loading,
+        courseType,
+        handleCourseTypeChange,
         isCreateModalVisible,
         isEditModalVisible,
         isDeleteModalVisible,

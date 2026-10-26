@@ -102,6 +102,15 @@
       }
     }
 
+    // Text that is longer than the box continues on the next line
+    &--wrap {
+      height: auto;
+      min-height: 33px;
+      resize: none;
+      overflow-y: hidden;
+      line-height: 23px;
+    }
+
     &--readonly {
       background-color: rgba(0, 0, 0, 0.04) !important;
       border-color: #d9d9d9 !important;
@@ -244,4 +253,9 @@
 .ant-input-outlined:focus-within:not(.form-fields-section__input--readonly) {
   border-color: #ec7d16;
   box-shadow: none;
+}
+
+// Textareas keep the size they are given
+textarea.ant-input {
+  resize: none;
 }

@@ -3,15 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
-import { getQuizzes, deleteQuiz, publishQuiz, copyQuiz, getBatches } from '../../services/LearningAction';
+import { getQuizzes, deleteQuiz, publishQuiz, copyQuiz, getBatches, getCourses } from '../../services/LearningAction';
 import type { QuizRecord } from './Constant';
-import type { BatchRecord } from '../Course/Constant';
-import { getQuizTableColumns, dayjsToISOString, QUIZ_SEARCH_INPUT_FIELDS, QUIZ_TO_VIEW_PAID, QUIZ_TYPE_SCHOOL, QUIZ_TYPE_PREVIOUS_YEAR, isFolderQuizType } from './Constant';
+import type { BatchRecord, CourseRecord } from '../Course/Constant';
+import { getQuizTableColumns, dayjsToISOString, QUIZ_SEARCH_INPUT_FIELDS, QUIZ_TO_VIEW_PAID, DEFAULT_FREE_KIND, getQuizScope, getTabForQuiz, usesFolderSelector } from './Constant';
 import { QUIZ_FILTER_FIELDS } from '../../utils/filterUtils';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 
-const DEFAULT_QUIZ_TAB = 'competitive';
-const SCHOOL_COPY_QUIZ_TO_VIEW = 'Free';
 
 export const useQuizManagement = () => {
     const dispatch = useDispatch();
@@ -26,6 +24,7 @@ export const useQuizManagement = () => {
     const [publishExpiresAtError, setPublishExpiresAtError] = useState('');
     const [isCopyModalVisible, setIsCopyModalVisible] = useState(false);
     const [copyTitle, setCopyTitle] = useState('');
+    const [copyCourseId, setCopyCourseId] = useState('');
     const [copyBatchId, setCopyBatchId] = useState('');
     const [copyQuizToView, setCopyQuizToView] = useState('');
     const [copyErrors, setCopyErrors] = useState<Record<string, string>>({});
@@ -33,23 +32,20 @@ export const useQuizManagement = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [searchValue, setSearchValue] = useState('');
-    // Which Quiz tab is showing ("competitive" / "school" / "previousYear"). Coming back from the Add / Edit Quiz page,
-    // the type of that quiz is passed in, so the list opens on its tab (and, for the Previous/Syllabus tab, on its kind)
-    const returnedQuizType = (location.state as { quizType?: string } | null)?.quizType;
-    const [activeTab, setActiveTab] = useState(
-        () => (isFolderQuizType(returnedQuizType) ? QUIZ_TYPE_PREVIOUS_YEAR : returnedQuizType || DEFAULT_QUIZ_TAB)
-    );
-    // The Previous/Syllabus tab shows one kind at a time: "previousYear" (default) or "syllabusWise"
-    const [previousYearType, setPreviousYearType] = useState(
-        () => (isFolderQuizType(returnedQuizType) ? (returnedQuizType as string) : QUIZ_TYPE_PREVIOUS_YEAR)
-    );
-    // What the search API is asked for (`quizType`) and which columns the table shows
-    const listQuizType = activeTab === QUIZ_TYPE_PREVIOUS_YEAR ? previousYearType : activeTab;
+    // Two tabs: Competitive (Paid) and Free MCQ. The Free MCQ tab has a dropdown for the kind of free quiz (Daily by
+    // default). Coming back from the Add / Edit Quiz page, that quiz's type and view are passed in, so the list opens
+    // on the tab (and kind) it belongs to.
+    const returnedState = location.state as { quizType?: string; quizToView?: string } | null;
+    const [initialScope] = useState(() => getTabForQuiz(returnedState?.quizType, returnedState?.quizToView));
+    const [activeTab, setActiveTab] = useState(initialScope.tab);
+    const [freeKind, setFreeKind] = useState(initialScope.freeKind || DEFAULT_FREE_KIND);
+    // What the search API is asked for (`quizType` + `quizToView`) and which columns the table shows
+    const { quizType: listQuizType, quizToView: listQuizToView } = getQuizScope(activeTab, freeKind);
     const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
     const [appliedFilters, setAppliedFilters] = useState<Record<string, string>>({});
     const activeFilterCount = Object.values(appliedFilters).filter(value => value && value.trim() !== '').length;
 
-    const { QuizzesData, BatchesData, apiStatus } = useSelector(
+    const { QuizzesData, BatchesData, CoursesData, apiStatus } = useSelector(
         (state: RootState) => state.learning
     );
 
@@ -57,6 +53,8 @@ export const useQuizManagement = () => {
     const quizzesArray: QuizRecord[] = Array.isArray(QuizzesData?.items) ? QuizzesData.items : [];
     const totalQuizzes: number = QuizzesData?.totalCount ?? 0;
     const loading = apiStatus.QuizzesData?.loading || false;
+    const copyCourseOptions = (Array.isArray(CoursesData) ? (CoursesData as CourseRecord[]) : [])
+        .map((course) => ({ value: course.id, label: course.courseName }));
     const copyBatchOptions = (Array.isArray(BatchesData?.items) ? (BatchesData.items as BatchRecord[]) : [])
         .map((batch) => ({ value: batch.id, label: batch.title }));
     const copyBatchesLoading = apiStatus.BatchesData?.loading || false;
@@ -78,7 +76,7 @@ export const useQuizManagement = () => {
     // Search/filter/tab changes always start back at page 1
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchValue, appliedFilters, listQuizType]);
+    }, [searchValue, appliedFilters, listQuizType, listQuizToView]);
 
     useEffect(() => {
         dispatch(getQuizzes({
@@ -87,8 +85,9 @@ export const useQuizManagement = () => {
             pageNumber: currentPage,
             pageSize,
             quizType: listQuizType,
+            quizToView: listQuizToView,
         }) as any);
-    }, [dispatch, currentPage, pageSize, searchValue, appliedFilters, listQuizType]);
+    }, [dispatch, currentPage, pageSize, searchValue, appliedFilters, listQuizType, listQuizToView]);
 
     // Picks up a success toast handed off via navigation state (e.g. from the Create/Edit Quiz
     // page, which unmounts immediately on navigate and can't keep its own toast alive long enough).
@@ -150,6 +149,7 @@ export const useQuizManagement = () => {
                 pageNumber: currentPage,
                 pageSize,
                 quizType: listQuizType,
+            quizToView: listQuizToView,
             }) as any);
         }
 
@@ -157,7 +157,7 @@ export const useQuizManagement = () => {
             showError(apiStatus.QuizzesData.error);
             setOperationType(null);
         }
-    }, [apiStatus.QuizzesData, operationType, showSuccess, showError, dispatch, currentPage, pageSize, searchValue, appliedFilters, listQuizType]);
+    }, [apiStatus.QuizzesData, operationType, showSuccess, showError, dispatch, currentPage, pageSize, searchValue, appliedFilters, listQuizType, listQuizToView]);
 
     // A quiz was created from the embedded School Book Revision form: confirm it and reload the list
     const handleSchoolQuizCreated = () => {
@@ -168,17 +168,19 @@ export const useQuizManagement = () => {
             pageNumber: currentPage,
             pageSize,
             quizType: listQuizType,
+            quizToView: listQuizToView,
         }) as any);
     };
 
-    // The Add Quiz page is tagged with the type being viewed: the tab itself, or on the Previous/Syllabus tab the
-    // kind chosen in its dropdown. That type decides the page's breadcrumb / title and is sent as `quizType` on Create.
+    // The Add Quiz page is tagged with what is being viewed: Competitive = competitive / Paid; Free MCQ = the kind chosen
+    // in its dropdown (Daily = competitive) / Free. They decide the page's title and are sent as `quizType` and
+    // `quizToView` on Create.
     const openCreateQuiz = () => {
-        navigate('/quiz/create', { state: { quizType: listQuizType } });
+        navigate('/quiz/create', { state: { quizType: listQuizType, quizToView: listQuizToView } });
     };
 
-    const handlePreviousYearTypeChange = (value: string | string[]) => {
-        setPreviousYearType(Array.isArray(value) ? value[0] || QUIZ_TYPE_PREVIOUS_YEAR : value || QUIZ_TYPE_PREVIOUS_YEAR);
+    const handleFreeKindChange = (value: string | string[]) => {
+        setFreeKind(Array.isArray(value) ? value[0] || DEFAULT_FREE_KIND : value || DEFAULT_FREE_KIND);
     };
     const openEditQuiz = (quiz: QuizRecord) => {
         navigate(`/quiz/${quiz.id}`);
@@ -235,13 +237,17 @@ export const useQuizManagement = () => {
     const openCopyModal = (quiz: QuizRecord) => {
         setSelectedQuiz(quiz);
         setCopyTitle(`${quiz.title} - Copy`);
+        setCopyCourseId(quiz.courseId || '');
         setCopyBatchId('');
-        // School Book quizzes are always Free (the Quiz To View dropdown is hidden for them)
-        setCopyQuizToView(activeTab === QUIZ_TYPE_SCHOOL ? SCHOOL_COPY_QUIZ_TO_VIEW : quiz.quizToView || '');
+        // Copies keep the view of the tab being looked at (Competitive = Paid, Free MCQ = Free), so it isn't asked for
+        setCopyQuizToView(listQuizToView);
         setCopyErrors({});
         setIsCopyModalVisible(true);
-        if (quiz.courseId) {
-            dispatch(getBatches({ courseId: quiz.courseId, pageSize: 100 }) as any);
+        if (!usesFolderSelector(listQuizType)) {
+            dispatch(getCourses() as any);
+            if (quiz.courseId) {
+                dispatch(getBatches({ courseId: quiz.courseId, pageSize: 100 }) as any);
+            }
         }
     };
 
@@ -249,17 +255,21 @@ export const useQuizManagement = () => {
         setIsCopyModalVisible(false);
         setSelectedQuiz(null);
         setCopyTitle('');
+        setCopyCourseId('');
         setCopyBatchId('');
         setCopyQuizToView('');
         setCopyErrors({});
     };
 
-    const handleCopyQuizToViewChange = (value: string | string[]) => {
+    // Picking another course clears the batch and loads that course's batches
+    const handleCopyCourseChange = (value: string | string[]) => {
         const stringValue = Array.isArray(value) ? value[0] || '' : value;
-        setCopyQuizToView(stringValue);
-        // A free quiz has no batch, so drop any batch that was picked
-        if (stringValue !== QUIZ_TO_VIEW_PAID) setCopyBatchId('');
-        setCopyErrors((prev) => ({ ...prev, quizToView: '', batchId: '' }));
+        setCopyCourseId(stringValue);
+        setCopyBatchId('');
+        setCopyErrors((prev) => ({ ...prev, courseId: '', batchId: '' }));
+        if (stringValue) {
+            dispatch(getBatches({ courseId: stringValue, pageSize: 100 }) as any);
+        }
     };
 
     const handleCopyTitleChange = (_name: string, value: string) => {
@@ -277,8 +287,9 @@ export const useQuizManagement = () => {
 
         const errors: Record<string, string> = {};
         if (!copyTitle.trim()) errors.title = 'Title is required';
-        if (!copyQuizToView) errors.quizToView = 'Quiz To View is required';
         const isPaid = copyQuizToView === QUIZ_TO_VIEW_PAID;
+        // Course and batch are required for a Paid copy; a Free one may leave them empty
+        if (isPaid && !usesFolderSelector(listQuizType) && !copyCourseId) errors.courseId = 'Course is required';
         if (isPaid && !copyBatchId) errors.batchId = 'Batch is required';
         if (Object.keys(errors).length > 0) {
             setCopyErrors(errors);
@@ -288,7 +299,8 @@ export const useQuizManagement = () => {
         setOperationType('copy');
         dispatch(copyQuiz({
             quizId: selectedQuiz.id,
-            batchId: isPaid ? copyBatchId : '',
+            courseId: copyCourseId,
+            batchId: copyBatchId,
             title: copyTitle.trim(),
             quizToView: copyQuizToView,
         }) as any);
@@ -328,9 +340,11 @@ export const useQuizManagement = () => {
         isPublishModalVisible,
         isCopyModalVisible,
         copyTitle,
+        copyCourseId,
+        copyCourseOptions,
+        handleCopyCourseChange,
         copyBatchId,
         copyQuizToView,
-        handleCopyQuizToViewChange,
         copyErrors,
         copyBatchOptions,
         copyBatchesLoading,
@@ -345,8 +359,8 @@ export const useQuizManagement = () => {
         activeTab,
         setActiveTab,
         listQuizType,
-        previousYearType,
-        handlePreviousYearTypeChange,
+        freeKind,
+        handleFreeKindChange,
         openCreateQuiz,
         handleSchoolQuizCreated,
         openEditQuiz,

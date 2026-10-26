@@ -11,6 +11,15 @@ export interface CourseRecord {
     updatedAt?: string | null;
 }
 
+// Courses list filter; "All" is the default
+export const COURSE_TYPE_ALL = 'All';
+
+export const COURSE_TYPE_OPTIONS = [
+    { value: COURSE_TYPE_ALL, label: 'All' },
+    { value: 'Paid', label: 'Paid' },
+    { value: 'Free', label: 'Free' },
+];
+
 export const COURSE_INPUT_FIELDS = [
     {
         name: 'courseName',
@@ -24,7 +33,7 @@ export const COURSE_INPUT_FIELDS = [
         label: 'Description',
         placeholder: 'Enter course description',
         required: false,
-        type: 'text' as const,
+        type: 'textarea' as const,
     },
     {
         name: 'courseAmount',

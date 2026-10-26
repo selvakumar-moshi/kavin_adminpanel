@@ -7,7 +7,6 @@ import StatusBadge from '../../components/Table/StatusBadge';
 import { renderTruncatedCellWithTooltip } from '../../utils/tableCellRender';
 import { compareText } from './quizTableUtils';
 import { competitiveScopeColumns } from './competitive/columns';
-import { schoolBookScopeColumns } from './schoolBook/columns';
 import { previousYearScopeColumns } from './previousYear/columns';
 
 export interface QuizQuestion {
@@ -99,24 +98,6 @@ export const parsePastedOptionsList = (text: string): string[] =>
         .map((line) => line.trim())
         .filter(Boolean);
 
-// School Book Revision quiz options come from GET /Quiz/categories:
-// Subject -> (optional) Category -> Standard -> (optional) Part. A level with an empty list is not shown.
-export interface QuizStandardOption {
-    standard: number;
-    parts: string[];
-}
-
-export interface QuizCategoryOption {
-    category: string;
-    standards: QuizStandardOption[];
-}
-
-export interface QuizSubjectOption {
-    subject: string;
-    categories: QuizCategoryOption[];
-    standards: QuizStandardOption[];
-}
-
 // "Quiz To View" value for which a batch applies (a Free quiz has no batch)
 export const QUIZ_TO_VIEW_PAID = 'Paid';
 
@@ -145,11 +126,6 @@ export interface QuizRecord {
     folderName?: string | null;
     subFolderId?: string | null;
     subFolderName?: string | null;
-    // School Book quizzes only
-    subject?: string | null;
-    category?: string | null;
-    standard?: number | string | null;
-    part?: string | null;
     publishedAt: string | null;
     questions: QuizQuestion[];
     questionCount: string;
@@ -222,17 +198,16 @@ export const QUIZ_TYPE_SCHOOL = 'school';
 export const QUIZ_TYPE_PREVIOUS_YEAR = 'previousYear';
 
 // Name of each quiz type as used in page titles ("Add Competitive Quiz", "Add School Quiz", ...)
-// The "Previous/Syllabus" tab holds two kinds of quiz: previous year papers and syllabus wise quizzes
+// quizType of Syllabus Wise quizzes
 export const QUIZ_TYPE_SYLLABUS_WISE = 'syllabusWise';
 
-export const PREVIOUS_YEAR_TAB_QUIZ_TYPES = [
-    { value: QUIZ_TYPE_PREVIOUS_YEAR, label: 'Previous Year' },
-    { value: QUIZ_TYPE_SYLLABUS_WISE, label: 'Syllabus Wise' },
-];
-
-// Both are kept in a folder / sub folder (instead of a course / batch or a subject / standard)
+// Previous Year and Syllabus Wise quizzes
 export const isFolderQuizType = (quizType?: string) =>
     quizType === QUIZ_TYPE_PREVIOUS_YEAR || quizType === QUIZ_TYPE_SYLLABUS_WISE;
+
+// These quizzes are kept in a folder / sub folder / nested sub folder (instead of a course / batch): Previous Year,
+// Syllabus Wise and School Book
+export const usesFolderSelector = (quizType?: string) => isFolderQuizType(quizType) || quizType === QUIZ_TYPE_SCHOOL;
 
 export const QUIZ_TYPE_LABELS: Record<string, string> = {
     competitive: 'Competitive',
@@ -245,10 +220,9 @@ export const QUIZ_TYPE_LABELS: Record<string, string> = {
 export const getQuizPageTitle = (isEdit: boolean, quizType?: string) =>
     [isEdit ? 'Edit' : 'Add', QUIZ_TYPE_LABELS[quizType ?? ''], 'Quiz'].filter(Boolean).join(' ');
 
-// The columns that differ per tab live next to that tab's code (competitive/, schoolBook/, previousYear/)
+// The columns that differ per tab live next to that tab's code (competitive/, previousYear/)
 const getQuizScopeColumns = (quizType?: string): ITableColumn[] => {
-    if (isFolderQuizType(quizType)) return previousYearScopeColumns;
-    if (quizType === QUIZ_TYPE_SCHOOL) return schoolBookScopeColumns;
+    if (usesFolderSelector(quizType)) return previousYearScopeColumns;
     return competitiveScopeColumns;
 };
 
@@ -304,8 +278,43 @@ export const getQuizTableColumns = (quizType?: string): ITableColumn[] => [
     },
 ];
 
+// --- Tabs -----------------------------------------------------------------------------------------------------------
+// Competitive tab: Paid competitive quizzes. Free MCQ tab: every Free quiz, narrowed down by a kind dropdown.
+export const QUIZ_TAB_COMPETITIVE = 'competitive';
+export const QUIZ_TAB_FREE = 'free';
+
 export const Quiz_TAB_ITEMS = [
-    { key: 'competitive', label: 'Competitive/Daily' },
-    { key: 'school', label: 'School Book' },
-    { key: 'previousYear', label: 'Previous/Syllabus' },
+    { key: QUIZ_TAB_COMPETITIVE, label: 'Competitive' },
+    { key: QUIZ_TAB_FREE, label: 'Free MCQ' },
 ];
+
+export const QUIZ_TO_VIEW_FREE = 'Free';
+
+// Kinds of Free MCQ quiz (the dropdown of that tab). Daily quizzes are competitive quizzes that are Free.
+export const FREE_KIND_DAILY = 'daily';
+export const DEFAULT_FREE_KIND = FREE_KIND_DAILY;
+
+export const FREE_QUIZ_KINDS = [
+    { value: FREE_KIND_DAILY, label: 'Daily' },
+    { value: QUIZ_TYPE_SCHOOL, label: 'School' },
+    { value: QUIZ_TYPE_PREVIOUS_YEAR, label: 'Previous Year' },
+    { value: QUIZ_TYPE_SYLLABUS_WISE, label: 'Syllabus Wise' },
+];
+
+export interface QuizScope {
+    quizType: string;
+    quizToView: string;
+}
+
+// What the list asks for (search payload) and what Add Quiz creates, for the tab / kind being viewed
+export const getQuizScope = (tab: string, freeKind: string): QuizScope => {
+    if (tab !== QUIZ_TAB_FREE) return { quizType: 'competitive', quizToView: QUIZ_TO_VIEW_PAID };
+    return { quizType: freeKind === FREE_KIND_DAILY ? 'competitive' : freeKind, quizToView: QUIZ_TO_VIEW_FREE };
+};
+
+// The reverse: which tab (and kind) a quiz belongs to, to reopen the list where the user came from
+export const getTabForQuiz = (quizType?: string, quizToView?: string): { tab: string; freeKind: string } => {
+    if (usesFolderSelector(quizType)) return { tab: QUIZ_TAB_FREE, freeKind: quizType as string };
+    if (quizType === 'competitive' && quizToView === QUIZ_TO_VIEW_FREE) return { tab: QUIZ_TAB_FREE, freeKind: FREE_KIND_DAILY };
+    return { tab: QUIZ_TAB_COMPETITIVE, freeKind: DEFAULT_FREE_KIND };
+};

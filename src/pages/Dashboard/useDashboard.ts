@@ -4,7 +4,7 @@ import type { RootState } from '../../services/Store';
 import { getDashboardCounts, getQuizRankList } from '../../services/LearningAction';
 import superSalesAPI from '../../services/LearningAPI';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
-import type { QuizRecord } from '../Quiz/Constant';
+import { usesFolderSelector, type QuizRecord } from '../Quiz/Constant';
 import { RANK_QUIZ_TYPE_COMPETITIVE, type QuizRankListEntry } from './Constant';
 
 // Pulls a filename out of a Content-Disposition header (e.g. attachment; filename="rank-list.xlsx")
@@ -23,11 +23,9 @@ const NON_COMPETITIVE_QUIZ_TO_VIEW = 'Free';
 
 // What identifies a quiz in the dropdown besides its title, depending on the kind of quiz
 const quizOptionLabel = (quiz: QuizRecord): string => {
-    const context = quiz.quizType === 'school'
-        ? [quiz.subject, quiz.standard ? `${quiz.standard}th` : '', quiz.part].filter(Boolean).join(' ')
-        : quiz.quizType === 'previousYear'
-            ? [quiz.folderName, quiz.subFolderName].filter(Boolean).join(' / ')
-            : [quiz.courseName, quiz.batchTitle].filter(Boolean).join(' - ');
+    const context = usesFolderSelector(quiz.quizType)
+        ? [quiz.folderName, quiz.subFolderName].filter(Boolean).join(' / ')
+        : [quiz.courseName, quiz.batchTitle].filter(Boolean).join(' - ');
     return context ? `${quiz.title} (${context})` : quiz.title;
 };
 

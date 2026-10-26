@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
+import type { UploadFile } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
 import { getNotifications, createNotification, updateNotification, deleteNotification } from '../../services/LearningAction';
 import type { NotificationRecord } from './Constant';
 import dayjs from 'dayjs';
-import { getNotificationTableColumns, dayjsToISOString, NOTIFICATION_SEARCH_INPUT_FIELDS, PUSH_NOTIFICATION_TYPE } from './Constant';
+import { getNotificationTableColumns, dayjsToISOString, NOTIFICATION_SEARCH_INPUT_FIELDS, FLASH_NOTIFICATION_TYPE } from './Constant';
 import { NOTIFICATION_FILTER_FIELDS } from '../../utils/filterUtils';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 import { NOTIFICATION_VALIDATION_RULES } from '../../utils/validationUtils';
@@ -19,6 +20,9 @@ export const useNotificationManagement = () => {
     const [selectedNotification, setSelectedNotification] = useState<NotificationRecord | null>(null);
     const [formValues, setFormValues] = useState<Record<string, any>>({});
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    // The optional file; when editing, the saved one is shown until it is removed (replacingFile)
+    const [fileList, setFileList] = useState<UploadFile[]>([]);
+    const [replacingFile, setReplacingFile] = useState(false);
     const [operationType, setOperationType] = useState<'create' | 'edit' | 'delete' | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
@@ -107,6 +111,8 @@ export const useNotificationManagement = () => {
             setIsDeleteModalVisible(false);
             setFormValues({});
             setFormErrors({});
+            setFileList([]);
+            setReplacingFile(false);
             setSelectedNotification(null);
             setOperationType(null);
             dispatch(getNotifications({
@@ -127,6 +133,8 @@ export const useNotificationManagement = () => {
         setSelectedNotification(null);
         setFormValues({});
         setFormErrors({});
+        setFileList([]);
+        setReplacingFile(false);
         setIsModalVisible(true);
     };
 
@@ -137,9 +145,12 @@ export const useNotificationManagement = () => {
             title: notification.title || '',
             description: notification.description || '',
             link: notification.link || '',
-            date: notification.date || null,
+            startDate: notification.startDate || null,
+            endDate: notification.endDate || null,
         });
         setFormErrors({});
+        setFileList([]);
+        setReplacingFile(false);
         setIsModalVisible(true);
     };
 
@@ -148,6 +159,8 @@ export const useNotificationManagement = () => {
         setSelectedNotification(null);
         setFormValues({});
         setFormErrors({});
+        setFileList([]);
+        setReplacingFile(false);
     };
 
     const openDeleteModal = (notification: NotificationRecord) => {
@@ -178,6 +191,10 @@ export const useNotificationManagement = () => {
         return '';
     };
 
+    const handleFileChange = (files: UploadFile[]) => {
+        setFileList(files);
+    };
+
     const handleInputChange = (name: string, value: any) => {
         setFormValues(prev => ({ ...prev, [name]: value }));
 
@@ -203,8 +220,13 @@ export const useNotificationManagement = () => {
             }
         });
 
-        if (!formValues.date) {
-            newErrors.date = 'Date is required';
+        if (!formValues.startDate) {
+            newErrors.startDate = 'Start Date is required';
+        }
+        if (!formValues.endDate) {
+            newErrors.endDate = 'End Date is required';
+        } else if (formValues.startDate && dayjs(formValues.endDate).isBefore(dayjs(formValues.startDate))) {
+            newErrors.endDate = 'End Date must not be before Start Date';
         }
 
         setFormErrors(newErrors);
@@ -217,30 +239,30 @@ export const useNotificationManagement = () => {
         }
 
         // A Job Notification is only dated, so any time left over from before the type was switched is dropped
-        const selectedDate = formValues.notificationType === PUSH_NOTIFICATION_TYPE
-            ? formValues.date
-            : dayjs(formValues.date).startOf('day');
-        const date = dayjsToISOString(selectedDate);
+        const isPush = formValues.notificationType === FLASH_NOTIFICATION_TYPE;
+        const toPayloadDate = (value: unknown) => dayjsToISOString(isPush ? value : dayjs(value as string).startOf('day'));
+        const startDate = toPayloadDate(formValues.startDate);
+        const endDate = toPayloadDate(formValues.endDate);
+
+        const formData = new FormData();
+        formData.append('title', formValues.title);
+        formData.append('description', formValues.description);
+        formData.append('link', formValues.link);
+        formData.append('startDate', startDate);
+        formData.append('endDate', endDate);
+        formData.append('notificationType', formValues.notificationType);
+
+        const file = fileList[0]?.originFileObj;
+        if (file) {
+            formData.append('file', file);
+        }
 
         if (selectedNotification) {
             setOperationType('edit');
-            dispatch(updateNotification({
-                id: selectedNotification.id,
-                title: formValues.title,
-                description: formValues.description,
-                link: formValues.link,
-                date,
-                notificationType: formValues.notificationType,
-            }) as any);
+            dispatch(updateNotification({ id: selectedNotification.id, formData }) as any);
         } else {
             setOperationType('create');
-            dispatch(createNotification({
-                title: formValues.title,
-                description: formValues.description,
-                link: formValues.link,
-                date,
-                notificationType: formValues.notificationType,
-            }) as any);
+            dispatch(createNotification(formData) as any);
         }
     };
 
@@ -257,14 +279,18 @@ export const useNotificationManagement = () => {
             String(formValues.title || '') !== (selectedNotification.title || '') ||
             String(formValues.description || '') !== (selectedNotification.description || '') ||
             String(formValues.link || '') !== (selectedNotification.link || '') ||
-            dayjsToISOString(formValues.date) !== dayjsToISOString(selectedNotification.date)
+            fileList.length > 0 ||
+            dayjsToISOString(formValues.startDate) !== dayjsToISOString(selectedNotification.startDate) ||
+            dayjsToISOString(formValues.endDate) !== dayjsToISOString(selectedNotification.endDate)
         )
         : (
             Boolean(formValues.notificationType) ||
             Boolean(String(formValues.title || '').trim()) ||
             Boolean(String(formValues.description || '').trim()) ||
             Boolean(String(formValues.link || '').trim()) ||
-            Boolean(formValues.date)
+            fileList.length > 0 ||
+            Boolean(formValues.startDate) ||
+            Boolean(formValues.endDate)
         );
 
     return {
@@ -303,6 +329,10 @@ export const useNotificationManagement = () => {
         formValues,
         formErrors,
         hasFormChanges,
+        fileList,
+        replacingFile,
+        setReplacingFile,
+        handleFileChange,
         openCreateModal,
         openEditModal,
         closeModal,
