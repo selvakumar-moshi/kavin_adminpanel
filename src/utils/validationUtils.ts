@@ -12,21 +12,17 @@ export type ValidationRule = {
 export const EDIT_USER_VALIDATION_RULES: Record<string, ValidationRule> = {
     firstName: {
         required: true,
-        maxLength: 100,
         pattern: /^[a-zA-Z\s]*$/,
         errorMessages: {
             required: 'First Name is required',
-            maxLength: 'First Name must not exceed 100 characters.',
             pattern: 'First Name can only contain alphabetic characters.',
         },
     },
     lastName: {
         required: true,
-        maxLength: 100,
         pattern: /^[a-zA-Z\s]*$/,
         errorMessages: {
             required: 'Last Name is required',
-            maxLength: 'Last Name must not exceed 100 characters.',
             pattern: 'Last Name can only contain alphabetic characters.',
         },
     },
@@ -49,43 +45,32 @@ export const EDIT_USER_VALIDATION_RULES: Record<string, ValidationRule> = {
 export const COURSE_VALIDATION_RULES: Record<string, ValidationRule> = {
     courseName: {
         required: true,
-        maxLength: 200,
         errorMessages: {
             required: 'Course Name is required',
-            maxLength: 'Course Name must not exceed 200 characters.',
         },
     },
     courseDescription: {
-        maxLength: 255,
-        errorMessages: {
-            maxLength: 'Description must not exceed 255 characters.',
-        },
+        errorMessages: {},
     },
 };
 
 export const BATCH_VALIDATION_RULES: Record<string, ValidationRule> = {
     title: {
         required: true,
-        maxLength: 100,
         errorMessages: {
             required: 'Batch Title is required',
-            maxLength: 'Batch Title must not exceed 100 characters.',
         },
     },
     // Optional — only checked when filled in
     whatsAppLink: {
-        maxLength: 500,
         pattern: /^https?:\/\/(chat\.whatsapp\.com|wa\.me|api\.whatsapp\.com|whatsapp\.com)\/\S+$/i,
         errorMessages: {
-            maxLength: 'WhatsApp Link must not exceed 500 characters.',
             pattern: 'Enter a valid WhatsApp link, eg: https://chat.whatsapp.com/AbCdEf123456',
         },
     },
     telegramLink: {
-        maxLength: 500,
         pattern: /^https?:\/\/(t\.me|telegram\.me|telegram\.dog)\/\S+$/i,
         errorMessages: {
-            maxLength: 'Telegram Link must not exceed 500 characters.',
             pattern: 'Enter a valid Telegram link, eg: https://t.me/yourgroupname',
         },
     },
@@ -94,34 +79,24 @@ export const BATCH_VALIDATION_RULES: Record<string, ValidationRule> = {
 export const STUDY_MATERIAL_VALIDATION_RULES: Record<string, ValidationRule> = {
     title: {
         required: true,
-        maxLength: 100,
         errorMessages: {
             required: 'Title is required',
-            maxLength: 'Title must not exceed 100 characters.',
         },
     },
     description: {
-        maxLength: 255,
-        errorMessages: {
-            maxLength: 'Description must not exceed 255 characters.',
-        },
+        errorMessages: {},
     },
 };
 
 export const VIDEO_MATERIAL_VALIDATION_RULES: Record<string, ValidationRule> = {
     title: {
         required: true,
-        maxLength: 100,
         errorMessages: {
             required: 'Title is required',
-            maxLength: 'Title must not exceed 100 characters.',
         },
     },
     description: {
-        maxLength: 255,
-        errorMessages: {
-            maxLength: 'Description must not exceed 255 characters.',
-        },
+        errorMessages: {},
     },
     youtubeLink: {
         required: true,
@@ -135,30 +110,20 @@ export const VIDEO_MATERIAL_VALIDATION_RULES: Record<string, ValidationRule> = {
 
 export const NOTIFICATION_VALIDATION_RULES: Record<string, ValidationRule> = {
     notificationType: {
-        required: true,
         errorMessages: {
-            required: 'Notification Type is required',
         },
     },
     title: {
-        required: true,
-        maxLength: 200,
         errorMessages: {
-            required: 'Title is required',
-            maxLength: 'Title must not exceed 200 characters.',
         },
     },
     description: {
-        required: true,
         errorMessages: {
-            required: 'Description is required',
         },
     },
     link: {
-        required: true,
         pattern: /^https?:\/\/.+/i,
         errorMessages: {
-            required: 'Link is required',
             pattern: 'Enter a valid URL starting with http:// or https://',
         },
     },

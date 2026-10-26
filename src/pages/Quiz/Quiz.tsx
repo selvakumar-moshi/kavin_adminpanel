@@ -16,7 +16,7 @@ import ToastMessages from '../../components/ToastMessages';
 import PageTitle from '../../components/PageTitle';
 import { useQuizManagement } from './useQuizHooks';
 import SchoolBookQuiz from './schoolBook/SchoolBookQuiz';
-import { getQuizTableColumns, QUIZ_EXPIRES_AT_FIELD, QUIZ_COPY_TITLE_FIELD, QUIZ_TO_VIEW_PAID, QUIZ_TAB_FREE, QUIZ_TYPE_SCHOOL, FREE_QUIZ_KINDS, usesFolderSelector, type QuizRecord, Quiz_TAB_ITEMS } from './Constant';
+import { getQuizTableColumns, QUIZ_EXPIRES_AT_FIELD, QUIZ_COPY_TITLE_FIELD, QUIZ_TO_VIEW_PAID, QUIZ_TAB_FREE, QUIZ_TYPE_SCHOOL, QUIZ_TYPE_DAILY, FREE_QUIZ_KINDS, usesFolderSelector, type QuizRecord, Quiz_TAB_ITEMS } from './Constant';
 import add_Icon from '../../assets/add_Icon.svg';
 import filter_Icon from '../../assets/filter_Icon.svg';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
@@ -168,6 +168,7 @@ const Quiz = () => {
                                     placeholder: 'Select type',
                                     options: FREE_QUIZ_KINDS,
                                     allowClear: false,
+                                    width: 180,
                                 },
                             ]}
                             values={{ freeKind }}
@@ -279,7 +280,7 @@ const Quiz = () => {
                     />
                     {/* Course and batch: required for a Paid copy (Competitive tab), optional for a Free one (Daily).
                         Folder based quizzes (School / Previous Year / Syllabus Wise) have neither. */}
-                    {!usesFolderSelector(listQuizType) && (
+                    {!usesFolderSelector(listQuizType) && listQuizType !== QUIZ_TYPE_DAILY && (
                         <>
                             <DropdownField
                                 fields={[

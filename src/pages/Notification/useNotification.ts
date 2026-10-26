@@ -220,12 +220,8 @@ export const useNotificationManagement = () => {
             }
         });
 
-        if (!formValues.startDate) {
-            newErrors.startDate = 'Start Date is required';
-        }
-        if (!formValues.endDate) {
-            newErrors.endDate = 'End Date is required';
-        } else if (formValues.startDate && dayjs(formValues.endDate).isBefore(dayjs(formValues.startDate))) {
+        // Both dates are optional; when both are given the end can't be before the start
+        if (formValues.startDate && formValues.endDate && dayjs(formValues.endDate).isBefore(dayjs(formValues.startDate))) {
             newErrors.endDate = 'End Date must not be before Start Date';
         }
 
@@ -240,17 +236,18 @@ export const useNotificationManagement = () => {
 
         // A Job Notification is only dated, so any time left over from before the type was switched is dropped
         const isPush = formValues.notificationType === FLASH_NOTIFICATION_TYPE;
-        const toPayloadDate = (value: unknown) => dayjsToISOString(isPush ? value : dayjs(value as string).startOf('day'));
+        const toPayloadDate = (value: unknown) => (value ? dayjsToISOString(isPush ? value : dayjs(value as string).startOf('day')) : '');
         const startDate = toPayloadDate(formValues.startDate);
         const endDate = toPayloadDate(formValues.endDate);
 
         const formData = new FormData();
-        formData.append('title', formValues.title);
-        formData.append('description', formValues.description);
-        formData.append('link', formValues.link);
-        formData.append('startDate', startDate);
-        formData.append('endDate', endDate);
-        formData.append('notificationType', formValues.notificationType);
+        formData.append('title', formValues.title || '');
+        formData.append('description', formValues.description || '');
+        formData.append('link', formValues.link || '');
+        // A date that wasn't picked is left out
+        if (startDate) formData.append('startDate', startDate);
+        if (endDate) formData.append('endDate', endDate);
+        formData.append('notificationType', formValues.notificationType || '');
 
         const file = fileList[0]?.originFileObj;
         if (file) {

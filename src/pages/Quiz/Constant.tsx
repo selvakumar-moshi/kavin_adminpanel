@@ -101,6 +101,16 @@ export const parsePastedOptionsList = (text: string): string[] =>
 // "Quiz To View" value for which a batch applies (a Free quiz has no batch)
 export const QUIZ_TO_VIEW_PAID = 'Paid';
 
+// Number of times a student may attempt the quiz (optional)
+export const QUIZ_ATTEMPT_FIELD = [
+    {
+        name: 'quizAttempt',
+        label: 'Quiz Attempt',
+        placeholder: 'Enter number of attempts, e.g. 10',
+        type: 'number' as const,
+    },
+];
+
 export const QUIZ_COPY_TITLE_FIELD = [
     {
         name: 'title',
@@ -121,6 +131,7 @@ export interface QuizRecord {
     status: string;
     quizToView: string;
     quizType?: string;
+    quizAttempt?: number | null;
     // Previous Year quizzes only
     folderId?: string | null;
     folderName?: string | null;
@@ -191,6 +202,9 @@ export const emptyQuestion = (): QuizQuestion => ({
     mark: '',
 });
 
+// quizType of Daily quizzes (a Free MCQ kind)
+export const QUIZ_TYPE_DAILY = 'daily';
+
 // quizType / tab key of the School Book tab
 export const QUIZ_TYPE_SCHOOL = 'school';
 
@@ -211,6 +225,7 @@ export const usesFolderSelector = (quizType?: string) => isFolderQuizType(quizTy
 
 export const QUIZ_TYPE_LABELS: Record<string, string> = {
     competitive: 'Competitive',
+    daily: 'Daily',
     school: 'School',
     previousYear: 'Previous Year',
     syllabusWise: 'Syllabus Wise',
@@ -223,6 +238,8 @@ export const getQuizPageTitle = (isEdit: boolean, quizType?: string) =>
 // The columns that differ per tab live next to that tab's code (competitive/, previousYear/)
 const getQuizScopeColumns = (quizType?: string): ITableColumn[] => {
     if (usesFolderSelector(quizType)) return previousYearScopeColumns;
+    // Daily quizzes belong to no course / batch / folder
+    if (quizType === QUIZ_TYPE_DAILY) return [];
     return competitiveScopeColumns;
 };
 
@@ -290,13 +307,14 @@ export const Quiz_TAB_ITEMS = [
 
 export const QUIZ_TO_VIEW_FREE = 'Free';
 
-// Kinds of Free MCQ quiz (the dropdown of that tab). Daily quizzes are competitive quizzes that are Free.
-export const FREE_KIND_DAILY = 'daily';
-export const DEFAULT_FREE_KIND = FREE_KIND_DAILY;
+// Kinds of Free MCQ quiz (the dropdown of that tab); each value is the quizType that is sent
+export const FREE_KIND_COMPETITIVE = 'competitive';
+export const DEFAULT_FREE_KIND = QUIZ_TYPE_DAILY;
 
 export const FREE_QUIZ_KINDS = [
-    { value: FREE_KIND_DAILY, label: 'Daily' },
-    { value: QUIZ_TYPE_SCHOOL, label: 'School' },
+    { value: QUIZ_TYPE_DAILY, label: 'Current Affairs' },
+    { value: FREE_KIND_COMPETITIVE, label: 'Competitive' },
+    { value: QUIZ_TYPE_SCHOOL, label: 'School Book' },
     { value: QUIZ_TYPE_PREVIOUS_YEAR, label: 'Previous Year' },
     { value: QUIZ_TYPE_SYLLABUS_WISE, label: 'Syllabus Wise' },
 ];
@@ -309,12 +327,12 @@ export interface QuizScope {
 // What the list asks for (search payload) and what Add Quiz creates, for the tab / kind being viewed
 export const getQuizScope = (tab: string, freeKind: string): QuizScope => {
     if (tab !== QUIZ_TAB_FREE) return { quizType: 'competitive', quizToView: QUIZ_TO_VIEW_PAID };
-    return { quizType: freeKind === FREE_KIND_DAILY ? 'competitive' : freeKind, quizToView: QUIZ_TO_VIEW_FREE };
+    return { quizType: freeKind, quizToView: QUIZ_TO_VIEW_FREE };
 };
 
 // The reverse: which tab (and kind) a quiz belongs to, to reopen the list where the user came from
 export const getTabForQuiz = (quizType?: string, quizToView?: string): { tab: string; freeKind: string } => {
-    if (usesFolderSelector(quizType)) return { tab: QUIZ_TAB_FREE, freeKind: quizType as string };
-    if (quizType === 'competitive' && quizToView === QUIZ_TO_VIEW_FREE) return { tab: QUIZ_TAB_FREE, freeKind: FREE_KIND_DAILY };
+    if (usesFolderSelector(quizType) || quizType === QUIZ_TYPE_DAILY) return { tab: QUIZ_TAB_FREE, freeKind: quizType as string };
+    if (quizType === 'competitive' && quizToView === QUIZ_TO_VIEW_FREE) return { tab: QUIZ_TAB_FREE, freeKind: FREE_KIND_COMPETITIVE };
     return { tab: QUIZ_TAB_COMPETITIVE, freeKind: DEFAULT_FREE_KIND };
 };

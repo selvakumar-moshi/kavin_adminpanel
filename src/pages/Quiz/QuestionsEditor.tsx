@@ -245,7 +245,8 @@ const QuestionsEditor = ({
                                             name: textFieldName,
                                             label: 'Question Text',
                                             placeholder: 'Enter question text',
-                                            required: true,
+                                            // A picture can be used instead of text
+                                            required: !question.images?.question,
                                         }]}
                                         values={{ [textFieldName]: question.questionText }}
                                         errors={errors.questionText ? { [textFieldName]: errors.questionText } : {}}
@@ -284,7 +285,7 @@ const QuestionsEditor = ({
                                                                 name: optionFieldName,
                                                                 label: `Option ${optionLabel}`,
                                                                 placeholder: `Enter option ${optionLabel}`,
-                                                                required: optionKey !== 'optionD',
+                                                                required: optionKey !== 'optionD' && !optionImage,
                                                             }]}
                                                             values={{ [optionFieldName]: question[optionKey] as string }}
                                                             errors={errors[optionKey] ? { [optionFieldName]: errors[optionKey] } : {}}

@@ -41,7 +41,6 @@ export const NOTIFICATION_TYPE_FIELD = [
         name: 'notificationType',
         label: 'Notification Type',
         placeholder: 'Select Notification Type',
-        required: true,
         options: NOTIFICATION_TYPE_OPTIONS,
     },
 ];
@@ -51,21 +50,18 @@ export const NOTIFICATION_INPUT_FIELDS = [
         name: 'title',
         label: 'Title',
         placeholder: 'Enter notification title',
-        required: true,
         type: 'text' as const,
     },
     {
         name: 'description',
         label: 'Description',
         placeholder: 'Enter notification description',
-        required: true,
         type: 'textarea' as const,
     },
     {
         name: 'link',
         label: 'Link',
         placeholder: 'Enter link URL',
-        required: true,
         type: 'text' as const,
     },
 ];
@@ -75,13 +71,11 @@ export const NOTIFICATION_DATE_FIELD = [
         name: 'startDate',
         label: 'Start Date',
         placeholder: 'Select start date',
-        required: true,
     },
     {
         name: 'endDate',
         label: 'End Date',
         placeholder: 'Select end date',
-        required: true,
     },
 ];
 

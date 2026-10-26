@@ -34,6 +34,7 @@ export interface DropdownField {
   noOptionsContent?: React.ReactNode;
    /** Custom test ID for the actual input element */
    inputTestId?: string;
+   width?: number | string;
 }
 
 export interface DropdownFieldProps {
@@ -112,6 +113,7 @@ const DropdownField: React.FC<DropdownFieldProps> = ({
               title={field.selectHoverTitle}
               className={`dropdown-field__select${isSearchable ? " dropdown-field__select--searchable" : ""}`}
               status={hasError ? "error" : undefined}
+              style={field.width !== undefined ? { width: field.width } : undefined}
               prefix={
                 isSearchable ? (
                   <SearchOutlined

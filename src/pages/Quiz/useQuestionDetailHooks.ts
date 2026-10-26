@@ -6,7 +6,7 @@ import { useToastMessages } from '../../components/ToastMessages/useToastMessage
 import type { RootState } from '../../services/Store';
 import { getQuizById, createQuiz, updateQuiz, getCourses, getBatches } from '../../services/LearningAction';
 import superSalesAPI from '../../services/LearningAPI';
-import { usesFolderSelector, emptyQuestion, parsePastedOptionsList, QUESTION_OPTION_KEYS, IMAGE_FIELD_NAMES, IMAGE_URL_FIELD_NAMES, type QuizQuestion, type QuizQuestionImages, type QuizQuestionImageFiles, type QuizRecord } from './Constant';
+import { usesFolderSelector, QUIZ_TYPE_DAILY, emptyQuestion, parsePastedOptionsList, QUESTION_OPTION_KEYS, IMAGE_FIELD_NAMES, IMAGE_URL_FIELD_NAMES, type QuizQuestion, type QuizQuestionImages, type QuizQuestionImageFiles, type QuizRecord } from './Constant';
 import type { CourseRecord, BatchRecord } from '../Course/Constant';
 import { QUIZ_VALIDATION_RULES, QUIZ_QUESTION_VALIDATION_RULES, type ValidationRule } from '../../utils/validationUtils';
 
@@ -24,6 +24,15 @@ const SCHOOL_QUIZ_TO_VIEW = 'Free';
 const DEFAULT_QUIZ_TYPE = 'competitive';
 const FOLDER_QUIZ_TO_VIEW = 'Free';
 const SCHOOL_QUIZ_TYPE = 'school';
+
+// Which image slot can stand in for a text field of a question
+const TEXT_FIELD_IMAGE_KEYS: Partial<Record<keyof QuizQuestion, string>> = {
+    questionText: 'question',
+    optionA: 'optionA',
+    optionB: 'optionB',
+    optionC: 'optionC',
+    optionD: 'optionD',
+};
 
 // Shape of /Quiz/import's `data.questions` / `data.warnings` entries
 interface ImportedQuestion {
@@ -98,6 +107,9 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
     const [items, setItems] = useState<ListItem[]>(() => [{ type: 'question', question: makeKeyedQuestion() }]);
     const [titleError, setTitleError] = useState('');
     const [courseError, setCourseError] = useState('');
+    const [batchError, setBatchError] = useState('');
+    const [quizAttempt, setQuizAttempt] = useState('');
+    const [quizAttemptError, setQuizAttemptError] = useState('');
     const [quizToViewError, setQuizToViewError] = useState('');
     const [questionErrors, setQuestionErrors] = useState<QuestionErrors>({});
     const [isSaving, setIsSaving] = useState(false);
@@ -132,6 +144,10 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
 
     // Previous Year quizzes live in a folder instead of having a Quiz To View / course / batch: they are always Free
     const isFolderQuiz = usesFolderSelector(quizType);
+    // Daily quizzes belong to no course / batch
+    const isDaily = quizType === QUIZ_TYPE_DAILY;
+    // Creating a competitive quiz (Paid or Free) needs a course and a batch
+    const courseBatchRequired = !isEditMode && !isFolderQuiz && !isDaily;
     const quizToView = isFolderQuiz ? FOLDER_QUIZ_TO_VIEW : fixedQuizToView ?? quizToViewInput;
     const isPaid = quizToView === PAID_QUIZ;
     const coursesArray = Array.isArray(CoursesData) ? (CoursesData as CourseRecord[]) : [];
@@ -156,6 +172,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
             setCourseId(quizDetail.courseId || '');
             setBatchId(quizDetail.batchId || '');
             setQuizToView(quizDetail.quizToView || '');
+            setQuizAttempt(quizDetail.quizAttempt == null ? '' : String(quizDetail.quizAttempt));
             originalTitleRef.current = quizDetail.title || '';
             originalQuizToViewRef.current = quizDetail.quizToView || '';
             if (quizDetail.courseId) {
@@ -216,6 +233,27 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
     const handleBatchChange = (value: string | string[]) => {
         const stringValue = Array.isArray(value) ? value[0] || '' : value;
         setBatchId(stringValue);
+        if (batchError) setBatchError('');
+    };
+
+    const handleQuizAttemptChange = (_name: string, value: string) => {
+        setQuizAttempt(value);
+        if (quizAttemptError) setQuizAttemptError('');
+    };
+
+    // Optional; when filled it must be a whole number of at least 1
+    const validateQuizAttempt = (): boolean => {
+        const value = quizAttempt.trim();
+        if (value && !/^[1-9]\d*$/.test(value)) {
+            setQuizAttemptError('Enter a whole number of 1 or more');
+            return false;
+        }
+        return true;
+    };
+
+    const appendQuizAttempt = (formData: FormData) => {
+        const value = quizAttempt.trim();
+        if (value) formData.append('quizAttempt', value);
     };
 
     const handleQuizToViewChange = (value: string | string[]) => {
@@ -420,6 +458,14 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
     };
 
     const handleImageChange = (key: number, imageKey: keyof QuizQuestionImages, file: File, previewUrl: string) => {
+        // The picture takes the place of that text, so a "Required" error on it no longer applies
+        const textField = imageKey === 'question' ? 'questionText' : imageKey;
+        setQuestionErrors((prev) => {
+            if (!prev[key]?.[textField as keyof QuizQuestion]) return prev;
+            const next = { ...prev, [key]: { ...prev[key] } };
+            delete next[key][textField as keyof QuizQuestion];
+            return next;
+        });
         setItems((prev) => prev.map((it) => (
             it.type === 'question' && it.question._key === key
                 ? {
@@ -508,8 +554,16 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
             isValid = false;
         }
 
-        if (!isEditMode && isPaid && !courseId) {
+        if (courseBatchRequired && !courseId) {
             setCourseError('Course is required');
+            isValid = false;
+        }
+        if (courseBatchRequired && !batchId) {
+            setBatchError('Batch is required');
+            isValid = false;
+        }
+
+        if (!validateQuizAttempt()) {
             isValid = false;
         }
 
@@ -530,11 +584,13 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
             const fieldErrors: Partial<Record<keyof QuizQuestion, string>> = {};
             (Object.keys(QUIZ_QUESTION_VALIDATION_RULES) as (keyof QuizQuestion)[]).forEach((field) => {
                 if (original && original[field] === q[field]) return;
+                // The question text and the options may be an image instead of text
+                if (field !== 'mark' && field !== 'correctOption' && q.images[TEXT_FIELD_IMAGE_KEYS[field] as keyof QuizQuestionImages]) return;
                 const error = validateSingleField(QUIZ_QUESTION_VALIDATION_RULES, field, q[field] as string);
                 if (error) fieldErrors[field] = error;
             });
             // Option D may be left empty, but then it can't be the correct answer
-            if (q.correctOption === 'D' && !q.optionD.trim()) {
+            if (q.correctOption === 'D' && !q.optionD.trim() && !q.images.optionD) {
                 fieldErrors.correctOption = 'Option D is empty';
             }
             if (Object.keys(fieldErrors).length > 0) {
@@ -571,10 +627,11 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
     const submitSchoolBookQuiz = (fields: Record<string, string>) => {
         const titleValidationError = validateSingleField(QUIZ_VALIDATION_RULES, 'title', title);
         if (titleValidationError) setTitleError(titleValidationError);
+        const attemptValid = validateQuizAttempt();
 
         // Run the question check even when the title failed, so every error shows at once
         const questionsValid = validateQuestions();
-        if (titleValidationError || !questionsValid) {
+        if (titleValidationError || !attemptValid || !questionsValid) {
             showError(questions.length === 0 ? 'Please add at least one question' : 'Please fix the errors in the form');
             return;
         }
@@ -583,6 +640,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         formData.append('title', title);
         formData.append('quizToView', SCHOOL_QUIZ_TO_VIEW);
         formData.append('quizType', SCHOOL_QUIZ_TYPE);
+        appendQuizAttempt(formData);
         Object.entries(fields).forEach(([name, value]) => formData.append(name, value));
         appendQuestionsToFormData(formData);
 
@@ -602,9 +660,13 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         formData.append('quizToView', quizToView);
         formData.append('quizType', quizType);
         if (extraFields) Object.entries(extraFields).forEach(([name, value]) => formData.append(name, value));
-        // Course / batch go with Paid and Free quizzes alike (the course can't change once the quiz exists)
-        if (isPaid || batchId) formData.append('batchId', batchId);
-        if (!isEditMode && courseId) formData.append('courseId', courseId);
+        appendQuizAttempt(formData);
+        // Course / batch go with competitive quizzes, Paid and Free alike (the course can't change once the quiz exists);
+        // a Daily quiz has neither
+        if (!isDaily && !isFolderQuiz) {
+            if (isPaid || batchId) formData.append('batchId', batchId);
+            if (!isEditMode && courseId) formData.append('courseId', courseId);
+        }
 
         // const quizFile = quizFileList[0]?.originFileObj;
         // if (!isEditMode && quizFile) formData.append('file', quizFile);
@@ -645,6 +707,11 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         questionCount: questions.length,
         titleError,
         courseError,
+        batchError,
+        quizAttempt,
+        quizAttemptError,
+        handleQuizAttemptChange,
+        isDaily,
         quizToViewError,
         questionErrors,
         applyMarkToAll,

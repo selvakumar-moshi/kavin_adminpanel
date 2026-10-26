@@ -6,7 +6,7 @@ import type { RootState } from '../../services/Store';
 import { getQuizzes, deleteQuiz, publishQuiz, copyQuiz, getBatches, getCourses } from '../../services/LearningAction';
 import type { QuizRecord } from './Constant';
 import type { BatchRecord, CourseRecord } from '../Course/Constant';
-import { getQuizTableColumns, dayjsToISOString, QUIZ_SEARCH_INPUT_FIELDS, QUIZ_TO_VIEW_PAID, DEFAULT_FREE_KIND, getQuizScope, getTabForQuiz, usesFolderSelector } from './Constant';
+import { getQuizTableColumns, QUIZ_TYPE_DAILY, dayjsToISOString, QUIZ_SEARCH_INPUT_FIELDS, QUIZ_TO_VIEW_PAID, DEFAULT_FREE_KIND, getQuizScope, getTabForQuiz, usesFolderSelector } from './Constant';
 import { QUIZ_FILTER_FIELDS } from '../../utils/filterUtils';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 
@@ -53,6 +53,8 @@ export const useQuizManagement = () => {
     const quizzesArray: QuizRecord[] = Array.isArray(QuizzesData?.items) ? QuizzesData.items : [];
     const totalQuizzes: number = QuizzesData?.totalCount ?? 0;
     const loading = apiStatus.QuizzesData?.loading || false;
+    // Folder based and Daily quizzes have no course / batch to copy into
+    const copyHasCourseBatch = !usesFolderSelector(listQuizType) && listQuizType !== QUIZ_TYPE_DAILY;
     const copyCourseOptions = (Array.isArray(CoursesData) ? (CoursesData as CourseRecord[]) : [])
         .map((course) => ({ value: course.id, label: course.courseName }));
     const copyBatchOptions = (Array.isArray(BatchesData?.items) ? (BatchesData.items as BatchRecord[]) : [])
@@ -243,7 +245,7 @@ export const useQuizManagement = () => {
         setCopyQuizToView(listQuizToView);
         setCopyErrors({});
         setIsCopyModalVisible(true);
-        if (!usesFolderSelector(listQuizType)) {
+        if (copyHasCourseBatch) {
             dispatch(getCourses() as any);
             if (quiz.courseId) {
                 dispatch(getBatches({ courseId: quiz.courseId, pageSize: 100 }) as any);
@@ -289,7 +291,7 @@ export const useQuizManagement = () => {
         if (!copyTitle.trim()) errors.title = 'Title is required';
         const isPaid = copyQuizToView === QUIZ_TO_VIEW_PAID;
         // Course and batch are required for a Paid copy; a Free one may leave them empty
-        if (isPaid && !usesFolderSelector(listQuizType) && !copyCourseId) errors.courseId = 'Course is required';
+        if (isPaid && copyHasCourseBatch && !copyCourseId) errors.courseId = 'Course is required';
         if (isPaid && !copyBatchId) errors.batchId = 'Batch is required';
         if (Object.keys(errors).length > 0) {
             setCopyErrors(errors);

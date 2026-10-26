@@ -10,7 +10,7 @@ import CompetitiveQuizFields from './competitive/CompetitiveQuizFields';
 import PreviousYearQuizFields from './previousYear/PreviousYearQuizFields';
 import { useQuestionDetailManagement } from './useQuestionDetailHooks';
 import { useFolderSelector } from './previousYear/useFolderSelectorHooks';
-import { QUIZ_TITLE_FIELD, getQuizPageTitle } from './Constant';
+import { QUIZ_TITLE_FIELD, QUIZ_ATTEMPT_FIELD, getQuizPageTitle } from './Constant';
 
 // Add / Edit Quiz page. The title, questions editor and Word import are the same for every quiz; the fields on the
 // left that differ per quiz type live in ./competitive and ./previousYear.
@@ -28,7 +28,11 @@ const QuestionDetail = () => {
         batchId,
         quizToView,
         isQuizToViewFixed,
-        isPaid,
+        isDaily,
+        quizAttempt,
+        quizAttemptError,
+        handleQuizAttemptChange,
+        batchError,
         quizType,
         isFolderQuiz,
         items,
@@ -117,6 +121,14 @@ const QuestionDetail = () => {
                         disabled={isSaving}
                     />
 
+                    <InputFields
+                        fields={QUIZ_ATTEMPT_FIELD}
+                        values={{ quizAttempt }}
+                        errors={quizAttemptError ? { quizAttempt: quizAttemptError } : {}}
+                        onChange={handleQuizAttemptChange}
+                        disabled={isSaving}
+                    />
+
                     {isFolderQuiz ? (
                         <PreviousYearQuizFields
                             {...folderSelector}
@@ -133,10 +145,12 @@ const QuestionDetail = () => {
                             hideQuizToView={isQuizToViewFixed}
                             quizToViewError={quizToViewError}
                             onQuizToViewChange={handleQuizToViewChange}
-                            isPaid={isPaid}
+                            showCourseBatch={!isDaily}
+                            courseBatchRequired={!isEditMode}
                             courseName={quizDetail?.courseName}
                             courseId={courseId}
                             courseError={courseError}
+                            batchError={batchError}
                             courseOptions={courseOptions}
                             onCourseChange={handleCourseChange}
                             batchId={batchId}

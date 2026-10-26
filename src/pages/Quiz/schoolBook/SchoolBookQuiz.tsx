@@ -8,7 +8,7 @@ import QuizDocumentUpload from '../QuizDocumentUpload';
 import PreviousYearQuizFields from '../previousYear/PreviousYearQuizFields';
 import { useFolderSelector } from '../previousYear/useFolderSelectorHooks';
 import { useQuestionDetailManagement } from '../useQuestionDetailHooks';
-import { QUIZ_TITLE_FIELD, QUIZ_TYPE_SCHOOL, getQuizPageTitle } from '../Constant';
+import { QUIZ_TITLE_FIELD, QUIZ_ATTEMPT_FIELD, QUIZ_TYPE_SCHOOL, getQuizPageTitle } from '../Constant';
 
 // "Add School Quiz": the breadcrumb and the page title
 const ADD_TITLE = getQuizPageTitle(false, QUIZ_TYPE_SCHOOL);
@@ -33,6 +33,9 @@ const SchoolBookQuiz = ({ onCancel, onCreated }: SchoolBookQuizProps) => {
         title,
         titleError,
         handleTitleChange,
+        quizAttempt,
+        quizAttemptError,
+        handleQuizAttemptChange,
         items,
         questionCount,
         questionErrors,
@@ -88,6 +91,14 @@ const SchoolBookQuiz = ({ onCancel, onCreated }: SchoolBookQuizProps) => {
                         values={{ title }}
                         errors={titleError ? { title: titleError } : {}}
                         onChange={handleTitleChange}
+                        disabled={isSaving}
+                    />
+
+                    <InputFields
+                        fields={QUIZ_ATTEMPT_FIELD}
+                        values={{ quizAttempt }}
+                        errors={quizAttemptError ? { quizAttempt: quizAttemptError } : {}}
+                        onChange={handleQuizAttemptChange}
                         disabled={isSaving}
                     />
 

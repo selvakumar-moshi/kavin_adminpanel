@@ -13,11 +13,14 @@ export interface CompetitiveQuizFieldsProps {
     hideQuizToView?: boolean;
     quizToViewError: string;
     onQuizToViewChange: OnChange;
-    // Course and batch (for Paid and Free quizzes; the course is only required for Paid)
-    isPaid: boolean;
+    // Course and batch (competitive quizzes, Paid and Free; Daily quizzes have neither)
+    showCourseBatch: boolean;
+    // Creating a quiz needs both
+    courseBatchRequired: boolean;
     courseName?: string;
     courseId: string;
     courseError: string;
+    batchError: string;
     courseOptions: Option[];
     onCourseChange: OnChange;
     batchId: string;
@@ -34,10 +37,12 @@ const CompetitiveQuizFields = ({
     hideQuizToView = false,
     quizToViewError,
     onQuizToViewChange,
-    isPaid,
+    showCourseBatch,
+    courseBatchRequired,
     courseName,
     courseId,
     courseError,
+    batchError,
     courseOptions,
     onCourseChange,
     batchId,
@@ -64,8 +69,8 @@ const CompetitiveQuizFields = ({
         />
         )}
 
-        {/* Course and batch apply to Paid and Free quizzes */}
-        {(
+        {/* Course and batch apply to competitive quizzes, Paid and Free */}
+        {showCourseBatch && (
             <>
                 {isEditMode ? (
                     <div className="question-detail-form__readonly-course">
@@ -78,7 +83,7 @@ const CompetitiveQuizFields = ({
                                 name: 'courseId',
                                 label: 'Course',
                                 placeholder: 'Select course',
-                                required: isPaid,
+                                required: courseBatchRequired,
                                 options: courseOptions,
                             },
                         ]}
@@ -94,12 +99,14 @@ const CompetitiveQuizFields = ({
                             name: 'batchId',
                             label: 'Batch',
                             placeholder: 'Select batch',
+                            required: courseBatchRequired,
                             options: batchOptions,
                             loading: batchesLoading,
                             disabled: disabled || !courseId,
                         },
                     ]}
                     values={{ batchId }}
+                    errors={batchError ? { batchId: batchError } : {}}
                     onChange={(_, value) => onBatchChange(value)}
                 />
             </>
