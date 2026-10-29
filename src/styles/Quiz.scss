@@ -447,3 +447,31 @@
     font-weight: 500;
   }
 }
+
+// Questions of the uploaded Word file that could not be read
+.question-detail-form__import-skipped {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid #f3c9c9;
+  border-radius: 8px;
+  background: #fff6f6;
+  font-family: var(--font-family);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #a12a2a;
+
+  ul {
+    margin: 4px 0 0;
+    padding-left: 18px;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+
+  &-title {
+    font-weight: 600;
+  }
+
+  li div {
+    overflow-wrap: anywhere;
+  }
+}

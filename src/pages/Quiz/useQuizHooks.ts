@@ -6,7 +6,7 @@ import type { RootState } from '../../services/Store';
 import { getQuizzes, deleteQuiz, publishQuiz, copyQuiz, getBatches, getCourses } from '../../services/LearningAction';
 import type { QuizRecord } from './Constant';
 import type { BatchRecord, CourseRecord } from '../Course/Constant';
-import { getQuizTableColumns, QUIZ_TYPE_DAILY, dayjsToISOString, QUIZ_SEARCH_INPUT_FIELDS, QUIZ_TO_VIEW_PAID, DEFAULT_FREE_KIND, getQuizScope, getTabForQuiz, usesFolderSelector } from './Constant';
+import { getQuizTableColumns, isCourseLessQuizType, dayjsToISOString, QUIZ_SEARCH_INPUT_FIELDS, QUIZ_TO_VIEW_PAID, DEFAULT_FREE_KIND, getQuizScope, getTabForQuiz, usesFolderSelector } from './Constant';
 import { QUIZ_FILTER_FIELDS } from '../../utils/filterUtils';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 
@@ -54,7 +54,7 @@ export const useQuizManagement = () => {
     const totalQuizzes: number = QuizzesData?.totalCount ?? 0;
     const loading = apiStatus.QuizzesData?.loading || false;
     // Folder based and Daily quizzes have no course / batch to copy into
-    const copyHasCourseBatch = !usesFolderSelector(listQuizType) && listQuizType !== QUIZ_TYPE_DAILY;
+    const copyHasCourseBatch = !usesFolderSelector(listQuizType) && !isCourseLessQuizType(listQuizType);
     const copyCourseOptions = (Array.isArray(CoursesData) ? (CoursesData as CourseRecord[]) : [])
         .map((course) => ({ value: course.id, label: course.courseName }));
     const copyBatchOptions = (Array.isArray(BatchesData?.items) ? (BatchesData.items as BatchRecord[]) : [])

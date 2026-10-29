@@ -18,7 +18,8 @@ const parseFileNameFromContentDisposition = (contentDisposition: string | undefi
 const toSafeFileNameSegment = (value: string): string =>
     value.trim().replace(/[^a-zA-Z0-9_]+/g, '-').replace(/^-+|-+$/g, '');
 
-// School and Previous Year quizzes are always Free, so that is what the rank list request sends for them
+// Every type except Competitive (Daily, Current Affairs, School, Previous Year, Syllabus Wise) is always Free,
+// so that is what the rank list request sends for them
 const NON_COMPETITIVE_QUIZ_TO_VIEW = 'Free';
 
 // What identifies a quiz in the dropdown besides its title, depending on the kind of quiz
@@ -102,7 +103,7 @@ export const useDashboard = () => {
 
     // Rank list is per-quiz, so only fetch once a quiz is picked. The request carries the filters in use:
     //   Competitive: ?batchId=..&quizType=competitive&quizToView=Paid|Free   (batchId only for batch-based quizzes)
-    //   School / Previous Year: ?quizType=school&quizToView=Free
+    //   Every other type (daily, currentAffairs, school, previousYear, syllabusWise): ?quizType=..&quizToView=Free
     const rankQuizToView = showQuizToView ? quizToView : NON_COMPETITIVE_QUIZ_TO_VIEW;
     useEffect(() => {
         // Only a quiz that is in the current list (so it matches the chosen type and Free / Paid) is requested

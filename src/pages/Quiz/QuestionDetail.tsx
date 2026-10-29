@@ -28,7 +28,7 @@ const QuestionDetail = () => {
         batchId,
         quizToView,
         isQuizToViewFixed,
-        isDaily,
+        isCourseLess,
         quizAttempt,
         quizAttemptError,
         handleQuizAttemptChange,
@@ -45,6 +45,8 @@ const QuestionDetail = () => {
         quizFileList,
         isImporting,
         importWarnings,
+        importSkipped,
+        importTotalFound,
         handleQuizFileChange,
         handleTitleChange,
         handleCourseChange,
@@ -145,7 +147,7 @@ const QuestionDetail = () => {
                             hideQuizToView={isQuizToViewFixed}
                             quizToViewError={quizToViewError}
                             onQuizToViewChange={handleQuizToViewChange}
-                            showCourseBatch={!isDaily}
+                            showCourseBatch={!isCourseLess}
                             courseBatchRequired={!isEditMode}
                             courseName={quizDetail?.courseName}
                             courseId={courseId}
@@ -166,6 +168,8 @@ const QuestionDetail = () => {
                             fileList={quizFileList}
                             isImporting={isImporting}
                             warnings={importWarnings}
+                            skipped={importSkipped}
+                            totalFound={importTotalFound}
                             onFileChange={handleQuizFileChange}
                         />
                     )}

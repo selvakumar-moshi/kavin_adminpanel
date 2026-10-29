@@ -205,6 +205,13 @@ export const emptyQuestion = (): QuizQuestion => ({
 // quizType of Daily quizzes (a Free MCQ kind)
 export const QUIZ_TYPE_DAILY = 'daily';
 
+// quizType of Current Affairs quizzes (a Free MCQ kind)
+export const QUIZ_TYPE_CURRENT_AFFAIRS = 'currentAffairs';
+
+// Daily and Current Affairs quizzes belong to no course / batch / folder
+export const isCourseLessQuizType = (quizType?: string) =>
+    quizType === QUIZ_TYPE_DAILY || quizType === QUIZ_TYPE_CURRENT_AFFAIRS;
+
 // quizType / tab key of the School Book tab
 export const QUIZ_TYPE_SCHOOL = 'school';
 
@@ -226,6 +233,7 @@ export const usesFolderSelector = (quizType?: string) => isFolderQuizType(quizTy
 export const QUIZ_TYPE_LABELS: Record<string, string> = {
     competitive: 'Competitive',
     daily: 'Daily',
+    currentAffairs: 'Current Affairs',
     school: 'School',
     previousYear: 'Previous Year',
     syllabusWise: 'Syllabus Wise',
@@ -238,8 +246,8 @@ export const getQuizPageTitle = (isEdit: boolean, quizType?: string) =>
 // The columns that differ per tab live next to that tab's code (competitive/, previousYear/)
 const getQuizScopeColumns = (quizType?: string): ITableColumn[] => {
     if (usesFolderSelector(quizType)) return previousYearScopeColumns;
-    // Daily quizzes belong to no course / batch / folder
-    if (quizType === QUIZ_TYPE_DAILY) return [];
+    // Daily and Current Affairs quizzes belong to no course / batch / folder
+    if (isCourseLessQuizType(quizType)) return [];
     return competitiveScopeColumns;
 };
 
@@ -312,8 +320,9 @@ export const FREE_KIND_COMPETITIVE = 'competitive';
 export const DEFAULT_FREE_KIND = QUIZ_TYPE_DAILY;
 
 export const FREE_QUIZ_KINDS = [
-    { value: QUIZ_TYPE_DAILY, label: 'Current Affairs' },
+    { value: QUIZ_TYPE_DAILY, label: 'Daily Test' },
     { value: FREE_KIND_COMPETITIVE, label: 'Competitive' },
+    { value: QUIZ_TYPE_CURRENT_AFFAIRS, label: 'Current Affairs' },
     { value: QUIZ_TYPE_SCHOOL, label: 'School Book' },
     { value: QUIZ_TYPE_PREVIOUS_YEAR, label: 'Previous Year' },
     { value: QUIZ_TYPE_SYLLABUS_WISE, label: 'Syllabus Wise' },
@@ -332,7 +341,7 @@ export const getQuizScope = (tab: string, freeKind: string): QuizScope => {
 
 // The reverse: which tab (and kind) a quiz belongs to, to reopen the list where the user came from
 export const getTabForQuiz = (quizType?: string, quizToView?: string): { tab: string; freeKind: string } => {
-    if (usesFolderSelector(quizType) || quizType === QUIZ_TYPE_DAILY) return { tab: QUIZ_TAB_FREE, freeKind: quizType as string };
+    if (usesFolderSelector(quizType) || isCourseLessQuizType(quizType)) return { tab: QUIZ_TAB_FREE, freeKind: quizType as string };
     if (quizType === 'competitive' && quizToView === QUIZ_TO_VIEW_FREE) return { tab: QUIZ_TAB_FREE, freeKind: FREE_KIND_COMPETITIVE };
     return { tab: QUIZ_TAB_COMPETITIVE, freeKind: DEFAULT_FREE_KIND };
 };

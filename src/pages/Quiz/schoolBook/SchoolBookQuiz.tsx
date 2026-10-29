@@ -42,6 +42,8 @@ const SchoolBookQuiz = ({ onCancel, onCreated }: SchoolBookQuizProps) => {
         applyMarkToAll,
         quizFileList,
         importWarnings,
+        importSkipped,
+        importTotalFound,
         handleQuizFileChange,
         addQuestionAfter,
         addSectionAfter,
@@ -115,6 +117,8 @@ const SchoolBookQuiz = ({ onCancel, onCreated }: SchoolBookQuizProps) => {
                         fileList={quizFileList}
                         isImporting={isImporting}
                         warnings={importWarnings}
+                        skipped={importSkipped}
+                        totalFound={importTotalFound}
                         onFileChange={handleQuizFileChange}
                     />
                 </div>

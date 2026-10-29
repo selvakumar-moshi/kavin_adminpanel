@@ -6,7 +6,7 @@ import { useToastMessages } from '../../components/ToastMessages/useToastMessage
 import type { RootState } from '../../services/Store';
 import { getQuizById, createQuiz, updateQuiz, getCourses, getBatches } from '../../services/LearningAction';
 import superSalesAPI from '../../services/LearningAPI';
-import { usesFolderSelector, QUIZ_TYPE_DAILY, emptyQuestion, parsePastedOptionsList, QUESTION_OPTION_KEYS, IMAGE_FIELD_NAMES, IMAGE_URL_FIELD_NAMES, type QuizQuestion, type QuizQuestionImages, type QuizQuestionImageFiles, type QuizRecord } from './Constant';
+import { usesFolderSelector, isCourseLessQuizType, emptyQuestion, parsePastedOptionsList, QUESTION_OPTION_KEYS, IMAGE_FIELD_NAMES, IMAGE_URL_FIELD_NAMES, type QuizQuestion, type QuizQuestionImages, type QuizQuestionImageFiles, type QuizRecord } from './Constant';
 import type { CourseRecord, BatchRecord } from '../Course/Constant';
 import { QUIZ_VALIDATION_RULES, QUIZ_QUESTION_VALIDATION_RULES, type ValidationRule } from '../../utils/validationUtils';
 
@@ -120,6 +120,9 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
     const [isImporting, setIsImporting] = useState(false);
     // Problems the import service flagged (e.g. a missing option) — listed under the upload for the admin to check
     const [importWarnings, setImportWarnings] = useState<ImportWarning[]>([]);
+    // Questions the import service could not read (with the reason), and how many it found in the document
+    const [importSkipped, setImportSkipped] = useState<ImportWarning[]>([]);
+    const [importTotalFound, setImportTotalFound] = useState(0);
 
     // Snapshots of the as-loaded values, so editing an existing quiz never gets blocked by
     // validation rules (e.g. "mark") added after that quiz/question was already saved — only
@@ -144,10 +147,10 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
 
     // Previous Year quizzes live in a folder instead of having a Quiz To View / course / batch: they are always Free
     const isFolderQuiz = usesFolderSelector(quizType);
-    // Daily quizzes belong to no course / batch
-    const isDaily = quizType === QUIZ_TYPE_DAILY;
+    // Daily and Current Affairs quizzes belong to no course / batch
+    const isCourseLess = isCourseLessQuizType(quizType);
     // Creating a competitive quiz (Paid or Free) needs a course and a batch
-    const courseBatchRequired = !isEditMode && !isFolderQuiz && !isDaily;
+    const courseBatchRequired = !isEditMode && !isFolderQuiz && !isCourseLess;
     const quizToView = isFolderQuiz ? FOLDER_QUIZ_TO_VIEW : fixedQuizToView ?? quizToViewInput;
     const isPaid = quizToView === PAID_QUIZ;
     const coursesArray = Array.isArray(CoursesData) ? (CoursesData as CourseRecord[]) : [];
@@ -295,12 +298,17 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         const requestId = ++importRequestIdRef.current;
         setIsImporting(true);
         setImportWarnings([]);
+        setImportSkipped([]);
+        setImportTotalFound(0);
         try {
             const res = await superSalesAPI.importQuiz(file);
             if (requestId !== importRequestIdRef.current) return;
 
             const data = res?.data?.data;
             const importedQuestions: ImportedQuestion[] = Array.isArray(data?.questions) ? data.questions : [];
+            // Shown under the upload, even when nothing could be read
+            setImportSkipped(Array.isArray(data?.skipped) ? data.skipped : []);
+            setImportTotalFound(Number(data?.totalFoundInDocument) || 0);
 
             if (importedQuestions.length === 0) {
                 showError(res?.data?.message || 'No questions could be read from the document');
@@ -354,6 +362,8 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
             importRequestIdRef.current += 1;
             setIsImporting(false);
             setImportWarnings([]);
+            setImportSkipped([]);
+            setImportTotalFound(0);
             removeImportedItems();
             return;
         }
@@ -663,7 +673,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         appendQuizAttempt(formData);
         // Course / batch go with competitive quizzes, Paid and Free alike (the course can't change once the quiz exists);
         // a Daily quiz has neither
-        if (!isDaily && !isFolderQuiz) {
+        if (!isCourseLess && !isFolderQuiz) {
             if (isPaid || batchId) formData.append('batchId', batchId);
             if (!isEditMode && courseId) formData.append('courseId', courseId);
         }
@@ -711,13 +721,15 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         quizAttempt,
         quizAttemptError,
         handleQuizAttemptChange,
-        isDaily,
+        isCourseLess,
         quizToViewError,
         questionErrors,
         applyMarkToAll,
         quizFileList,
         isImporting,
         importWarnings,
+        importSkipped,
+        importTotalFound,
         handleQuizFileChange,
         handleTitleChange,
         handleCourseChange,
