@@ -108,8 +108,7 @@ const SchoolBookQuiz = ({ onCancel, onCreated }: SchoolBookQuizProps) => {
                         {...folderSelector}
                         disabled={isSaving}
                         onFolderChange={folderSelector.handleFolderChange}
-                        onSubFolderChange={folderSelector.handleSubFolderChange}
-                        onNestedSubFolderChange={folderSelector.handleNestedSubFolderChange}
+                        onLevelChange={folderSelector.handleLevelChange}
                     />
 
                     {/* Questions in the Word file are read and filled into the editor on the right */}

@@ -1,4 +1,5 @@
 import DropdownField from '../../../components/DropdownField/DropdownField';
+import type { FolderLevel } from './useFolderSelectorHooks';
 
 type Option = { value: string; label: string };
 type OnChange = (value: string | string[]) => void;
@@ -6,38 +7,32 @@ type OnChange = (value: string | string[]) => void;
 export interface PreviousYearQuizFieldsProps {
     disabled: boolean;
     folderId: string;
-    subFolderId: string;
-    nestedSubFolderId: string;
     folderOptions: Option[];
-    subFolderOptions: Option[];
-    nestedSubFolderOptions: Option[];
+    /** One dropdown per level below the folder: sub folder, nested sub folder, ... */
+    levels: FolderLevel[];
     foldersLoading: boolean;
     subFoldersLoading: boolean;
     loadError: string;
     errors: Record<string, string>;
     showSubFolder: boolean;
     onFolderChange: OnChange;
-    onSubFolderChange: OnChange;
-    onNestedSubFolderChange: OnChange;
+    onLevelChange: (index: number, value: string | string[]) => void;
 }
 
-// Left-hand fields of a Previous Year quiz (add and edit): the folder it lives in and, once a folder is picked, its sub folder and, when that has nested ones, the nested sub folder
+// Left-hand fields of a folder based quiz (add and edit): the folder it lives in, then a dropdown for each level
+// below it (sub folder, nested sub folders, ...) while the chosen one has something inside
 const PreviousYearQuizFields = ({
     disabled,
     folderId,
-    subFolderId,
-    nestedSubFolderId,
     folderOptions,
-    subFolderOptions,
-    nestedSubFolderOptions,
+    levels,
     foldersLoading,
     subFoldersLoading,
     loadError,
     errors,
     showSubFolder,
     onFolderChange,
-    onSubFolderChange,
-    onNestedSubFolderChange,
+    onLevelChange,
 }: PreviousYearQuizFieldsProps) => (
     <>
         <DropdownField
@@ -57,42 +52,25 @@ const PreviousYearQuizFields = ({
             onChange={(_, value) => onFolderChange(value)}
         />
 
-        {showSubFolder && (
+        {showSubFolder && levels.map((level, index) => (
             <DropdownField
+                key={`${index}-${level.label}`}
                 fields={[
                     {
-                        name: 'subFolderId',
-                        label: 'Sub Folder',
-                        placeholder: 'Select sub folder',
-                        required: subFolderOptions.length > 0,
-                        options: subFolderOptions,
-                        loading: subFoldersLoading,
-                        disabled,
-                    },
-                ]}
-                values={{ subFolderId }}
-                errors={errors.subFolderId ? { subFolderId: errors.subFolderId } : {}}
-                onChange={(_, value) => onSubFolderChange(value)}
-            />
-        )}
-
-        {showSubFolder && nestedSubFolderOptions.length > 0 && (
-            <DropdownField
-                fields={[
-                    {
-                        name: 'nestedSubFolderId',
-                        label: 'Nested Sub Folder',
-                        placeholder: 'Select nested sub folder',
+                        name: `level${index}`,
+                        label: level.label,
+                        placeholder: `Select ${level.label.toLowerCase()}`,
                         required: true,
-                        options: nestedSubFolderOptions,
+                        options: level.options,
+                        loading: index === 0 && subFoldersLoading,
                         disabled,
                     },
                 ]}
-                values={{ nestedSubFolderId }}
-                errors={errors.nestedSubFolderId ? { nestedSubFolderId: errors.nestedSubFolderId } : {}}
-                onChange={(_, value) => onNestedSubFolderChange(value)}
+                values={{ [`level${index}`]: level.value }}
+                errors={errors[`level${index}`] ? { [`level${index}`]: errors[`level${index}`] } : {}}
+                onChange={(_, value) => onLevelChange(index, value)}
             />
-        )}
+        ))}
     </>
 );
 

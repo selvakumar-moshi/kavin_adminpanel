@@ -5,10 +5,16 @@ import { toTitleCase } from '../../utils/textUtils';
 import {
     FOLDER_LABELS,
     NAME_MAX_LENGTH,
+    addNode,
+    getChildren,
+    getNodeAt,
     normalizeSubFolder,
+    removeNode,
+    renameNode,
     toFolderChildrenPayload,
     toSubFolderChildrenPayload,
     type FolderKind,
+    type FolderNode,
     type FolderRecord,
     type SubFolderRecord,
 } from './Constant';
@@ -19,12 +25,15 @@ const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().t
 
 // What the open Add / Edit modal or delete confirmation is about:
 //   folder / subfolder: `record` is null while adding
-//   nested: `parent` is the sub folder it lives in, `index` its position there (null while adding)
+//   nested: `parent` is the sub folder whose tree it lives in and `path` addresses it inside that tree:
+//           while adding, the path of the node that gets the new child ([] = the sub folder itself),
+//           while editing / deleting, the path of the node itself
 interface FolderTarget {
     kind: FolderKind;
     record: FolderRecord | SubFolderRecord | null;
     parent?: SubFolderRecord;
-    index?: number | null;
+    path?: number[];
+    isAdd?: boolean;
 }
 
 export const useFolderStructureManagement = () => {
@@ -38,8 +47,8 @@ export const useFolderStructureManagement = () => {
     const [subFoldersLoading, setSubFoldersLoading] = useState(false);
     // Bumped to reload the selected folder's sub folders after a change
     const [subFoldersVersion, setSubFoldersVersion] = useState(0);
-    // Sub folders opened to show their nested sub folders
-    const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+    // Rows (sub folders and nested sub folders) opened to show what is inside them
+    const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
 
     const [formTarget, setFormTarget] = useState<FolderTarget | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<FolderTarget | null>(null);
@@ -92,19 +101,27 @@ export const useFolderStructureManagement = () => {
 
     const selectedFolder = folders.find((folder) => folder.id === selectedFolderId) ?? null;
 
-    const toggleExpanded = (subFolderId: string) => {
-        setExpandedIds((prev) => {
+    const toggleExpanded = (key: string) => {
+        setExpandedKeys((prev) => {
             const next = new Set(prev);
-            if (next.has(subFolderId)) next.delete(subFolderId);
-            else next.add(subFolderId);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
             return next;
         });
     };
 
     // --- Add / Edit modal ---------------------------------------------------------------------------------------
 
-    const openAddModal = (kind: FolderKind, parent?: SubFolderRecord) => {
-        setFormTarget({ kind, record: null, parent, index: null });
+    const openAddModal = (kind: 'folder' | 'subfolder') => {
+        setFormTarget({ kind, record: null });
+        setName('');
+        setNameError('');
+    };
+
+    // Adds a nested sub folder under the node at `path` of `parent`'s tree ([] = directly under the sub folder)
+    const openAddNestedModal = (parent: SubFolderRecord, path: number[], expandKey: string) => {
+        setFormTarget({ kind: 'nested', record: null, parent, path, isAdd: true });
+        setExpandedKeys((prev) => new Set(prev).add(expandKey));
         setName('');
         setNameError('');
     };
@@ -115,9 +132,9 @@ export const useFolderStructureManagement = () => {
         setNameError('');
     };
 
-    const openEditNestedModal = (parent: SubFolderRecord, index: number) => {
-        setFormTarget({ kind: 'nested', record: null, parent, index });
-        setName(parent.subFolders[index] ?? '');
+    const openEditNestedModal = (parent: SubFolderRecord, path: number[]) => {
+        setFormTarget({ kind: 'nested', record: null, parent, path });
+        setName(getNodeAt(parent.subFolders, path)?.name ?? '');
         setNameError('');
     };
 
@@ -132,7 +149,8 @@ export const useFolderStructureManagement = () => {
         if (nameError) setNameError('');
     };
 
-    // Another item with the same name next to this one (same folder / same sub folder), ignoring the item being edited
+    // Another item with the same name next to this one (same folder / same sub folder / same parent), ignoring the
+    // item being edited
     const findDuplicate = (target: FolderTarget, value: string): boolean => {
         if (target.kind === 'folder') {
             return folders.some((folder) => folder.id !== target.record?.id && sameName(folder.name, value));
@@ -140,8 +158,15 @@ export const useFolderStructureManagement = () => {
         if (target.kind === 'subfolder') {
             return subFolders.some((subFolder) => subFolder.id !== target.record?.id && sameName(subFolder.name, value));
         }
-        return (target.parent?.subFolders ?? []).some((nestedName, index) => index !== target.index && sameName(nestedName, value));
+        const path = target.path ?? [];
+        const parentPath = target.isAdd ? path : path.slice(0, -1);
+        const ownIndex = target.isAdd ? -1 : path[path.length - 1];
+        return getChildren(target.parent?.subFolders ?? [], parentPath).some((node, index) => index !== ownIndex && sameName(node.name, value));
     };
+
+    // A nested sub folder is saved by sending the changed tree through the sub folder it sits in
+    const saveTree = (parent: SubFolderRecord, tree: FolderNode[]) =>
+        superSalesAPI.updateSubFolder(parent.id, parent.name, parent.folderId, toSubFolderChildrenPayload(tree));
 
     const handleSubmit = async () => {
         if (!formTarget) return;
@@ -160,9 +185,9 @@ export const useFolderStructureManagement = () => {
             return;
         }
 
-        const { kind, record, parent, index } = formTarget;
+        const { kind, record, parent, path = [], isAdd } = formTarget;
         const label = FOLDER_LABELS[kind];
-        const isEditing = kind === 'nested' ? index !== null && index !== undefined : Boolean(record);
+        const isEditing = kind === 'nested' ? !isAdd : Boolean(record);
 
         setIsSaving(true);
         try {
@@ -187,13 +212,7 @@ export const useFolderStructureManagement = () => {
                 }
                 setSubFoldersVersion((version) => version + 1);
             } else if (parent) {
-                // A nested sub folder is saved through the sub folder it sits in
-                const names = isEditing
-                    ? parent.subFolders.map((nestedName, position) => (position === index ? trimmed : nestedName))
-                    : [...parent.subFolders, trimmed];
-                await superSalesAPI.updateSubFolder(parent.id, parent.name, parent.folderId, toSubFolderChildrenPayload(names));
-                // Open the sub folder so the new item is visible straight away
-                setExpandedIds((prev) => new Set(prev).add(parent.id));
+                await saveTree(parent, isAdd ? addNode(parent.subFolders, path, trimmed) : renameNode(parent.subFolders, path, trimmed));
                 setSubFoldersVersion((version) => version + 1);
             }
             showSuccess(`${label} ${isEditing ? 'updated' : 'created'} successfully!`);
@@ -208,13 +227,13 @@ export const useFolderStructureManagement = () => {
     // --- Delete ---------------------------------------------------------------------------------------------------
 
     const openDeleteModal = (kind: 'folder' | 'subfolder', record: FolderRecord | SubFolderRecord) => setDeleteTarget({ kind, record });
-    const openDeleteNestedModal = (parent: SubFolderRecord, index: number) => setDeleteTarget({ kind: 'nested', record: null, parent, index });
+    const openDeleteNestedModal = (parent: SubFolderRecord, path: number[]) => setDeleteTarget({ kind: 'nested', record: null, parent, path });
     const closeDeleteModal = () => setDeleteTarget(null);
 
     const handleDeleteConfirm = async () => {
         if (!deleteTarget) return;
 
-        const { kind, record, parent, index } = deleteTarget;
+        const { kind, record, parent, path = [] } = deleteTarget;
         const label = FOLDER_LABELS[kind];
 
         setIsSaving(true);
@@ -226,8 +245,7 @@ export const useFolderStructureManagement = () => {
                 await superSalesAPI.deleteSubFolder(record.id);
                 setSubFoldersVersion((version) => version + 1);
             } else if (kind === 'nested' && parent) {
-                const names = parent.subFolders.filter((_nestedName, position) => position !== index);
-                await superSalesAPI.updateSubFolder(parent.id, parent.name, parent.folderId, toSubFolderChildrenPayload(names));
+                await saveTree(parent, removeNode(parent.subFolders, path));
                 setSubFoldersVersion((version) => version + 1);
             } else {
                 return;
@@ -242,21 +260,24 @@ export const useFolderStructureManagement = () => {
     };
 
     // Texts for the two modals; a nested sub folder says which sub folder it belongs to
-    const isEdit = formTarget
-        ? formTarget.kind === 'nested' ? formTarget.index !== null && formTarget.index !== undefined : Boolean(formTarget.record)
-        : false;
+    const isEdit = formTarget ? (formTarget.kind === 'nested' ? !formTarget.isAdd : Boolean(formTarget.record)) : false;
 
     const modalTitle = formTarget
         ? formTarget.kind === 'nested'
-            ? `${isEdit ? 'Edit' : 'Add'} Nested Sub Folder in "${toTitleCase(formTarget.parent?.name)}"`
+            ? `${isEdit ? 'Edit' : 'Add'} Nested Sub Folder in "${toTitleCase(
+                formTarget.isAdd && (formTarget.path?.length ?? 0) > 0
+                    ? getNodeAt(formTarget.parent?.subFolders ?? [], formTarget.path ?? [])?.name
+                    : formTarget.parent?.name,
+            )}"`
             : `${isEdit ? 'Edit' : 'Add'} ${FOLDER_LABELS[formTarget.kind]}`
         : '';
 
     const deleteMessage = (() => {
         if (!deleteTarget) return '';
         if (deleteTarget.kind === 'nested') {
-            const nestedName = deleteTarget.parent?.subFolders[deleteTarget.index ?? -1] ?? '';
-            return `Are you sure you want to delete the nested sub folder "${toTitleCase(nestedName)}"?`;
+            const node = getNodeAt(deleteTarget.parent?.subFolders ?? [], deleteTarget.path ?? []);
+            const inside = node && node.subFolders.length > 0 ? ' Everything inside it will be removed too.' : '';
+            return `Are you sure you want to delete the nested sub folder "${toTitleCase(node?.name)}"?${inside}`;
         }
         if (!deleteTarget.record) return '';
         return deleteTarget.kind === 'folder'
@@ -271,7 +292,7 @@ export const useFolderStructureManagement = () => {
         setSelectedFolderId,
         subFolders,
         subFoldersLoading,
-        expandedIds,
+        expandedKeys,
         toggleExpanded,
         isModalVisible: Boolean(formTarget),
         isDeleteModalVisible: Boolean(deleteTarget),
@@ -282,6 +303,7 @@ export const useFolderStructureManagement = () => {
         nameError,
         isSaving,
         openAddModal,
+        openAddNestedModal,
         openEditModal,
         openEditNestedModal,
         closeModal,

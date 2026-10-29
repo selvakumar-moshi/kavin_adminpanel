@@ -187,11 +187,11 @@ class LearningAPI {
         return Super_Sales.get('/Folder');
     }
 
-    createFolder(name: string, subFolders: { name: string; subFolders: string[] }[] = []) {
+    createFolder(name: string, subFolders: { name: string; subFolders: unknown[] }[] = []) {
         return Super_Sales.post('/Folder', { name, subFolders });
     }
 
-    updateFolder(id: string, name: string, subFolders: { name: string; subFolders: string[] }[] = []) {
+    updateFolder(id: string, name: string, subFolders: { name: string; subFolders: unknown[] }[] = []) {
         return Super_Sales.put(`/Folder/${id}`, { name, subFolders });
     }
 
@@ -203,11 +203,11 @@ class LearningAPI {
         return Super_Sales.get('/SubFolder', { params: { folderId } });
     }
 
-    createSubFolder(name: string, folderId: string, subFolders: { name: string; subFolders: string[] }[] = []) {
+    createSubFolder(name: string, folderId: string, subFolders: { name: string; subFolders: unknown[] }[] = []) {
         return Super_Sales.post('/SubFolder', { name, folderId, subFolders });
     }
 
-    updateSubFolder(id: string, name: string, folderId: string, subFolders: { name: string; subFolders: string[] }[] = []) {
+    updateSubFolder(id: string, name: string, folderId: string, subFolders: { name: string; subFolders: unknown[] }[] = []) {
         return Super_Sales.put(`/SubFolder/${id}`, { name, folderId, subFolders });
     }
 

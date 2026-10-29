@@ -1,13 +1,15 @@
 import { PlusOutlined, EditOutlined, DeleteOutlined, FolderOutlined, FolderOpenOutlined, RightOutlined, DownOutlined } from '@ant-design/icons';
+import type { ReactNode } from 'react';
 import { Spin, Tooltip } from 'antd';
 import PopupModal from '../PopupModal/PopupModal';
 import InputFields from '../InputFields/InputFields';
 import ToastMessages from '../ToastMessages';
 import { useFolderStructureManagement } from './useFolderStructureHooks';
-import { FOLDER_NAME_FIELD, type FolderRecord, type SubFolderRecord } from './Constant';
+import { FOLDER_NAME_FIELD, MAX_FOLDER_DEPTH, canHaveChildren, getNodeAt, type FolderNode, type FolderRecord, type SubFolderRecord } from './Constant';
 import { toTitleCase } from '../../utils/textUtils';
 
-// "Folders" tab: pick a folder on the left; on the right manage its sub folders, each expandable to show its nested sub folders
+// "Folders" tab: pick a folder on the left; on the right manage its sub folders, each expandable to show its nested sub
+// folders, which open in turn (up to MAX_FOLDER_DEPTH levels)
 const FolderStructure = () => {
     const {
         folders,
@@ -16,7 +18,7 @@ const FolderStructure = () => {
         setSelectedFolderId,
         subFolders,
         subFoldersLoading,
-        expandedIds,
+        expandedKeys,
         toggleExpanded,
         isModalVisible,
         isDeleteModalVisible,
@@ -27,6 +29,7 @@ const FolderStructure = () => {
         nameError,
         isSaving,
         openAddModal,
+        openAddNestedModal,
         openEditModal,
         openEditNestedModal,
         openDeleteNestedModal,
@@ -92,8 +95,54 @@ const FolderStructure = () => {
         );
     };
 
+    // One nested sub folder and, when it is open, everything inside it (down to the last level)
+    const renderNode = (root: SubFolderRecord, node: FolderNode, path: number[]): ReactNode => {
+        const key = node.id || `${root.id}/${path.join('.')}`;
+        const isExpanded = expandedKeys.has(key);
+        return (
+            <div key={key} className="folder-structure__group">
+                <div
+                    className="folder-structure__item folder-structure__item--plain folder-structure__item--toggle folder-structure__item--nested"
+                    onClick={() => toggleExpanded(key)}
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isExpanded}
+                    onKeyDown={(event) => {
+                        if (event.key === 'Enter') toggleExpanded(key);
+                    }}
+                >
+                    <span className="folder-structure__chevron">{isExpanded ? <DownOutlined /> : <RightOutlined />}</span>
+                    {isExpanded ? <FolderOpenOutlined /> : <FolderOutlined />}
+                    <span className="folder-structure__item-name">{node.name}</span>
+                    {node.subFolders.length > 0 && <span className="folder-structure__count">{node.subFolders.length}</span>}
+                    {renderRowActions(node.name, () => openEditNestedModal(root, path), () => openDeleteNestedModal(root, path))}
+                </div>
+                {isExpanded && renderChildren(root, node.subFolders, path)}
+            </div>
+        );
+    };
+
+    // What is inside the sub folder / nested sub folder at `path`: its nested sub folders and the Add button
+    const renderChildren = (root: SubFolderRecord, children: FolderNode[], path: number[]): ReactNode => (
+        <div className="folder-structure__nested">
+            {children.map((child, index) => renderNode(root, child, [...path, index]))}
+            {children.length === 0 && <div className="folder-structure__empty">No nested sub folders yet.</div>}
+            {canHaveChildren(path) ? (
+                <button
+                    type="button"
+                    className="school-book__add folder-structure__add-nested"
+                    onClick={() => openAddNestedModal(root, path, path.length === 0 ? root.id : getNodeAt(root.subFolders, path)?.id || `${root.id}/${path.join('.')}`)}
+                >
+                    <PlusOutlined /> Add Nested Sub Folder
+                </button>
+            ) : (
+                <div className="folder-structure__empty">Last level ({MAX_FOLDER_DEPTH}) reached.</div>
+            )}
+        </div>
+    );
+
     const renderSubFolder = (subFolder: SubFolderRecord) => {
-        const isExpanded = expandedIds.has(subFolder.id);
+        const isExpanded = expandedKeys.has(subFolder.id);
         return (
             <div key={subFolder.id} className="folder-structure__group">
                 <div
@@ -113,21 +162,7 @@ const FolderStructure = () => {
                     {renderRowActions(subFolder.name, () => openEditModal('subfolder', subFolder), () => openDeleteModal('subfolder', subFolder))}
                 </div>
 
-                {isExpanded && (
-                    <div className="folder-structure__nested">
-                        {subFolder.subFolders.map((nestedName, index) => (
-                            <div key={`${nestedName}-${index}`} className="folder-structure__item folder-structure__item--plain folder-structure__item--nested">
-                                <FolderOutlined />
-                                <span className="folder-structure__item-name">{nestedName}</span>
-                                {renderRowActions(nestedName, () => openEditNestedModal(subFolder, index), () => openDeleteNestedModal(subFolder, index))}
-                            </div>
-                        ))}
-                        {subFolder.subFolders.length === 0 && <div className="folder-structure__empty">No nested sub folders yet.</div>}
-                        <button type="button" className="school-book__add folder-structure__add-nested" onClick={() => openAddModal('nested', subFolder)}>
-                            <PlusOutlined /> Add Nested Sub Folder
-                        </button>
-                    </div>
-                )}
+                {isExpanded && renderChildren(subFolder, subFolder.subFolders, [])}
             </div>
         );
     };

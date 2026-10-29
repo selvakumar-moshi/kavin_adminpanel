@@ -7,7 +7,7 @@ const toValue = (value: string | string[]) => (Array.isArray(value) ? value[0] |
 interface NamedRecord {
     id: string;
     name: string;
-    /** Nested sub folders (each with its own id); only present on sub folders */
+    /** Nested sub folders (each with its own id, and possibly more inside); only present on sub folders */
     subFolders?: NamedRecord[];
 }
 
@@ -18,7 +18,27 @@ export interface FolderSelectorOptions {
     initial?: { folderId?: string | null; subFolderId?: string | null };
 }
 
-// Folder -> Sub Folder -> Nested Sub Folder dropdowns for quizzes that live in a folder (the "Previous Year" tab)
+// One dropdown below the Folder: the sub folders, then the nested sub folders of the chosen one, and so on
+export interface FolderLevel {
+    label: string;
+    value: string;
+    options: { value: string; label: string }[];
+}
+
+const levelLabel = (index: number) => (index === 0 ? 'Sub Folder' : index === 1 ? 'Nested Sub Folder' : `Nested Sub Folder ${index}`);
+
+// The ids from the first sub folder down to `targetId`, or null when it isn't in the tree
+const findPath = (nodes: NamedRecord[], targetId: string): string[] | null => {
+    for (const node of nodes) {
+        if (node.id === targetId) return [node.id];
+        const below = findPath(node.subFolders ?? [], targetId);
+        if (below) return [node.id, ...below];
+    }
+    return null;
+};
+
+// Folder -> Sub Folder -> nested sub folders (as deep as the folder structure goes) dropdowns for quizzes that live
+// in a folder; the deepest one picked is what the quiz is saved under
 export const useFolderSelector = ({ enabled = true, initial }: FolderSelectorOptions = {}) => {
     const [folders, setFolders] = useState<NamedRecord[]>([]);
     const [subFolders, setSubFolders] = useState<NamedRecord[]>([]);
@@ -27,8 +47,10 @@ export const useFolderSelector = ({ enabled = true, initial }: FolderSelectorOpt
     const [loadError, setLoadError] = useState('');
 
     const [folderId, setFolderId] = useState('');
-    const [subFolderId, setSubFolderId] = useState('');
-    const [nestedSubFolderId, setNestedSubFolderId] = useState('');
+    // The chosen id at each level below the folder: [sub folder, nested, nested, ...]
+    const [path, setPath] = useState<string[]>([]);
+    // Editing: the saved (deepest) id, turned into a path once the sub folders have loaded
+    const [pendingId, setPendingId] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     // Editing: start from the saved values once they arrive
@@ -36,8 +58,8 @@ export const useFolderSelector = ({ enabled = true, initial }: FolderSelectorOpt
     useEffect(() => {
         if (!initial) return;
         setFolderId(initial.folderId || '');
-        setSubFolderId(initial.subFolderId || '');
-        setNestedSubFolderId('');
+        setPath([]);
+        setPendingId(initial.subFolderId || '');
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialKey]);
 
@@ -85,66 +107,64 @@ export const useFolderSelector = ({ enabled = true, initial }: FolderSelectorOpt
         };
     }, [enabled, folderId]);
 
-    // A saved quiz stores the deepest choice in subFolderId; when that is a nested sub folder, split it back into parent + nested
+    // A saved quiz stores the deepest choice; split it back into one choice per level
     useEffect(() => {
-        if (!subFolderId || subFolders.length === 0 || subFolders.some((item) => item.id === subFolderId)) return;
-        const parent = subFolders.find((item) => item.subFolders?.some((nested) => nested.id === subFolderId));
-        if (parent) {
-            setSubFolderId(parent.id);
-            setNestedSubFolderId(subFolderId);
-        }
-    }, [subFolders, subFolderId]);
+        if (!pendingId || subFolders.length === 0) return;
+        setPath(findPath(subFolders, pendingId) ?? []);
+        setPendingId('');
+    }, [subFolders, pendingId]);
 
-    const nestedSubFolders = subFolders.find((item) => item.id === subFolderId)?.subFolders ?? [];
+    // One dropdown per level: it appears once the level above is chosen and only if there is something to pick
+    const levels: FolderLevel[] = [];
+    let options = subFolders;
+    for (let index = 0; options.length > 0; index++) {
+        const value = path[index] ?? '';
+        levels.push({ label: levelLabel(index), value, options: options.map((item) => ({ value: item.id, label: item.name })) });
+        const chosen = options.find((item) => item.id === value);
+        if (!chosen) break;
+        options = chosen.subFolders ?? [];
+    }
 
     const handleFolderChange = (value: string | string[]) => {
         setFolderId(toValue(value));
-        setSubFolderId('');
-        setNestedSubFolderId('');
+        setPath([]);
         setErrors({});
     };
 
-    const handleSubFolderChange = (value: string | string[]) => {
-        setSubFolderId(toValue(value));
-        setNestedSubFolderId('');
-        setErrors((prev) => ({ ...prev, subFolderId: '', nestedSubFolderId: '' }));
+    // Choosing a level clears everything below it
+    const handleLevelChange = (index: number, value: string | string[]) => {
+        setPath((prev) => [...prev.slice(0, index), toValue(value)]);
+        setErrors((prev) => ({ ...prev, [`level${index}`]: '' }));
     };
 
-    const handleNestedSubFolderChange = (value: string | string[]) => {
-        setNestedSubFolderId(toValue(value));
-        setErrors((prev) => ({ ...prev, nestedSubFolderId: '' }));
-    };
-
-    // A folder is required, and so is a sub folder when the chosen folder has any. Returns the values to send,
+    // A folder is required, and so is every level that has something to pick. Returns the values to send,
     // or null when something is missing
     const getFolderFields = (): Record<string, string> | null => {
         const nextErrors: Record<string, string> = {};
         if (!folderId) nextErrors.folderId = 'Folder is required';
-        else if (subFolders.length > 0 && !subFolderId) nextErrors.subFolderId = 'Sub Folder is required';
-        else if (nestedSubFolders.length > 0 && !nestedSubFolderId) nextErrors.nestedSubFolderId = 'Nested Sub Folder is required';
+        else {
+            const missing = levels.findIndex((level) => !level.value);
+            if (missing >= 0) nextErrors[`level${missing}`] = `${levels[missing].label} is required`;
+        }
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length > 0) return null;
 
         // The deepest folder picked is what the quiz is saved under
-        const deepestId = nestedSubFolderId || subFolderId;
+        const deepestId = levels.length > 0 ? levels[levels.length - 1].value : '';
         return { folderId, ...(deepestId ? { subFolderId: deepestId } : {}) };
     };
 
     return {
         folderId,
-        subFolderId,
-        nestedSubFolderId,
         folderOptions: folders.map((item) => ({ value: item.id, label: item.name })),
-        subFolderOptions: subFolders.map((item) => ({ value: item.id, label: item.name })),
-        nestedSubFolderOptions: nestedSubFolders.map((item) => ({ value: item.id, label: item.name })),
+        levels,
         foldersLoading,
         subFoldersLoading,
         loadError,
         errors,
         showSubFolder: Boolean(folderId),
         handleFolderChange,
-        handleSubFolderChange,
-        handleNestedSubFolderChange,
+        handleLevelChange,
         getFolderFields,
     };
 };
