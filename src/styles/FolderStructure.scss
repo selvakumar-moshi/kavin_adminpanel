@@ -21,9 +21,30 @@
       width: 320px;
     }
 
+    // Only this panel scrolls (not the page) when the tree gets long
     &--subs {
       flex: 1;
       min-width: 0;
+      max-height: calc(100vh - 166px);
+      min-height: 200px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #c1c1c1 transparent;
+
+      &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      // Keep the title and "Add Sub Folder" visible while scrolling
+      .folder-structure__head {
+        position: sticky;
+        top: -14px;
+        z-index: 1;
+        margin: -14px -14px 10px;
+        padding: 14px;
+        background: #fff;
+      }
     }
   }
 
