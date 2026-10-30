@@ -137,6 +137,8 @@ export interface QuizRecord {
     folderName?: string | null;
     subFolderId?: string | null;
     subFolderName?: string | null;
+    /** e.g. "6th/part-1/lesson-1" */
+    subFolderPath?: string | null;
     publishedAt: string | null;
     questions: QuizQuestion[];
     questionCount: string;

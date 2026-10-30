@@ -212,7 +212,18 @@ export const useFolderStructureManagement = () => {
                 }
                 setSubFoldersVersion((version) => version + 1);
             } else if (parent) {
-                await saveTree(parent, isAdd ? addNode(parent.subFolders, path, trimmed) : renameNode(parent.subFolders, path, trimmed));
+                if (isAdd) {
+                    // POST /SubFolder with the id of the folder it goes under as `folderId`: only this one is created
+                    const holderId = path.length === 0 ? parent.id : getNodeAt(parent.subFolders, path)?.id;
+                    if (holderId) await superSalesAPI.createSubFolder(trimmed, holderId, []);
+                    else await saveTree(parent, addNode(parent.subFolders, path, trimmed));
+                } else {
+                    // PUT /SubFolder/{id}, `folderId` being the folder it sits under
+                    const node = getNodeAt(parent.subFolders, path);
+                    const holderId = path.length === 1 ? parent.id : getNodeAt(parent.subFolders, path.slice(0, -1))?.id;
+                    if (node?.id && holderId) await superSalesAPI.updateSubFolder(node.id, trimmed, holderId, toSubFolderChildrenPayload(node.subFolders));
+                    else await saveTree(parent, renameNode(parent.subFolders, path, trimmed));
+                }
                 setSubFoldersVersion((version) => version + 1);
             }
             showSuccess(`${label} ${isEditing ? 'updated' : 'created'} successfully!`);
@@ -245,7 +256,10 @@ export const useFolderStructureManagement = () => {
                 await superSalesAPI.deleteSubFolder(record.id);
                 setSubFoldersVersion((version) => version + 1);
             } else if (kind === 'nested' && parent) {
-                await saveTree(parent, removeNode(parent.subFolders, path));
+                // Delete by its own id; only a node the API gave no id falls back to saving the tree without it
+                const nodeId = getNodeAt(parent.subFolders, path)?.id;
+                if (nodeId) await superSalesAPI.deleteSubFolder(nodeId);
+                else await saveTree(parent, removeNode(parent.subFolders, path));
                 setSubFoldersVersion((version) => version + 1);
             } else {
                 return;

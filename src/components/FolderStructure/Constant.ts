@@ -91,17 +91,17 @@ export const removeNode = (nodes: FolderNode[], path: number[]): FolderNode[] =>
 
 export interface FolderTreePayload {
     name: string;
-    subFolders: FolderTreePayload[];
+    subFolders: (string | FolderTreePayload)[];
 }
 
-// Sub Folder create / update body: its nested sub folders, each as { name, subFolders: [...] } all the way down
-export const toSubFolderChildrenPayload = (nodes: FolderNode[]): FolderTreePayload[] =>
-    nodes.map((node) => ({ name: node.name, subFolders: toSubFolderChildrenPayload(node.subFolders) }));
+// Below the level being sent, an empty nested sub folder goes as its plain name and one with something inside as
+// { name, subFolders: [...] }, matching the string[] the update bodies take
+const toLeafOrTree = (node: FolderNode): string | FolderTreePayload =>
+    node.subFolders.length === 0 ? node.name : { name: node.name, subFolders: node.subFolders.map(toLeafOrTree) };
 
-// Folder create / update body: the folder's sub folders; the names directly inside a sub folder are plain strings,
-// anything deeper than that goes as { name, subFolders } objects
-export const toFolderChildrenPayload = (subFolders: SubFolderRecord[]): { name: string; subFolders: (string | FolderTreePayload)[] }[] =>
-    subFolders.map((subFolder) => ({
-        name: subFolder.name,
-        subFolders: subFolder.subFolders.map((node) => (node.subFolders.length === 0 ? node.name : { name: node.name, subFolders: toSubFolderChildrenPayload(node.subFolders) })),
-    }));
+// Sub Folder create / update body: each direct nested sub folder as { name, subFolders: [names / trees] }
+export const toSubFolderChildrenPayload = (nodes: FolderNode[]): FolderTreePayload[] =>
+    nodes.map((node) => ({ name: node.name, subFolders: node.subFolders.map(toLeafOrTree) }));
+
+// Folder create / update body: each sub folder as { name, subFolders: [names / trees] }
+export const toFolderChildrenPayload = (subFolders: SubFolderRecord[]): FolderTreePayload[] => toSubFolderChildrenPayload(subFolders);
