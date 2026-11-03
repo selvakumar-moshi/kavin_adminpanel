@@ -132,6 +132,10 @@ export interface QuizRecord {
     quizToView: string;
     quizType?: string;
     quizAttempt?: number | null;
+    // The document the questions were imported from, when the quiz was created from one
+    sourceFileName?: string | null;
+    sourceFileUrl?: string | null;
+    sourceFileKey?: string | null;
     // Previous Year quizzes only
     folderId?: string | null;
     folderName?: string | null;

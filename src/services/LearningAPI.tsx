@@ -175,6 +175,13 @@ class LearningAPI {
         });
     }
 
+    // Detaches the uploaded document from the quiz (multipart, like the rest of this endpoint)
+    removeQuizSourceFile(id: string) {
+        const formData = new FormData();
+        formData.append('removeSourceFile', 'true');
+        return this.updateQuiz(id, formData);
+    }
+
     deleteQuiz(id: string) {
         return Super_Sales.delete(`/quiz/${id}`);
     }

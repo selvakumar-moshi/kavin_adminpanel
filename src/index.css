@@ -188,7 +188,8 @@ textarea:focus-visible:not(.dynamic-form-field__control--highlighted) {
 .ant-picker-dropdown .ant-picker-panel-container .ant-picker-panel .ant-picker-content, 
 .ant-picker-dropdown .ant-picker-panel-container .ant-picker-panel table,
 .ant-picker-dropdown .ant-picker-header-view >button,
-.ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input
+.ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input,
+.ant-picker-dropdown .ant-picker-header-view
 {
   font-family: var(--font-family);
 }

@@ -1,0 +1,126 @@
+.rich-text-editor {
+  border: 1px solid #b3b3b3;
+  border-radius: 5px;
+  background: #fff;
+
+  &:hover,
+  &:focus-within {
+    border-color: #ec7d16;
+  }
+
+  &:focus-within {
+    box-shadow: 0 0 0 2px rgba(236, 125, 22, 0.2);
+  }
+
+  &--error,
+  &--error:hover,
+  &--error:focus-within {
+    border-color: #D13F3F;
+  }
+
+  &--error:focus-within {
+    box-shadow: 0 0 0 2px rgba(209, 63, 63, 0.2);
+  }
+
+  &--disabled {
+    background-color: rgba(0, 0, 0, 0.04);
+    cursor: not-allowed;
+
+    &:hover {
+      border-color: #b3b3b3;
+    }
+  }
+
+  &__content {
+    min-height: 33px;
+    padding: 4px 15px;
+    font-family: var(--font-family);
+    font-size: 14px;
+    line-height: 23px;
+    outline: none;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+
+    &:empty::before {
+      content: attr(data-placeholder);
+      color: #d9d9d9;
+      font-weight: 500;
+      pointer-events: none;
+    }
+
+    a {
+      color: #1677ff;
+      text-decoration: underline;
+    }
+  }
+
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px 4px;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: rgba(0, 0, 0, 0.65);
+    font-size: 15px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: rgba(0, 0, 0, 0.06);
+    }
+
+    &--active {
+      background: rgba(236, 125, 22, 0.15);
+      color: #ec7d16;
+    }
+
+    &--text {
+      font-size: 14px;
+      font-weight: 500;
+
+      sub {
+        font-size: 9px;
+      }
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      color: rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  &__link-popover {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 300px;
+  }
+
+  &__link-apply {
+    border: none;
+    background: transparent;
+    color: #ec7d16;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+// Rendered rich question text (preview)
+.rich-text-content {
+  overflow-wrap: anywhere;
+
+  a {
+    color: #1677ff;
+    text-decoration: underline;
+  }
+}

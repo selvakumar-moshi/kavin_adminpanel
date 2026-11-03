@@ -15,6 +15,7 @@ import './styles/Table.scss';
 import './styles/ActionIcons.scss';
 import './styles/PopupModal.scss';
 import './styles/InputFields.scss';
+import './styles/RichTextEditor.scss';
 import './styles/DropdownField.scss';
 import './styles/FileUploadDisplay.scss';
 import './styles/FileUploadSection.scss';

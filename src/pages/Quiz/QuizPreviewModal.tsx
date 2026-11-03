@@ -3,6 +3,7 @@ import { Spin } from 'antd';
 import PopupModal from '../../components/PopupModal/PopupModal';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 import superSalesAPI from '../../services/LearningAPI';
+import { sanitizeRichText } from '../../utils/richText';
 import { QUESTION_OPTION_KEYS, type QuizQuestion, type QuizRecord } from './Constant';
 
 interface QuizPreviewModalProps {
@@ -70,7 +71,11 @@ const QuizPreviewModal = ({ quiz, onClose }: QuizPreviewModalProps) => {
                                     <span className="quiz-preview__mark">Mark: {String(question.mark)}</span>
                                 )}
                             </div>
-                            <div className="quiz-preview__text keep-case">{question.questionText}</div>
+                            <div
+                                className="quiz-preview__text keep-case rich-text-content"
+                                // Sanitized against an allow-list (b, i, u, a, br, div); legacy plain text passes through unchanged
+                                dangerouslySetInnerHTML={{ __html: sanitizeRichText(question.questionText || '') }}
+                            />
                             {question.questionImageUrl && <img className="quiz-preview__image" src={question.questionImageUrl} alt="Question" />}
 
                             <div className="quiz-preview__options">

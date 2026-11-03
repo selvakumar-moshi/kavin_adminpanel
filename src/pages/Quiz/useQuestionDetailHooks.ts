@@ -24,6 +24,8 @@ const SCHOOL_QUIZ_TO_VIEW = 'Free';
 const DEFAULT_QUIZ_TYPE = 'competitive';
 const FOLDER_QUIZ_TO_VIEW = 'Free';
 const SCHOOL_QUIZ_TYPE = 'school';
+// uid of the already-saved document shown in the upload box while editing
+const SAVED_SOURCE_FILE_UID = 'saved-source-file';
 
 // Which image slot can stand in for a text field of a question
 const TEXT_FIELD_IMAGE_KEYS: Partial<Record<keyof QuizQuestion, string>> = {
@@ -113,11 +115,22 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
     const [quizToViewError, setQuizToViewError] = useState('');
     const [questionErrors, setQuestionErrors] = useState<QuestionErrors>({});
     const [isSaving, setIsSaving] = useState(false);
-    const [applyMarkToAll, setApplyMarkToAll] = useState(false);
+    // On by default: the first question's mark is used for every question until the admin unchecks it
+    const [applyMarkToAll, setApplyMarkToAll] = useState(true);
+    // Latest values for the async import, which outlives the render that started it
+    const itemsRef = useRef(items);
+    const applyMarkToAllRef = useRef(applyMarkToAll);
+    useEffect(() => {
+        itemsRef.current = items;
+        applyMarkToAllRef.current = applyMarkToAll;
+    }, [items, applyMarkToAll]);
 
     // Optional document (PDF etc.) the questions are imported from; also sent to the API when the quiz is created
     const [quizFileList, setQuizFileList] = useState<UploadFile[]>([]);
     const [isImporting, setIsImporting] = useState(false);
+    // Confirmation shown before the saved document is removed from the quiz
+    const [isRemoveDocumentOpen, setIsRemoveDocumentOpen] = useState(false);
+    const [isRemovingDocument, setIsRemovingDocument] = useState(false);
     // Problems the import service flagged (e.g. a missing option) — listed under the upload for the admin to check
     const [importWarnings, setImportWarnings] = useState<ImportWarning[]>([]);
     // Questions the import service could not read (with the reason), and how many it found in the document
@@ -191,6 +204,13 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
             originalQuestionValuesRef.current = originalValues;
 
             setItems(keyedQuestions.map((question) => ({ type: 'question' as const, question })));
+            // A saved quiz whose questions carry different marks must not be flattened (or have its marks locked)
+            setApplyMarkToAll(keyedQuestions.every((q) => q.mark === keyedQuestions[0].mark));
+
+            // The document this quiz was created from is listed in the upload box (no originFileObj, so it is never re-imported)
+            setQuizFileList(quizDetail.sourceFileName
+                ? [{ uid: SAVED_SOURCE_FILE_UID, name: quizDetail.sourceFileName, status: 'done', url: quizDetail.sourceFileUrl || undefined }]
+                : []);
         }
     }, [isEditMode, quizDetail, id, dispatch]);
 
@@ -316,6 +336,10 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
                 return;
             }
 
+            // Taken from the questions as they are now, i.e. before a blank placeholder that holds the mark is replaced
+            const markForImported = applyMarkToAllRef.current
+                ? (itemsRef.current.find((it) => it.type === 'question') as { question: KeyedQuizQuestion } | undefined)?.question.mark || ''
+                : '';
             const imported: ListItem[] = importedQuestions.map((q) => ({
                 type: 'question' as const,
                 question: makeKeyedQuestion({
@@ -326,6 +350,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
                     optionC: q.optionC || '',
                     optionD: q.optionD || '',
                     correctOption: q.correctOption || '',
+                    mark: markForImported,
                 }),
             }));
 
@@ -354,7 +379,35 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         }
     };
 
+    // Deleting the saved document: the quiz is updated right away with { removeSourceFile: true }, and the questions
+    // on the right (they came from that document) are cleared. The file stays listed if the request fails.
+    const removeSavedSourceFile = async () => {
+        if (!id) return;
+        setIsRemovingDocument(true);
+        try {
+            const res = await superSalesAPI.removeQuizSourceFile(id);
+            setQuizFileList([]);
+            setItems([{ type: 'question', question: makeKeyedQuestion() }]);
+            setQuestionErrors({});
+            originalQuestionValuesRef.current = new Map();
+            importedKeysRef.current = new Set();
+            showSuccess(res?.data?.message || 'Document removed');
+        } catch (error: any) {
+            showError(error?.response?.data?.message || error?.message || 'Failed to remove the document');
+        } finally {
+            setIsRemovingDocument(false);
+            setIsRemoveDocumentOpen(false);
+        }
+    };
+
     const handleQuizFileChange = (files: UploadFile[]) => {
+        // Editing: a listed file that was not just picked is the saved one; deleting it asks first, then calls the API
+        const hasSavedFile = isEditMode && quizFileList.some((file) => !file.originFileObj);
+        if (hasSavedFile && files.length === 0) {
+            setIsRemoveDocumentOpen(true);
+            return;
+        }
+
         setQuizFileList(files);
 
         if (files.length === 0) {
@@ -384,7 +437,15 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         });
     };
 
-    const addQuestionAfter = (afterKey: number) => insertItemAfter(afterKey, { type: 'question', question: makeKeyedQuestion() });
+    // Mark of the first question, which new and imported questions copy while "applicable for all" is checked
+    const sharedMark = () => {
+        if (!applyMarkToAll) return '';
+        const first = items.find((it): it is { type: 'question'; question: KeyedQuizQuestion } => it.type === 'question');
+        return first?.question.mark || '';
+    };
+
+    const addQuestionAfter = (afterKey: number) =>
+        insertItemAfter(afterKey, { type: 'question', question: makeKeyedQuestion({ ...emptyQuestion(), mark: sharedMark() }) });
 
     const addSectionAfter = (afterKey: number) => insertItemAfter(afterKey, { type: 'section', section: makeKeyedSection() });
 
@@ -632,6 +693,14 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         });
     };
 
+    // A newly uploaded document, sent as `sourceFile` on create and update (the saved one has no file object, so it is never re-sent)
+    const appendSourceFile = (formData: FormData) => {
+        const sourceFile = quizFileList[0]?.originFileObj;
+        if (!sourceFile) return;
+        // formData.append('file', sourceFile);
+        formData.append('sourceFile', sourceFile);
+    };
+
     // School Book Revision quiz: sent with its title, always as a Free quiz (no course/batch), the
     // folder / sub folder picked on that form, and the questions
     const submitSchoolBookQuiz = (fields: Record<string, string>) => {
@@ -652,6 +721,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         formData.append('quizType', SCHOOL_QUIZ_TYPE);
         appendQuizAttempt(formData);
         Object.entries(fields).forEach(([name, value]) => formData.append(name, value));
+        appendSourceFile(formData);
         appendQuestionsToFormData(formData);
 
         setIsSaving(true);
@@ -678,8 +748,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
             if (!isEditMode && courseId) formData.append('courseId', courseId);
         }
 
-        // const quizFile = quizFileList[0]?.originFileObj;
-        // if (!isEditMode && quizFile) formData.append('file', quizFile);
+        appendSourceFile(formData);
 
         appendQuestionsToFormData(formData);
 
@@ -731,6 +800,12 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         importSkipped,
         importTotalFound,
         handleQuizFileChange,
+        documentRemoval: {
+            open: isRemoveDocumentOpen,
+            loading: isRemovingDocument,
+            onConfirm: removeSavedSourceFile,
+            onCancel: () => setIsRemoveDocumentOpen(false),
+        },
         handleTitleChange,
         handleCourseChange,
         handleBatchChange,

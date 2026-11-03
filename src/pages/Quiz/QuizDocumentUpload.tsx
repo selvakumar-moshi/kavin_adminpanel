@@ -1,6 +1,7 @@
 import { Spin } from 'antd';
 import type { UploadFile } from 'antd';
 import FileUploadSection from '../../components/FileUploadSection/FileUploadSection';
+import PopupModal from '../../components/PopupModal/PopupModal';
 
 interface ImportIssue {
     documentNumber: number;
@@ -16,6 +17,8 @@ export interface QuizDocumentUploadProps {
     /** How many questions the document contains (shown as "x of y skipped") */
     totalFound?: number;
     onFileChange: (files: UploadFile[]) => void;
+    /** Confirmation for deleting the document already saved on the quiz (Edit only) */
+    removal?: { open: boolean; loading: boolean; onConfirm: () => void; onCancel: () => void };
 }
 
 // "1, 2, 3, 5" -> "1-3, 5"
@@ -40,7 +43,7 @@ const groupByReason = (issues: ImportIssue[]) => {
 };
 
 // Word document upload: the questions in it are read by /Quiz/import and filled into the questions editor
-const QuizDocumentUpload = ({ fileList, isImporting, warnings, skipped = [], totalFound = 0, onFileChange }: QuizDocumentUploadProps) => (
+const QuizDocumentUpload = ({ fileList, isImporting, warnings, skipped = [], totalFound = 0, onFileChange, removal }: QuizDocumentUploadProps) => (
     <>
         <FileUploadSection
             label="Word File"
@@ -50,6 +53,26 @@ const QuizDocumentUpload = ({ fileList, isImporting, warnings, skipped = [], tot
             fileList={fileList}
             onFileChange={onFileChange}
         />
+        {removal && (
+            <PopupModal
+                open={removal.open}
+                onClose={removal.onCancel}
+                onSubmit={removal.onConfirm}
+                title="Confirm Deletion"
+                subtitle=""
+                primaryButtonText="Delete"
+                secondaryButtonText="Cancel"
+                showFooter={true}
+                primaryButtonLoading={removal.loading}
+                primaryButtonDisabled={removal.loading}
+                contentHeight="auto"
+                minHeight={100}
+            >
+                <div className="popup-modal__content-content-text">
+                    Are you sure you want to delete the document?
+                </div>
+            </PopupModal>
+        )}
         {isImporting && (
             <div className="question-detail-form__importing">
                 <Spin size="small" /> Reading questions from the file...

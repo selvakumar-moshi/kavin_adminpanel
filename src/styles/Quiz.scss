@@ -36,7 +36,16 @@
     border: 1px solid #e6e9f5;
     border-radius: 10px;
     padding: 20px;
-    flex: 0 0 290px;
+    flex: 0 0 300px;
+    max-height: 100%;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 transparent;
+    
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
 
     &__readonly-course {
       color: #000;
@@ -82,6 +91,14 @@
       min-height: 0;
       overflow-y: auto;
       padding-right: 8px;
+
+      scrollbar-width: thin;
+      scrollbar-color: #c1c1c1 transparent;
+      
+      &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
     }
   }
 
@@ -306,6 +323,8 @@
     .question-detail-form {
       flex: 0 0 auto;
       width: 100%;
+      max-height: none;
+      overflow-y: visible;
     }
 
     .question-detail-card__options {

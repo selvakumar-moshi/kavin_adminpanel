@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Tooltip } from 'antd';
 import { CloseCircleFilled, PictureOutlined } from '@ant-design/icons';
 import InputFields from '../../components/InputFields/InputFields';
+import { RichTextEditor } from '../../components/RichTextEditor';
 import DropdownField from '../../components/DropdownField/DropdownField';
 import Checkbox from '../../components/Checkbox/Checkbox';
 import PageTitle from '../../components/PageTitle';
@@ -240,17 +241,15 @@ const QuestionsEditor = ({
                                 </div>
 
                                 <div className="question-detail-card__field">
-                                    <InputFields
-                                        fields={[{
-                                            name: textFieldName,
-                                            label: 'Question Text',
-                                            placeholder: 'Enter question text',
-                                            // A picture can be used instead of text
-                                            required: !question.images?.question,
-                                        }]}
-                                        values={{ [textFieldName]: question.questionText }}
-                                        errors={errors.questionText ? { [textFieldName]: errors.questionText } : {}}
-                                        onChange={(_, value) => handleQuestionFieldChange(key, 'questionText', value)}
+                                    <RichTextEditor
+                                        name={textFieldName}
+                                        label="Question Text"
+                                        placeholder="Enter question text"
+                                        // A picture can be used instead of text
+                                        required={!question.images?.question}
+                                        value={question.questionText}
+                                        error={errors.questionText}
+                                        onChange={(value) => handleQuestionFieldChange(key, 'questionText', value)}
                                         disabled={isSaving}
                                     />
                                 </div>

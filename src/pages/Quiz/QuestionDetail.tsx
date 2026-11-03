@@ -48,6 +48,7 @@ const QuestionDetail = () => {
         importSkipped,
         importTotalFound,
         handleQuizFileChange,
+        documentRemoval,
         handleTitleChange,
         handleCourseChange,
         handleBatchChange,
@@ -162,16 +163,15 @@ const QuestionDetail = () => {
                     )}
 
                     {/* Optional: questions are read from the uploaded file and filled in on the right */}
-                    {!isEditMode && (
-                        <QuizDocumentUpload
-                            fileList={quizFileList}
-                            isImporting={isImporting}
-                            warnings={importWarnings}
-                            skipped={importSkipped}
-                            totalFound={importTotalFound}
-                            onFileChange={handleQuizFileChange}
-                        />
-                    )}
+                    <QuizDocumentUpload
+                        fileList={quizFileList}
+                        isImporting={isImporting}
+                        warnings={importWarnings}
+                        skipped={importSkipped}
+                        totalFound={importTotalFound}
+                        onFileChange={handleQuizFileChange}
+                        removal={documentRemoval}
+                    />
                 </div>
 
                 <QuestionsEditor
