@@ -12,8 +12,12 @@ class LearningAPI {
         return Super_Sales.post(`/Auth/login`, { email, password });
     }
 
-    getRegister(firstName: string, lastName: string, phoneNumber: string, email: string, password: string) {
-        return Super_Sales.post(`/Login/register`, { firstName, lastName, phoneNumber, email, password });
+    getRegister(firstName: string, lastName: string, phoneNumber: string, email: string, password: string, district?: string, confirmPassword?: string) {
+        return Super_Sales.post(`/Auth/register`, { firstName, lastName, email, phoneNumber, district, password, confirmPassword });
+    }
+
+    resetUserPassword(id: string) {
+        return Super_Sales.post(`/User/${id}/reset-password`);
     }
 
     getUsers(searchTerm?: string, globalFilter?: Record<string, string>, pageNumber?: number, pageSize?: number) {
@@ -281,6 +285,37 @@ class LearningAPI {
                 'Content-Type': 'multipart/form-data',
             },
         });
+    }
+
+    searchSyllabusMaterials(searchTerm?: string, folderId?: string, subFolderId?: string, pageNumber?: number, pageSize?: number) {
+        return Super_Sales.post('/SyllabusMaterial/search', {
+            searchTerm: searchTerm || '',
+            folderId: folderId || '',
+            subFolderId: subFolderId || '',
+            pageNumber: pageNumber || 1,
+            pageSize: pageSize || 10,
+        });
+    }
+
+    // Sent as multipart form data: title, description, folderId, subFolderId and the PDF as `file`
+    createSyllabusMaterial(formData: FormData) {
+        return Super_Sales.post('/SyllabusMaterial', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    }
+
+    updateSyllabusMaterial(id: string, formData: FormData) {
+        return Super_Sales.put(`/SyllabusMaterial/${id}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    }
+
+    deleteSyllabusMaterial(id: string) {
+        return Super_Sales.delete(`/SyllabusMaterial/${id}`);
     }
 
     getSyllabusWiseList() {

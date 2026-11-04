@@ -3,14 +3,19 @@ import { Badge } from 'antd';
 import TableWithPagination from '../../components/Table/TableWithPagination';
 import ActionIcons from '../../components/Table/ActionIcons';
 import PopupModal from '../../components/PopupModal/PopupModal';
+import Button from '../../components/Button/Button';
+import DropdownField from '../../components/DropdownField/DropdownField';
+import ResetPasswordModals from './ResetPasswordModals';
 import InputFields from '../../components/InputFields/InputFields';
 import FilterModal from '../../components/FilterModal/FilterModal';
 import { withSortAndSearch } from '../../components/Table/withSortAndSearch';
 import Loader from '../../components/Loader/Loader';
 import ToastMessages from '../../components/ToastMessages';
 import { useUserManagement } from './useUserHooks';
-import { getUserTableColumns, type UserRecord } from './Constants';
+import { getUserTableColumns, CREATE_USER_PERSONAL_FIELDS, CREATE_USER_DISTRICT_FIELD, CREATE_USER_PASSWORD_FIELDS, type UserRecord } from './Constants';
+import { DISTRICT_OPTIONS } from '../UserDetail/Constants';
 import filter_Icon from '../../assets/filter_Icon.svg';
+import add_Icon from '../../assets/add_Icon.svg';
 import PageTitle from '../../components/PageTitle';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 
@@ -48,6 +53,15 @@ const Users = () => {
         closeSearchColumn,
         getColumnSearchValue,
         handleColumnSearch,
+        isCreateModalVisible,
+        createValues,
+        createErrors,
+        isCreating,
+        openCreateModal,
+        closeCreateModal,
+        handleCreateChange,
+        handleCreateSubmit,
+        resetPassword,
     } = useUserManagement();
 
     // Prepare columns with sort icons, per-column search, and action handlers
@@ -84,11 +98,11 @@ const Users = () => {
             {
                 title: 'Actions',
                 key: 'actions',
-                onHeaderCell: () => ({ style: { width: 90, minWidth: 90, maxWidth: 90 } }),
-                onCell: () => ({ style: { width: 90, minWidth: 90, maxWidth: 90 } }),
+                onHeaderCell: () => ({ style: { width: 120, minWidth: 120, maxWidth: 120 } }),
+                onCell: () => ({ style: { width: 120, minWidth: 120, maxWidth: 120 } }),
                 render: (_: any, record: any) => (
                     <ActionIcons
-                        actions={['edit', 'delete']}
+                        actions={['edit', 'reset-password', 'delete']}
                         disabledActions={[]}
                         onActionClick={(action, record) => handleActionClick(action, record)}
                         record={record}
@@ -108,7 +122,14 @@ const Users = () => {
             <div className="report_main">
                 <PageTitle title="Users" />
                 <div className="dl_filter_main">
-                  <InputFields 
+                  <Button icon={<img src={add_Icon} alt="add-icon" />} variant="primary" className="page-title__button" onClick={openCreateModal}>
+                      Create User
+                  </Button>
+                </div>
+            </div>
+
+            <div className="dl_filter_main">
+                <InputFields
                       fields={searchField.map(field => ({
                         ...field,
                         }))}
@@ -120,8 +141,8 @@ const Users = () => {
                         <img src={filter_Icon} alt="filter" />
                     </div>
                   </Badge>
-                </div>
             </div>
+            
 
             <TableWithPagination
                 columns={columns}
@@ -138,6 +159,48 @@ const Users = () => {
                     emptyText: <NoDataFound type="nodata" description="No users found" style={{ height: 'unset' }} />
                 }}
             />
+
+            {/* Create User Modal */}
+            <PopupModal
+                open={isCreateModalVisible}
+                onClose={closeCreateModal}
+                onSubmit={handleCreateSubmit}
+                title="Create User"
+                subtitle=""
+                primaryButtonText="Create"
+                secondaryButtonText="Cancel"
+                showFooter={true}
+                primaryButtonLoading={isCreating}
+                primaryButtonDisabled={isCreating}
+                contentHeight="auto"
+                minHeight={430}
+                maxHeight="calc(100vh - 200px)"
+            >
+                <div style={{ padding: '0 8px' }}>
+                    <InputFields
+                        fields={CREATE_USER_PERSONAL_FIELDS}
+                        values={createValues}
+                        errors={createErrors}
+                        onChange={handleCreateChange}
+                        disabled={isCreating}
+                    />
+                    <DropdownField
+                        fields={[{ ...CREATE_USER_DISTRICT_FIELD, options: DISTRICT_OPTIONS, disabled: isCreating }]}
+                        values={{ district: createValues.district || '' }}
+                        errors={createErrors.district ? { district: createErrors.district } : {}}
+                        onChange={(_, value) => handleCreateChange('district', value)}
+                    />
+                    <InputFields
+                        fields={CREATE_USER_PASSWORD_FIELDS}
+                        values={createValues}
+                        errors={createErrors}
+                        onChange={handleCreateChange}
+                        disabled={isCreating}
+                    />
+                </div>
+            </PopupModal>
+
+            <ResetPasswordModals reset={resetPassword} />
 
             {/* Delete Confirmation Modal */}
             <PopupModal

@@ -283,6 +283,7 @@ export const useUserDetailManagement = () => {
         updatingEnrollmentId,
         handleStatusChange,
         toastMessages,
+        showError,
         hideToast,
     };
 };

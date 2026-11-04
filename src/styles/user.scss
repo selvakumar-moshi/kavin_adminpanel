@@ -165,10 +165,13 @@
 
  .users-container{
   .custom-table{
-    top: 130px;
+    top: 170px;
   }
   .filter-modal{
-    top: 128px;
+    top: 168px;
+  }
+  .dl_filter_main{
+    justify-content: end;
   }
  }
 
@@ -512,4 +515,39 @@ body.user-detail-page {
   display: flex;
   align-items: flex-start;
   gap: 20px;
+}
+
+// Temporary password shown after a student's password is reset
+.reset-password__result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 10px 14px;
+  border: 1px dashed #ec7d16;
+  border-radius: 8px;
+  background: rgba(236, 125, 22, 0.06);
+}
+
+.reset-password__value {
+  font-family: monospace;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  word-break: break-all;
+  user-select: all;
+  text-transform: none;
+}
+
+.reset-password__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: #ec7d16;
+  font-weight: 600;
+  cursor: pointer;
 }

@@ -3,6 +3,7 @@ import { UserOutlined } from '@ant-design/icons';
 import type { ITableColumn } from '../../components/Table/ITable';
 import { formatDate } from '../../utils/dateUtils';
 import { renderTruncatedCellWithTooltip } from '../../utils/tableCellRender';
+import { EDIT_USER_VALIDATION_RULES, type ValidationRule } from '../../utils/validationUtils';
 
 export interface UserRecord {
     userId: string;
@@ -100,3 +101,49 @@ export const getUserTableColumns = (): ITableColumn[] => [
         render: (text: string) => formatDate(text),
     },
 ];
+
+// Create User form: the name / phone / district rules are the ones the Edit User form uses
+export const CREATE_USER_PERSONAL_FIELDS = [
+    { name: 'firstName', label: 'First Name', placeholder: 'Enter First name', required: true, type: 'text' as const, singleLine: true, autoComplete: 'off' },
+    { name: 'lastName', label: 'Last Name', placeholder: 'Enter Last name', required: true, type: 'text' as const, singleLine: true, autoComplete: 'off' },
+    { name: 'email', label: 'Email', placeholder: 'Enter Email', required: true, type: 'email' as const, autoComplete: 'off' },
+    { name: 'phoneNumber', label: 'Phone Number', placeholder: 'Enter Phone Number', required: true, type: 'text' as const, singleLine: true, autoComplete: 'off' },
+];
+
+export const CREATE_USER_DISTRICT_FIELD = {
+    name: 'district',
+    label: 'District',
+    placeholder: 'Select district',
+    required: true,
+};
+
+// "new-password" tells the browser these are for a new account, so it never fills a saved login into them
+export const CREATE_USER_PASSWORD_FIELDS = [
+    { name: 'password', label: 'Password', placeholder: 'Enter Password', required: true, type: 'password' as const, autoComplete: 'new-password' },
+    { name: 'confirmPassword', label: 'Confirm Password', placeholder: 'Re-enter Password', required: true, type: 'password' as const, autoComplete: 'new-password' },
+];
+
+export const MIN_PASSWORD_LENGTH = 6;
+
+export const CREATE_USER_VALIDATION_RULES: Record<string, ValidationRule> = {
+    firstName: EDIT_USER_VALIDATION_RULES.firstName,
+    lastName: EDIT_USER_VALIDATION_RULES.lastName,
+    email: {
+        required: true,
+        pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        errorMessages: {
+            required: 'Email is required',
+            pattern: 'Enter a valid email address.',
+        },
+    },
+    phoneNumber: EDIT_USER_VALIDATION_RULES.phoneNumber,
+    district: EDIT_USER_VALIDATION_RULES.district,
+    password: {
+        required: true,
+        errorMessages: { required: 'Password is required' },
+    },
+    confirmPassword: {
+        required: true,
+        errorMessages: { required: 'Confirm Password is required' },
+    },
+};

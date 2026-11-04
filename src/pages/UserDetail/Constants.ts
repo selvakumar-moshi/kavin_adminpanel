@@ -44,6 +44,23 @@ export interface EnrolledCourse {
     allowedBatches?: AllowedBatch[];
 }
 
+// A syllabus material the user has access to
+export interface UserSyllabusMaterial {
+    id: string;
+    title: string;
+    description: string;
+    folderId: string;
+    subFolderId?: string | null;
+    pdfUrl: string;
+    pdfKey?: string;
+    pdfFileName: string;
+    folderName?: string | null;
+    subFolderName?: string | null;
+    subFolderPath?: string | null;
+    createdAt?: string;
+    updatedAt?: string | null;
+}
+
 // A payment the user made for a Syllabus Wise plan
 export interface SyllabusWisePayment {
     paymentId: string;
@@ -74,6 +91,7 @@ export interface UserDetailRecord {
     updatedAt?: string;
     courses: EnrolledCourse[];
     syllabusWisePayments?: SyllabusWisePayment[];
+    syllabusMaterials?: UserSyllabusMaterial[];
 }
 
 // Districts are scoped to Tamil Nadu only — state itself is never shown or sent to the API
@@ -142,8 +160,10 @@ export const UserDetailtabs = [
 
 export const COURSE_DETAILS_TAB_KEY = 'courseDetails';
 export const SYLLABUS_WISE_TAB_KEY = 'syllabusWise';
+export const SYLLABUS_MATERIAL_TAB_KEY = 'syllabusMaterial';
 
 export const UserDetailMainTabs = [
     { key: COURSE_DETAILS_TAB_KEY, label: 'Course Details' },
     { key: SYLLABUS_WISE_TAB_KEY, label: 'Syllabus Wise' },
+    { key: SYLLABUS_MATERIAL_TAB_KEY, label: 'Syllabus Material' },
 ];

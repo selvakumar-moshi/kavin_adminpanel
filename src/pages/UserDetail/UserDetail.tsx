@@ -15,7 +15,9 @@ import type { ITableColumn } from '../../components/Table/ITable';
 import InfoItem from '../../components/InfoItem/InfoItem';
 import { useUserDetailManagement, ALLOWED_BATCH_SEPARATOR } from './useUserDetailHooks';
 import { usePageBodyClass } from '../../utils/pageBodyClass';
-import { EDIT_USER_FIELDS, PENDING_ENROLLMENT_STATUS_OPTIONS, UserDetailtabs, DISTRICT_OPTIONS, UserDetailMainTabs, COURSE_DETAILS_TAB_KEY, SYLLABUS_WISE_TAB_KEY } from './Constants';
+import { useResetPassword } from '../Users/useResetPassword';
+import ResetPasswordModals from '../Users/ResetPasswordModals';
+import { EDIT_USER_FIELDS, PENDING_ENROLLMENT_STATUS_OPTIONS, UserDetailtabs, DISTRICT_OPTIONS, UserDetailMainTabs, COURSE_DETAILS_TAB_KEY, SYLLABUS_WISE_TAB_KEY, SYLLABUS_MATERIAL_TAB_KEY } from './Constants';
 import { formatDate } from '../../utils/dateUtils';
 import dot_Icon from '../../assets/dot_Icon.svg';
 import person_add_Icon from '../../assets/person_add_Icon.svg'
@@ -28,6 +30,24 @@ import NoDataFound from '../../components/NoDataFound/NoDataFound';
 
 /** Applied to document.body while this page is shown; user.scss targets this. */
 const USER_DETAIL_PAGE_BODY_CLASS = 'user-detail-page';
+
+const SYLLABUS_MATERIAL_COLUMNS: ITableColumn[] = [
+    { title: 'Title', dataIndex: 'title', key: 'title' },
+    { title: 'Description', dataIndex: 'description', key: 'description', render: (value: string) => value || '-' },
+    { title: 'Folder', dataIndex: 'folderName', key: 'folderName', render: (value: string | null) => value || '-' },
+    { title: 'Sub Folder', dataIndex: 'subFolderPath', key: 'subFolderPath', render: (_: string | null, record: { subFolderPath?: string | null; subFolderName?: string | null }) => record.subFolderPath || record.subFolderName || '-' },
+    {
+        title: 'PDF',
+        dataIndex: 'pdfUrl',
+        key: 'pdfUrl',
+        render: (pdfUrl: string) => (
+            <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
+                <FilePdfOutlined /> View
+            </a>
+        ),
+    },
+    { title: 'Created At', dataIndex: 'createdAt', key: 'createdAt', render: (value: string) => (value ? formatDate(value) : '-') },
+];
 
 const SYLLABUS_PAYMENT_COLUMNS: ITableColumn[] = [
     { title: 'Plan', dataIndex: 'planTitle', key: 'planTitle' },
@@ -65,8 +85,11 @@ const UserDetail = () => {
         updatingEnrollmentId,
         handleStatusChange,
         toastMessages,
+        showError,
         hideToast,
     } = useUserDetailManagement();
+
+    const resetPassword = useResetPassword(showError);
 
     const [activeMainTab, setActiveMainTab] = useState(COURSE_DETAILS_TAB_KEY);
     const [expandedCourseIds, setExpandedCourseIds] = useState<Set<string>>(new Set());
@@ -142,12 +165,18 @@ const UserDetail = () => {
     }
 
     const syllabusPayments = userDetail.syllabusWisePayments || [];
+    const syllabusMaterials = userDetail.syllabusMaterials || [];
 
     const menuItems: MenuProps['items'] = [
         {
             key: 'edit',
             label: 'Edit',
             onClick: openEditModal,
+        },
+        {
+            key: 'resetPassword',
+            label: 'Reset Password',
+            onClick: () => resetPassword.openConfirm({ userId: userDetail.userId, name: `${userDetail.firstName} ${userDetail.lastName}`.trim() }),
         },
     ];
 
@@ -351,6 +380,19 @@ const UserDetail = () => {
                     </div>
                 )}
 
+                {activeMainTab === SYLLABUS_MATERIAL_TAB_KEY && (
+                    <div className="user-syllabus-list">
+                        {syllabusMaterials.length === 0 ? (
+                            <NoDataFound type="nodata" description="No syllabus materials" />
+                        ) : (
+                            <TableWithPagination
+                                columns={SYLLABUS_MATERIAL_COLUMNS}
+                                dataSource={syllabusMaterials.map((material) => ({ ...material, key: material.id }))}
+                            />
+                        )}
+                    </div>
+                )}
+
                 {/* Edit Modal */}
                 <PopupModal
                     open={isEditModalVisible}
@@ -490,6 +532,8 @@ const UserDetail = () => {
                         )}
                     </div>
                 </PopupModal>
+
+                <ResetPasswordModals reset={resetPassword} />
 
                 {/* Confirm Drop Status Modal */}
                 <PopupModal

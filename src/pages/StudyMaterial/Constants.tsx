@@ -226,9 +226,12 @@ export const getVideoMaterialTableColumns = (getCourseName: (courseId: string) =
     },
 ];
 
+export const SYLLABUS_MATERIAL_TAB_KEY = 'syllabus';
+
 export const MATERIAL_TAB_ITEMS = [
     { key: 'study', label: 'Study Material' },
     { key: 'video', label: 'Video Material' },
+    { key: SYLLABUS_MATERIAL_TAB_KEY, label: 'Syllabus Material' },
 ];
 
 export interface StudyMaterialProps {
@@ -242,3 +245,97 @@ export interface VideoMaterialProps {
     appliedFilters?: Record<string, string>;
     courseId?: string;
 }
+
+
+export interface SyllabusMaterialRecord {
+    id: string;
+    title: string;
+    description: string;
+    folderId: string;
+    subFolderId?: string | null;
+    pdfUrl: string;
+    pdfKey?: string;
+    pdfFileName: string;
+    folderName?: string | null;
+    subFolderName?: string | null;
+    /** e.g. "6th/part-1/lesson-1" */
+    subFolderPath?: string | null;
+    createdAt?: string;
+    updatedAt?: string | null;
+}
+
+export interface SyllabusMaterialProps {
+    searchTerm?: string;
+}
+
+export const SYLLABUS_MATERIAL_TEXT_FIELDS = [
+    {
+        name: 'title',
+        label: 'Title',
+        placeholder: 'Enter title',
+        required: true,
+        type: 'text' as const,
+    },
+    {
+        name: 'description',
+        label: 'Description',
+        placeholder: 'Enter description',
+        required: false,
+        type: 'text' as const,
+    },
+];
+
+export const getSyllabusMaterialTableColumns = (): ITableColumn[] => [
+    {
+        title: 'Title',
+        dataIndex: 'title',
+        key: 'title',
+        searchType: 'text',
+        sorter: (a: SyllabusMaterialRecord, b: SyllabusMaterialRecord) => compareText(a.title, b.title),
+        render: (title: string) => renderTruncatedCellWithTooltip(title),
+    },
+    {
+        title: 'Folder',
+        dataIndex: 'folderName',
+        key: 'folderName',
+        searchType: 'text',
+        sorter: (a: SyllabusMaterialRecord, b: SyllabusMaterialRecord) => compareText(a.folderName, b.folderName),
+        render: (value: string | null) => renderTruncatedCellWithTooltip(value),
+    },
+    {
+        title: 'Sub Folder',
+        dataIndex: 'subFolderPath',
+        key: 'subFolderPath',
+        searchType: 'text',
+        sorter: (a: SyllabusMaterialRecord, b: SyllabusMaterialRecord) => compareText(a.subFolderPath, b.subFolderPath),
+        render: (_: string | null, record: SyllabusMaterialRecord) => renderTruncatedCellWithTooltip(record.subFolderPath || record.subFolderName),
+    },
+    {
+        title: 'PDF',
+        dataIndex: 'pdfUrl',
+        key: 'pdfUrl',
+        render: (pdfUrl: string) => (
+            <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
+                <FilePdfOutlined /> View
+            </a>
+        ),
+    },
+    {
+        title: 'Created At',
+        dataIndex: 'createdAt',
+        key: 'createdAt',
+        searchType: 'date',
+        disableFutureDates: true,
+        sorter: (a: SyllabusMaterialRecord, b: SyllabusMaterialRecord) => compareText(a.createdAt, b.createdAt),
+        render: (value: string) => formatDate(value),
+    },
+    {
+        title: 'Updated At',
+        dataIndex: 'updatedAt',
+        key: 'updatedAt',
+        searchType: 'date',
+        disableFutureDates: true,
+        sorter: (a: SyllabusMaterialRecord, b: SyllabusMaterialRecord) => compareText(a.updatedAt, b.updatedAt),
+        render: (value: string | null) => (value ? formatDate(value) : '-'),
+    },
+];

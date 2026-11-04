@@ -6,6 +6,7 @@ import { useToastMessages } from '../../components/ToastMessages/useToastMessage
 import type { RootState } from '../../services/Store';
 import { getQuizById, createQuiz, updateQuiz, getCourses, getBatches } from '../../services/LearningAction';
 import superSalesAPI from '../../services/LearningAPI';
+import { savingOverlay, waitForPaint } from '../../components/SavingOverlay/SavingOverlay';
 import { usesFolderSelector, isCourseLessQuizType, emptyQuestion, parsePastedOptionsList, QUESTION_OPTION_KEYS, IMAGE_FIELD_NAMES, IMAGE_URL_FIELD_NAMES, type QuizQuestion, type QuizQuestionImages, type QuizQuestionImageFiles, type QuizRecord } from './Constant';
 import type { CourseRecord, BatchRecord } from '../Course/Constant';
 import { QUIZ_VALIDATION_RULES, QUIZ_QUESTION_VALIDATION_RULES, type ValidationRule } from '../../utils/validationUtils';
@@ -219,6 +220,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
 
         if (saveStatus?.success) {
             setIsSaving(false);
+            savingOverlay.hide();
             if (onSaved) {
                 // Embedded form (School Book Revision): the host page closes the form and shows the toast
                 onSaved();
@@ -234,6 +236,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         if (saveStatus?.error) {
             showError(saveStatus.error);
             setIsSaving(false);
+            savingOverlay.hide();
         }
     }, [saveStatus, isSaving, isEditMode, showError, navigate, onSaved, quizType, quizToView]);
 
@@ -701,9 +704,18 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         formData.append('sourceFile', sourceFile);
     };
 
+    // Full-screen "Saving..." indicator, painted before the heavy work of a save begins; it stays until the request ends
+    // (success leaves the page, a failure hides it)
+    const beginSaving = async () => {
+        savingOverlay.show(isEditMode ? 'Updating quiz...' : 'Creating quiz...');
+        await waitForPaint();
+    };
+
     // School Book Revision quiz: sent with its title, always as a Free quiz (no course/batch), the
     // folder / sub folder picked on that form, and the questions
-    const submitSchoolBookQuiz = (fields: Record<string, string>) => {
+    const submitSchoolBookQuiz = async (fields: Record<string, string>) => {
+        // The indicator goes up before the (slow, for a big quiz) check and request building start
+        await beginSaving();
         const titleValidationError = validateSingleField(QUIZ_VALIDATION_RULES, 'title', title);
         if (titleValidationError) setTitleError(titleValidationError);
         const attemptValid = validateQuizAttempt();
@@ -711,6 +723,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         // Run the question check even when the title failed, so every error shows at once
         const questionsValid = validateQuestions();
         if (titleValidationError || !attemptValid || !questionsValid) {
+            savingOverlay.hide();
             showError(questions.length === 0 ? 'Please add at least one question' : 'Please fix the errors in the form');
             return;
         }
@@ -729,8 +742,11 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
     };
 
     // `extraFields` are added to the request as-is (e.g. the folder / sub folder of a folder based quiz)
-    const handleSubmit = (extraFields?: Record<string, string>) => {
+    const handleSubmit = async (extraFields?: Record<string, string>) => {
+        // The indicator goes up before the (slow, for a big quiz) check and request building start
+        await beginSaving();
         if (!validate()) {
+            savingOverlay.hide();
             showError(questions.length === 0 ? 'Please add at least one question' : 'Please fix the errors in the form');
             return;
         }

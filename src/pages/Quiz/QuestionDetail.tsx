@@ -6,6 +6,7 @@ import Breadcrumbs from '../../components/Breadcrumb/Breadcrumbs';
 import PageTitle from '../../components/PageTitle';
 import QuestionsEditor from './QuestionsEditor';
 import QuizDocumentUpload from './QuizDocumentUpload';
+import SavingOverlay from '../../components/SavingOverlay/SavingOverlay';
 import CompetitiveQuizFields from './competitive/CompetitiveQuizFields';
 import PreviousYearQuizFields from './previousYear/PreviousYearQuizFields';
 import { useQuestionDetailManagement } from './useQuestionDetailHooks';
@@ -101,6 +102,7 @@ const QuestionDetail = () => {
     return (
         <div className="question-detail-container">
             <ToastMessages messages={toastMessages} onMessageClose={hideToast} />
+            <SavingOverlay />
 
             <Breadcrumbs
                 items={[

@@ -19,6 +19,8 @@ export interface InputField {
   singleLine?: boolean;
   /** Small helper text shown under the input (e.g. "eg: https://..."). */
   hint?: string;
+  /** Browser autofill hint; search boxes default to "off" so a saved login is never filled into them. */
+  autoComplete?: string;
 }
 
 export interface InputFieldsProps {
@@ -39,6 +41,7 @@ interface CommonInputProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   disabled: boolean;
   readOnly: boolean;
+  autoComplete?: string;
   'data-testid': string;
 }
 
@@ -118,6 +121,7 @@ const InputFields: React.FC<InputFieldsProps> = ({
               onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => onChange?.(field.name, e.target.value),
               disabled: isGloballyDisabled,
               readOnly: isFieldLocked && !isGloballyDisabled,
+              autoComplete: field.autoComplete ?? (field.search ? 'off' : undefined),
               'data-testid': `input-${field.name}`,
             };
 

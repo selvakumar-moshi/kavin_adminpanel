@@ -5,6 +5,7 @@ import ToastMessages from '../../../components/ToastMessages';
 import PageTitle from '../../../components/PageTitle';
 import QuestionsEditor from '../QuestionsEditor';
 import QuizDocumentUpload from '../QuizDocumentUpload';
+import SavingOverlay from '../../../components/SavingOverlay/SavingOverlay';
 import PreviousYearQuizFields from '../previousYear/PreviousYearQuizFields';
 import { useFolderSelector } from '../previousYear/useFolderSelectorHooks';
 import { useQuestionDetailManagement } from '../useQuestionDetailHooks';
@@ -71,6 +72,7 @@ const SchoolBookQuiz = ({ onCancel, onCreated }: SchoolBookQuizProps) => {
     return (
         <div className="question-detail-container">
             <ToastMessages messages={toastMessages} onMessageClose={hideToast} />
+            <SavingOverlay />
 
             {/* Embedded form (the URL stays /quiz), so the second item uses a placeholder path to be the "current" one
                 and clicking "Quiz" closes the form instead of navigating */}

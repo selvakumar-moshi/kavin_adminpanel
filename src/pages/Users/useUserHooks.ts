@@ -4,8 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
 import { getUsers, deleteUser } from '../../services/LearningAction';
+import superSalesAPI from '../../services/LearningAPI';
 import type { UserRecord } from './Constants';
-import { SEARCH_INPUT_FIELDS, getUserTableColumns } from './Constants';
+import { SEARCH_INPUT_FIELDS, getUserTableColumns, CREATE_USER_VALIDATION_RULES, MIN_PASSWORD_LENGTH } from './Constants';
+import { useResetPassword } from './useResetPassword';
 import { USER_FILTER_FIELDS } from '../../utils/filterUtils';
 import { useColumnSortSearch, getSortedTableData } from '../../components/Table/useColumnSortSearch';
 
@@ -24,6 +26,12 @@ export const useUserManagement = () => {
     // Modal states
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState<UserRecord | null>(null);
+
+    // Create User modal
+    const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
+    const [createValues, setCreateValues] = useState<Record<string, string>>({});
+    const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
+    const [isCreating, setIsCreating] = useState(false);
 
     // Track which operation is in progress
     const [operationType, setOperationType] = useState<'delete' | null>(null);
@@ -150,8 +158,88 @@ export const useUserManagement = () => {
         }
     };
 
+    const resetPassword = useResetPassword(showError);
+
+    const getCreateFieldError = (field: string, rawValue: string, values: Record<string, string>): string => {
+        const rule = CREATE_USER_VALIDATION_RULES[field];
+        const value = (rawValue || '').trim();
+        if (rule?.required && !value) return rule.errorMessages.required || 'This field is required';
+        if (rule?.pattern && value && !rule.pattern.test(value)) return rule.errorMessages.pattern || 'Invalid format.';
+        if (field === 'password' && value && rawValue.length < MIN_PASSWORD_LENGTH) {
+            return `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
+        }
+        if (field === 'confirmPassword' && value && rawValue !== values.password) return 'Passwords do not match.';
+        return '';
+    };
+
+    const openCreateModal = () => {
+        setCreateValues({});
+        setCreateErrors({});
+        setIsCreateModalVisible(true);
+    };
+
+    const closeCreateModal = () => {
+        setIsCreateModalVisible(false);
+        setCreateValues({});
+        setCreateErrors({});
+    };
+
+    const handleCreateChange = (name: string, value: string | string[]) => {
+        const stringValue = Array.isArray(value) ? value[0] || '' : value;
+        const nextValues = { ...createValues, [name]: stringValue };
+        setCreateValues(nextValues);
+
+        setCreateErrors((prev) => {
+            const next = { ...prev };
+            const error = getCreateFieldError(name, stringValue, nextValues);
+            if (error) next[name] = error;
+            else delete next[name];
+            // Changing the password changes whether the confirmation still matches
+            if (name === 'password' && nextValues.confirmPassword) {
+                const confirmError = getCreateFieldError('confirmPassword', nextValues.confirmPassword, nextValues);
+                if (confirmError) next.confirmPassword = confirmError;
+                else delete next.confirmPassword;
+            }
+            return next;
+        });
+    };
+
+    const handleCreateSubmit = async () => {
+        const errors: Record<string, string> = {};
+        Object.keys(CREATE_USER_VALIDATION_RULES).forEach((field) => {
+            const error = getCreateFieldError(field, createValues[field], createValues);
+            if (error) errors[field] = error;
+        });
+        setCreateErrors(errors);
+        if (Object.keys(errors).length > 0) return;
+
+        setIsCreating(true);
+        try {
+            // Called directly (not through the Redux thunk) so the login page's sign-up state is left alone
+            const res = await superSalesAPI.getRegister(
+                createValues.firstName.trim(),
+                createValues.lastName.trim(),
+                createValues.phoneNumber.trim(),
+                createValues.email.trim(),
+                createValues.password,
+                createValues.district,
+                createValues.confirmPassword,
+            );
+            showSuccess(res?.data?.message || 'User created successfully!');
+            closeCreateModal();
+            setNeedsRefresh(true);
+        } catch (error: any) {
+            showError(error?.response?.data?.message || error?.message || 'Failed to create the user');
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
     const handleActionClick = (action: string, record: UserRecord) => {
         switch (action.toLowerCase()) {
+            case 'reset-password':
+                resetPassword.openConfirm({ userId: record.userId, name: `${record.firstName} ${record.lastName}`.trim() });
+                break;
             case 'edit':
                 navigate(`/user/${record.userId}`);
                 break;
@@ -212,6 +300,19 @@ export const useUserManagement = () => {
         closeSearchColumn,
         getColumnSearchValue,
         handleColumnSearch,
+
+        // Create User
+        isCreateModalVisible,
+        createValues,
+        createErrors,
+        isCreating,
+        openCreateModal,
+        closeCreateModal,
+        handleCreateChange,
+        handleCreateSubmit,
+
+        // Reset password
+        resetPassword,
 
         // Toast
         toastMessages,
