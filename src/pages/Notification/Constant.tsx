@@ -18,6 +18,14 @@ export interface NotificationRecord {
     updatedAt?: string | null;
 }
 
+export const NOTIFICATION_TAB_KEY = 'notification';
+export const SYLLABUS_WISE_TAB_KEY = 'syllabusWise';
+
+export const NOTIFICATION_PAGE_TABS = [
+    { key: NOTIFICATION_TAB_KEY, label: 'Notification', title: 'Notifications' },
+    { key: SYLLABUS_WISE_TAB_KEY, label: 'Syllabus Wise', title: 'Syllabus Wise' },
+];
+
 export const NOTIFICATION_SEARCH_INPUT_FIELDS = [
     {
         name: 'search',

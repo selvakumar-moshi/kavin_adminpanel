@@ -1,5 +1,12 @@
 import Super_Sales from "../config/Axios";
 
+export interface SyllabusWisePayload {
+    title: string;
+    description: string;
+    amount: number;
+    folderId: string;
+}
+
 class LearningAPI {
     getSSLogin(email: string, password: string) {
         return Super_Sales.post(`/Auth/login`, { email, password });
@@ -274,6 +281,26 @@ class LearningAPI {
                 'Content-Type': 'multipart/form-data',
             },
         });
+    }
+
+    getSyllabusWiseList() {
+        return Super_Sales.get('/SyllabusWise');
+    }
+
+    getSyllabusWiseById(id: string) {
+        return Super_Sales.get(`/SyllabusWise/${id}`);
+    }
+
+    createSyllabusWise(payload: SyllabusWisePayload) {
+        return Super_Sales.post('/SyllabusWise', payload);
+    }
+
+    updateSyllabusWise(id: string, payload: SyllabusWisePayload) {
+        return Super_Sales.put(`/SyllabusWise/${id}`, payload);
+    }
+
+    deleteSyllabusWise(id: string) {
+        return Super_Sales.delete(`/SyllabusWise/${id}`);
     }
 
     deleteNotification(id: string) {

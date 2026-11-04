@@ -44,6 +44,21 @@ export interface EnrolledCourse {
     allowedBatches?: AllowedBatch[];
 }
 
+// A payment the user made for a Syllabus Wise plan
+export interface SyllabusWisePayment {
+    paymentId: string;
+    userId: string;
+    planId: string;
+    planTitle: string;
+    folderId: string | null;
+    amount: number;
+    paymentMethod: string | null;
+    transactionReference: string | null;
+    paymentStatus: string;
+    verifiedAt: string | null;
+    createdAt: string;
+}
+
 export interface UserDetailRecord {
     userId: string;
     firstName: string;
@@ -58,6 +73,7 @@ export interface UserDetailRecord {
     createdAt?: string;
     updatedAt?: string;
     courses: EnrolledCourse[];
+    syllabusWisePayments?: SyllabusWisePayment[];
 }
 
 // Districts are scoped to Tamil Nadu only — state itself is never shown or sent to the API
@@ -123,3 +139,11 @@ export const UserDetailtabs = [
         label: 'Payment Details',
     },
 ]
+
+export const COURSE_DETAILS_TAB_KEY = 'courseDetails';
+export const SYLLABUS_WISE_TAB_KEY = 'syllabusWise';
+
+export const UserDetailMainTabs = [
+    { key: COURSE_DETAILS_TAB_KEY, label: 'Course Details' },
+    { key: SYLLABUS_WISE_TAB_KEY, label: 'Syllabus Wise' },
+];

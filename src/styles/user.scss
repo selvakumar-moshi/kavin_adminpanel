@@ -275,6 +275,34 @@ body.user-detail-page {
   text-transform: capitalize;
 }
 
+.user-detail-main-tabs{
+  margin-top: 18px;
+  margin-bottom: 8px;
+}
+
+.user-syllabus-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 transparent;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+
+  .custom-table {
+    position: static;
+    padding: 0;
+    margin-top: 12px;
+    overflow: visible;
+  }
+
+  .pagination-container {
+    position: static;
+    margin: 12px 0;
+  }
+}
+
 .user-course-title{
   margin-top: 18px;
   font-family: var(--font-family);

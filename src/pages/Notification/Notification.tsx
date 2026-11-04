@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Badge } from 'antd';
 import Button from '../../components/Button/Button';
 import TableWithPagination from '../../components/Table/TableWithPagination';
@@ -19,7 +20,12 @@ import { getNotificationTableColumns, NOTIFICATION_TYPE_FIELD, NOTIFICATION_INPU
 import add_Icon from '../../assets/add_Icon.svg';
 import filter_Icon from '../../assets/filter_Icon.svg';
 
-const Notification = () => {
+interface NotificationProps {
+    pageTitle?: string;
+    tabs?: ReactNode;
+}
+
+const Notification = ({ pageTitle = 'Notifications', tabs }: NotificationProps) => {
     const {
         notificationsArray,
         loading,
@@ -101,21 +107,33 @@ const Notification = () => {
         },
     ];
 
+    const header = (
+        <div className="report_main">
+            <PageTitle title={pageTitle} />
+            <Button icon={<img src={add_Icon} alt="add-icon" />} variant="primary" className="page-title__button" onClick={openCreateModal}>
+                Add Notification
+            </Button>
+        </div>
+    );
+
     if (loading && notificationsArray.length === 0) {
-        return <Loader size="large" spinning={true} fullScreen={false} />;
+        return (
+            <div className="notification-container">
+                {header}
+                {tabs && <div className="report_main">{tabs}</div>}
+                <Loader size="large" spinning={true} fullScreen={false} />
+            </div>
+        );
     }
 
     return (
         <div className="notification-container">
             <ToastMessages messages={toastMessages} onMessageClose={hideToast} />
-            <div className="report_main">
-                <PageTitle title="Notifications" />
-                <Button icon={<img src={add_Icon} alt="add-icon" />} variant="primary" className="page-title__button" onClick={openCreateModal}>
-                    Add Notification
-                </Button>
-            </div>
+            {header}
 
-            <div className="dl_filter_main2">
+            <div className="report_main">
+                {tabs}
+                <div className="dl_filter_main2">
                     <InputFields
                         fields={searchField.map(field => ({ ...field }))}
                         onChange={handleSearchChange}
@@ -127,6 +145,7 @@ const Notification = () => {
                         </div>
                     </Badge>
                 </div>
+            </div>
 
             <TableWithPagination
                 columns={columns}

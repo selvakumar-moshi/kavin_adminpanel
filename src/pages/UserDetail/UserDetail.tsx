@@ -10,10 +10,12 @@ import Loader from '../../components/Loader/Loader';
 import ToastMessages from '../../components/ToastMessages';
 import Breadcrumbs from '../../components/Breadcrumb/Breadcrumbs';
 import StatusBadge from '../../components/Table/StatusBadge';
+import TableWithPagination from '../../components/Table/TableWithPagination';
+import type { ITableColumn } from '../../components/Table/ITable';
 import InfoItem from '../../components/InfoItem/InfoItem';
 import { useUserDetailManagement, ALLOWED_BATCH_SEPARATOR } from './useUserDetailHooks';
 import { usePageBodyClass } from '../../utils/pageBodyClass';
-import { EDIT_USER_FIELDS, PENDING_ENROLLMENT_STATUS_OPTIONS, UserDetailtabs, DISTRICT_OPTIONS } from './Constants';
+import { EDIT_USER_FIELDS, PENDING_ENROLLMENT_STATUS_OPTIONS, UserDetailtabs, DISTRICT_OPTIONS, UserDetailMainTabs, COURSE_DETAILS_TAB_KEY, SYLLABUS_WISE_TAB_KEY } from './Constants';
 import { formatDate } from '../../utils/dateUtils';
 import dot_Icon from '../../assets/dot_Icon.svg';
 import person_add_Icon from '../../assets/person_add_Icon.svg'
@@ -26,6 +28,16 @@ import NoDataFound from '../../components/NoDataFound/NoDataFound';
 
 /** Applied to document.body while this page is shown; user.scss targets this. */
 const USER_DETAIL_PAGE_BODY_CLASS = 'user-detail-page';
+
+const SYLLABUS_PAYMENT_COLUMNS: ITableColumn[] = [
+    { title: 'Plan', dataIndex: 'planTitle', key: 'planTitle' },
+    { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (amount: number) => `₹${Number(amount).toLocaleString()}` },
+    { title: 'Payment Method', dataIndex: 'paymentMethod', key: 'paymentMethod', render: (value: string | null) => value || '-' },
+    { title: 'Transaction Reference', dataIndex: 'transactionReference', key: 'transactionReference', render: (value: string | null) => value || '-' },
+    { title: 'Payment Status', dataIndex: 'paymentStatus', key: 'paymentStatus', render: (status: string) => (status ? <StatusBadge status={status} /> : '-') },
+    { title: 'Verified At', dataIndex: 'verifiedAt', key: 'verifiedAt', render: (value: string | null) => (value ? formatDate(value) : '-') },
+    { title: 'Paid On', dataIndex: 'createdAt', key: 'createdAt', render: (value: string) => (value ? formatDate(value) : '-') },
+];
 
 const UserDetail = () => {
     usePageBodyClass(USER_DETAIL_PAGE_BODY_CLASS);
@@ -56,6 +68,7 @@ const UserDetail = () => {
         hideToast,
     } = useUserDetailManagement();
 
+    const [activeMainTab, setActiveMainTab] = useState(COURSE_DETAILS_TAB_KEY);
     const [expandedCourseIds, setExpandedCourseIds] = useState<Set<string>>(new Set());
     const [activeMaterialTabs, setActiveMaterialTabs] = useState<Record<string, string>>({});
     const [courseToDrop, setCourseToDrop] = useState<{ enrollmentId: string; courseName: string } | null>(null);
@@ -128,6 +141,8 @@ const UserDetail = () => {
         return <NoDataFound type="nodata" /> ;
     }
 
+    const syllabusPayments = userDetail.syllabusWisePayments || [];
+
     const menuItems: MenuProps['items'] = [
         {
             key: 'edit',
@@ -172,8 +187,11 @@ const UserDetail = () => {
                     </div>
                 </div>
 
-                <h2 className="user-course-title">Course Details</h2>
+                <div className="user-detail-main-tabs">
+                    <TabsComponent items={UserDetailMainTabs} activeKey={activeMainTab} onChange={setActiveMainTab} />
+                </div>
 
+                {activeMainTab === COURSE_DETAILS_TAB_KEY && (
                 <div className="user-detail-course-list">
                 {(!userDetail.courses || userDetail.courses.length === 0) ? (
                     <NoDataFound type="nodata" description="No courses enrolled" />
@@ -318,6 +336,20 @@ const UserDetail = () => {
                     </>
                 )}
                 </div>
+                )}
+
+                {activeMainTab === SYLLABUS_WISE_TAB_KEY && (
+                    <div className="user-syllabus-list">
+                        {syllabusPayments.length === 0 ? (
+                            <NoDataFound type="nodata" description="No syllabus wise payments" />
+                        ) : (
+                            <TableWithPagination
+                                columns={SYLLABUS_PAYMENT_COLUMNS}
+                                dataSource={syllabusPayments.map((payment) => ({ ...payment, key: payment.paymentId }))}
+                            />
+                        )}
+                    </div>
+                )}
 
                 {/* Edit Modal */}
                 <PopupModal
