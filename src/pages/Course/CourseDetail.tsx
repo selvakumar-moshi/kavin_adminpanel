@@ -1,12 +1,11 @@
 import { Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import PopupModal from '../../components/PopupModal/PopupModal';
-import InputFields from '../../components/InputFields/InputFields';
 import Loader from '../../components/Loader/Loader';
 import ToastMessages from '../../components/ToastMessages';
 import Breadcrumbs from '../../components/Breadcrumb/Breadcrumbs';
 import { useCourseDetailManagement } from './useCourseDetailHooks';
-import { EDIT_COURSE_FIELDS } from './Constant';
+import CourseFormFields from './CourseFormFields';
 import { formatDate } from '../../utils/dateUtils';
 import BatchDetails from './BatchDetails';
 import dot_Icon from '../../assets/dot_Icon.svg'
@@ -128,8 +127,7 @@ const CourseDetail = () => {
                     minHeight={200}
                 >
                     <div style={{ padding: '0 8px' }}>
-                        <InputFields
-                            fields={EDIT_COURSE_FIELDS}
+                        <CourseFormFields
                             values={formValues}
                             errors={formErrors}
                             onChange={handleInputChange}

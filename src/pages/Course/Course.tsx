@@ -3,12 +3,13 @@ import { ArrowRightOutlined } from '@ant-design/icons';
 import Button from '../../components/Button/Button';
 import EmptyValue from '../../components/EmptyValue/EmptyValue';
 import PopupModal from '../../components/PopupModal/PopupModal';
-import InputFields from '../../components/InputFields/InputFields';
 import DropdownField from '../../components/DropdownField/DropdownField';
 import Loader from '../../components/Loader/Loader';
 import ToastMessages from '../../components/ToastMessages';
 import { useCourseManagement } from './useCourseHooks';
-import { COURSE_INPUT_FIELDS, COURSE_TYPE_OPTIONS, type CourseRecord } from './Constant';
+import { COURSE_TYPE_OPTIONS, type CourseRecord } from './Constant';
+import CourseFormFields from './CourseFormFields';
+import { richTextToPlain } from '../../utils/richText';
 import add_Icon from '../../assets/add_Icon.svg';
 import PageTitle from '../../components/PageTitle';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
@@ -90,7 +91,7 @@ const Course = () => {
                                 data-testid={`course-card-${course.id}`}
                             >
                                 <div className="course-card__title" title={course.courseName}>{course.courseName}</div>
-                                <EmptyValue className="course-card__description" value={course.courseDescription} fallback="No description" />
+                                <EmptyValue className="course-card__description" value={richTextToPlain(course.courseDescription || '')} fallback="No description" />
 
                                 <div className="course-card__footer">
                                     <div className="course-card__amount">₹{course.courseAmount.toLocaleString()}</div>
@@ -123,8 +124,7 @@ const Course = () => {
                 minHeight={200}
             >
                 <div style={{ padding: '0 8px' }}>
-                    <InputFields
-                        fields={COURSE_INPUT_FIELDS}
+                    <CourseFormFields
                         values={formValues}
                         errors={formErrors}
                         onChange={handleInputChange}
@@ -149,8 +149,7 @@ const Course = () => {
                 minHeight={200}
             >
                 <div style={{ padding: '0 8px' }}>
-                    <InputFields
-                        fields={COURSE_INPUT_FIELDS}
+                    <CourseFormFields
                         values={formValues}
                         errors={formErrors}
                         onChange={handleInputChange}

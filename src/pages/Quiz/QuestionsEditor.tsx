@@ -9,6 +9,7 @@ import PageTitle from '../../components/PageTitle';
 import { getItemKey, type ListItem } from './useQuestionDetailHooks';
 import { CORRECT_OPTION_CHOICES, QUESTION_ITEM_RAIL_ACTIONS, type QuizQuestion, type QuizQuestionImages } from './Constant';
 import delete_Icon from '../../assets/delete_Icon2.svg';
+import { getPastedImage } from '../../utils/clipboardImage';
 
 export interface QuestionsEditorProps {
     items: ListItem[];
@@ -77,19 +78,32 @@ const QuestionsEditor = ({
         imageInputRef.current?.click();
     };
 
+    // Shared by the file picker and Ctrl+V: previews the file and hands it to the question
+    const attachImage = (key: number, imageKey: keyof QuizQuestionImages, file: File) => {
+        const reader = new FileReader();
+        reader.onload = () => handleImageChange(key, imageKey, file, reader.result as string);
+        reader.readAsDataURL(file);
+    };
+
     const handleImageFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         e.target.value = '';
         if (!file || !pendingImageTarget) return;
 
         const { key, imageKey } = pendingImageTarget;
-        const reader = new FileReader();
-        reader.onload = () => handleImageChange(key, imageKey, file, reader.result as string);
-        reader.readAsDataURL(file);
+        attachImage(key, imageKey, file);
         setPendingImageTarget(null);
     };
 
-    const handleOptionPaste = (key: number) => (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const handleOptionPaste = (key: number, imageKey: keyof QuizQuestionImages) => (e: React.ClipboardEvent<HTMLDivElement>) => {
+        // A screenshot pasted into an option becomes that option's image
+        const image = getPastedImage(e.clipboardData);
+        if (image) {
+            e.preventDefault();
+            attachImage(key, imageKey, image);
+            return;
+        }
+
         const pastedText = e.clipboardData.getData('text');
         if (applySmartOptionsPaste(key, pastedText)) {
             e.preventDefault();
@@ -247,6 +261,8 @@ const QuestionsEditor = ({
                                         placeholder="Enter question text"
                                         // A picture can be used instead of text
                                         required={!question.images?.question}
+                                        // A screenshot pasted into the question text becomes the question's image
+                                        onPasteImage={(file) => attachImage(key, 'question', file)}
                                         value={question.questionText}
                                         error={errors.questionText}
                                         onChange={(value) => handleQuestionFieldChange(key, 'questionText', value)}
@@ -277,7 +293,7 @@ const QuestionsEditor = ({
                                         const optionImage = question.images?.[optionImageKey];
                                         return (
                                             <div key={optionKey} className="question-detail-card__option">
-                                                <div className="question-detail-card__field question-detail-card__row" onPaste={handleOptionPaste(key)}>
+                                                <div className="question-detail-card__field question-detail-card__row" onPaste={handleOptionPaste(key, optionImageKey)}>
                                                     <div className="question-detail-card__row-input">
                                                         <InputFields
                                                             fields={[{

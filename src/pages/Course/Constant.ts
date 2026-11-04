@@ -20,7 +20,7 @@ export const COURSE_TYPE_OPTIONS = [
     { value: 'Free', label: 'Free' },
 ];
 
-export const COURSE_INPUT_FIELDS = [
+export const COURSE_NAME_FIELDS = [
     {
         name: 'courseName',
         label: 'Course Name',
@@ -28,13 +28,16 @@ export const COURSE_INPUT_FIELDS = [
         required: true,
         type: 'text' as const,
     },
-    {
-        name: 'courseDescription',
-        label: 'Description',
-        placeholder: 'Enter course description',
-        required: false,
-        type: 'textarea' as const,
-    },
+];
+
+// A rich text box (bold / italic / underline / link), so it is not one of the plain input fields
+export const COURSE_DESCRIPTION_FIELD = {
+    name: 'courseDescription',
+    label: 'Description',
+    placeholder: 'Enter course description',
+};
+
+export const COURSE_AMOUNT_FIELDS = [
     {
         name: 'courseAmount',
         label: 'Amount',
@@ -45,8 +48,6 @@ export const COURSE_INPUT_FIELDS = [
 ];
 
 export type CourseDetailRecord = CourseRecord;
-
-export const EDIT_COURSE_FIELDS = COURSE_INPUT_FIELDS;
 
 export interface BatchRecord {
     id: string;

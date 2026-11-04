@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Input, Popover, Tooltip } from 'antd';
 import { BoldOutlined, ItalicOutlined, UnderlineOutlined, LinkOutlined } from '@ant-design/icons';
 import { cleanRichTextValue, normalizeUrl, sanitizeRichText } from '../../utils/richText';
+import { getPastedImage } from '../../utils/clipboardImage';
 
 export interface RichTextEditorProps {
   name: string;
@@ -12,6 +13,7 @@ export interface RichTextEditorProps {
   required?: boolean;
   disabled?: boolean;
   error?: string;
+  onPasteImage?: (file: File) => void;
 }
 
 type FormatCommand = 'bold' | 'italic' | 'underline';
@@ -32,6 +34,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   required,
   disabled = false,
   error,
+  onPasteImage,
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   // The last value this editor emitted; a different incoming value means it was changed from outside (import, reset ...)
@@ -87,6 +90,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const image = onPasteImage ? getPastedImage(e.clipboardData) : null;
+    if (image && onPasteImage) {
+      e.preventDefault();
+      onPasteImage(image);
+      return;
+    }
     // Paste as plain text so formatting from Word / web pages doesn't leak in
     e.preventDefault();
     document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
