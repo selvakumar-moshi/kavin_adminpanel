@@ -197,7 +197,21 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       onPasteImage(image);
       return;
     }
-    // Paste as plain text so formatting from Word / web pages doesn't leak in
+    // A table copied from Word / Excel / a web page comes in as a real table (cleaned down to the allowed tags, so only
+    // its rows, cells and text are kept; the borders come from the editor's own style). Not inside an existing table.
+    const html = e.clipboardData.getData('text/html');
+    if (editorRef.current && /<table[\s>]/i.test(html) && !getCurrentCell(editorRef.current)) {
+      const cleaned = sanitizeRichText(html);
+      if (cleaned.includes('<table')) {
+        e.preventDefault();
+        // A trailing line gives the caret somewhere to go below a table that ends the paste
+        document.execCommand('insertHTML', false, cleaned.endsWith('</table>') ? `${cleaned}<div><br></div>` : cleaned);
+        emitChange();
+        return;
+      }
+    }
+
+    // Anything else is pasted as plain text so formatting from Word / web pages doesn't leak in
     e.preventDefault();
     document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
   };

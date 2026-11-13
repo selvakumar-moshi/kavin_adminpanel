@@ -28,10 +28,25 @@ export const normalizeUrl = (url: string): string => {
     return /^[a-z][a-z0-9+.-]*:/i.test(trimmed) ? '' : `https://${trimmed}`;
 };
 
+const TABLE_STRUCTURE_TAGS = ['TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR'];
+
+// Merged cells (rowspan / colspan) are kept when they hold a sensible number
+const readSpan = (element: HTMLElement, attribute: 'colspan' | 'rowspan'): string => {
+    const span = Number.parseInt(element.getAttribute(attribute) || '', 10);
+    return span > 1 && span <= 50 ? String(span) : '';
+};
+
 const sanitizeNode = (source: Node, target: Node, doc: Document) => {
+    const sourceElement = source.nodeType === Node.ELEMENT_NODE ? (source as Element) : null;
+    // Pasted tables (e.g. from Word) carry the source's indentation as text between their tags and line breaks inside cells
+    const isTableStructure = Boolean(sourceElement && TABLE_STRUCTURE_TAGS.includes(sourceElement.tagName));
+    const isInsideCell = Boolean(sourceElement?.closest('td, th'));
+
     source.childNodes.forEach((child) => {
         if (child.nodeType === Node.TEXT_NODE) {
-            target.appendChild(doc.createTextNode(child.textContent || ''));
+            const text = child.textContent || '';
+            if (isTableStructure && !text.trim()) return;
+            target.appendChild(doc.createTextNode(isInsideCell ? text.replace(/\s+/g, ' ') : text));
             return;
         }
         if (child.nodeType !== Node.ELEMENT_NODE) return;
@@ -54,6 +69,12 @@ const sanitizeNode = (source: Node, target: Node, doc: Document) => {
             clean.setAttribute('href', href);
             clean.setAttribute('target', '_blank');
             clean.setAttribute('rel', 'noopener noreferrer');
+        }
+        if (tag === 'td' || tag === 'th') {
+            (['colspan', 'rowspan'] as const).forEach((attribute) => {
+                const span = readSpan(element, attribute);
+                if (span) clean.setAttribute(attribute, span);
+            });
         }
         if (tag !== 'br') sanitizeNode(element, clean, doc);
         target.appendChild(clean);
