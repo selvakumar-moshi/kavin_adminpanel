@@ -1,4 +1,4 @@
-// Allow-list sanitizer for the rich question text (bold / italic / underline / link / line breaks only)
+// Allow-list sanitizer for the rich text (bold / italic / underline / link / line breaks / tables only)
 const ALLOWED_TAGS: Record<string, string> = {
     B: 'b',
     STRONG: 'b',
@@ -9,6 +9,13 @@ const ALLOWED_TAGS: Record<string, string> = {
     BR: 'br',
     DIV: 'div',
     P: 'div',
+    TABLE: 'table',
+    THEAD: 'thead',
+    TBODY: 'tbody',
+    TFOOT: 'tfoot',
+    TR: 'tr',
+    TH: 'th',
+    TD: 'td',
 };
 
 const SAFE_URL = /^(https?:\/\/|mailto:)/i;
@@ -64,11 +71,14 @@ export const sanitizeRichText = (html: string): string => {
 export const richTextToPlain = (html: string): string => {
     if (!html) return '';
     const doc = new DOMParser().parseFromString(html, 'text/html');
+    // Cells would otherwise run together ("NameAge"), so each one ends with a space
+    doc.querySelectorAll('td, th').forEach((cell) => cell.append(' '));
     return (doc.body.textContent || '').replace(/\xA0/g, ' ');
 };
 
 // '' when the editor holds no real content (e.g. just "<br>" left after deleting everything)
 export const cleanRichTextValue = (html: string): string => {
     const sanitized = sanitizeRichText(html);
-    return richTextToPlain(sanitized).trim() ? sanitized : '';
+    // A table counts as content even while all of its cells are still empty
+    return richTextToPlain(sanitized).trim() || sanitized.includes('<table') ? sanitized : '';
 };

@@ -679,6 +679,12 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
 
     // ASP.NET Core's [FromForm] binder expects dot notation for List<T> items (e.g. "questions[0].questionText"),
     // not bracket-in-bracket — IFormFile properties in particular only bind on an exact path match.
+    // Editing: the question had a saved image in this slot and the admin has taken it away (without picking another)
+    const isSavedImageRemoved = (q: KeyedQuizQuestion, imageKey: keyof QuizQuestionImages): boolean => {
+        const original = isEditMode ? originalQuestionValuesRef.current.get(q._key) : undefined;
+        return Boolean(original?.[IMAGE_URL_FIELD_NAMES[imageKey]]) && !q.images[imageKey];
+    };
+
     const appendQuestionsToFormData = (formData: FormData) => {
         questions.forEach((q, index) => {
             formData.append(`questions[${index}].questionText`, q.questionText);
@@ -690,8 +696,14 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
             formData.append(`questions[${index}].mark`, q.mark);
 
             (Object.keys(IMAGE_FIELD_NAMES) as (keyof QuizQuestionImages)[]).forEach((imageKey) => {
+                const fieldName = `questions[${index}].${IMAGE_FIELD_NAMES[imageKey]}`;
                 const file = q.imageFiles[imageKey];
-                if (file) formData.append(`questions[${index}].${IMAGE_FIELD_NAMES[imageKey]}`, file);
+                if (file) {
+                    formData.append(fieldName, file);
+                } else if (isSavedImageRemoved(q, imageKey)) {
+                    const imageField = IMAGE_FIELD_NAMES[imageKey];
+                    formData.append(`questions[${index}].remove${imageField.charAt(0).toUpperCase()}${imageField.slice(1)}`, 'true');
+                }
             });
         });
     };
