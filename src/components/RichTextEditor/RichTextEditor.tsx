@@ -14,6 +14,7 @@ import {
 } from '@ant-design/icons';
 import { cleanRichTextValue, normalizeUrl, sanitizeRichText } from '../../utils/richText';
 import { getPastedImage } from '../../utils/clipboardImage';
+import SymbolPicker from './SymbolPicker';
 import {
   addColumnRight,
   addRowBelow,
@@ -38,12 +39,14 @@ export interface RichTextEditorProps {
   onPasteImage?: (file: File) => void;
 }
 
-type FormatCommand = 'bold' | 'italic' | 'underline';
+type FormatCommand = 'bold' | 'italic' | 'underline' | 'superscript' | 'subscript';
 
 const FORMAT_BUTTONS: { command: FormatCommand; tooltip: string; icon: React.ReactNode }[] = [
   { command: 'bold', tooltip: 'Bold (Ctrl+B)', icon: <BoldOutlined /> },
   { command: 'italic', tooltip: 'Italic (Ctrl+I)', icon: <ItalicOutlined /> },
   { command: 'underline', tooltip: 'Underline (Ctrl+U)', icon: <UnderlineOutlined /> },
+  { command: 'superscript', tooltip: 'Superscript', icon: <span>x<sup>2</sup></span> },
+  { command: 'subscript', tooltip: 'Subscript', icon: <span>x<sub>2</sub></span> },
 ];
 
 // Size of the grid in the "Insert table" picker
@@ -77,11 +80,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   // The last value this editor emitted; a different incoming value means it was changed from outside (import, reset ...)
   const lastEmittedRef = useRef<string | null>(null);
   const savedRangeRef = useRef<Range | null>(null);
-  const [activeCommands, setActiveCommands] = useState<Record<FormatCommand, boolean>>({ bold: false, italic: false, underline: false });
+  const [activeCommands, setActiveCommands] = useState<Record<FormatCommand, boolean>>({ bold: false, italic: false, underline: false, superscript: false, subscript: false });
   const [isLinkOpen, setIsLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [isInTable, setIsInTable] = useState(false);
   const [isTablePickerOpen, setIsTablePickerOpen] = useState(false);
+  const [isSymbolPickerOpen, setIsSymbolPickerOpen] = useState(false);
   // Size highlighted in the table picker while the pointer moves over it
   const [pickerSize, setPickerSize] = useState({ rows: 0, cols: 0 });
 
@@ -105,6 +109,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       bold: document.queryCommandState('bold'),
       italic: document.queryCommandState('italic'),
       underline: document.queryCommandState('underline'),
+      superscript: document.queryCommandState('superscript'),
+      subscript: document.queryCommandState('subscript'),
     });
     setIsInTable(Boolean(getCurrentCell(editorRef.current)));
   }, []);
@@ -129,6 +135,33 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     document.execCommand(command, false, argument);
     emitChange();
     refreshActiveCommands();
+  };
+
+  const openSymbolPicker = (open: boolean) => {
+    if (!open) {
+      setIsSymbolPickerOpen(false);
+      return;
+    }
+    const selection = globalThis.getSelection();
+    savedRangeRef.current = selectionInsideEditor() && selection ? selection.getRangeAt(0).cloneRange() : null;
+    setIsSymbolPickerOpen(true);
+  };
+
+  // Puts the symbol at the cursor (where it was when the picker opened, or after the last symbol inserted)
+  const insertSymbol = (character: string) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    editor.focus();
+    const selection = globalThis.getSelection();
+    if (savedRangeRef.current && selection) {
+      selection.removeAllRanges();
+      selection.addRange(savedRangeRef.current);
+    }
+    document.execCommand('insertText', false, character);
+    emitChange();
+    // The next symbol continues from here
+    savedRangeRef.current = selection && selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
   };
 
   const openTablePicker = (open: boolean) => {
@@ -390,6 +423,25 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                       ))}
                     </>
                   )}
+                  <Popover
+                    open={isSymbolPickerOpen}
+                    onOpenChange={openSymbolPicker}
+                    trigger="click"
+                    placement="bottomLeft"
+                    content={<SymbolPicker onPick={insertSymbol} />}
+                  >
+                    <Tooltip title="Insert symbol">
+                      <button
+                        type="button"
+                        className="rich-text-editor__btn rich-text-editor__btn--text"
+                        onMouseDown={(e) => e.preventDefault()}
+                        aria-label="Insert symbol"
+                        disabled={disabled}
+                      >
+                        Ω
+                      </button>
+                    </Tooltip>
+                  </Popover>
                   <Tooltip title="Remove formatting">
                     <button
                       type="button"

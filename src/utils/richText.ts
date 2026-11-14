@@ -5,6 +5,8 @@ const ALLOWED_TAGS: Record<string, string> = {
     I: 'i',
     EM: 'i',
     U: 'u',
+    SUP: 'sup',
+    SUB: 'sub',
     A: 'a',
     BR: 'br',
     DIV: 'div',
@@ -89,11 +91,25 @@ export const sanitizeRichText = (html: string): string => {
     return container.innerHTML;
 };
 
+const SUPERSCRIPTS = '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱ';
+const SUBSCRIPTS = '₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎';
+const NORMAL_CHARACTERS = '0123456789+-=()ni';
+
+// Characters without a Unicode form are left as they are
+const mapCharacters = (text: string, mapped: string): string =>
+    Array.from(text).map((character) => {
+        const index = NORMAL_CHARACTERS.indexOf(character);
+        return index >= 0 && index < mapped.length ? mapped[index] : character;
+    }).join('');
+
 export const richTextToPlain = (html: string): string => {
     if (!html) return '';
     const doc = new DOMParser().parseFromString(html, 'text/html');
     // Cells would otherwise run together ("NameAge"), so each one ends with a space
     doc.querySelectorAll('td, th').forEach((cell) => cell.append(' '));
+    // Without styling "10<sup>10</sup>" would read "1010", so powers and indices become their Unicode forms (10¹⁰)
+    doc.querySelectorAll('sup').forEach((element) => { element.textContent = mapCharacters(element.textContent || '', SUPERSCRIPTS); });
+    doc.querySelectorAll('sub').forEach((element) => { element.textContent = mapCharacters(element.textContent || '', SUBSCRIPTS); });
     return (doc.body.textContent || '').replace(/\xA0/g, ' ');
 };
 

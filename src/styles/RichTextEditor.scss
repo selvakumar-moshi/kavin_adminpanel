@@ -191,3 +191,69 @@
   font-size: 13px;
   color: rgba(0, 0, 0, 0.65);
 }
+
+// Symbol picker
+.rich-text-editor__symbol-picker {
+  width: 340px;
+}
+
+.rich-text-editor__symbol-heading {
+  margin: 8px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.rich-text-editor__symbol-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.rich-text-editor__symbol-tab {
+  padding: 2px 8px;
+  border: 1px solid #d9d9d9;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+
+  &--active {
+    border-color: #ec7d16;
+    background: rgba(236, 125, 22, 0.12);
+    color: #ec7d16;
+  }
+}
+
+.rich-text-editor__symbol-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 2px;
+  max-height: 190px;
+  margin-top: 6px;
+  overflow-y: auto;
+}
+
+.rich-text-editor__symbol {
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #ec7d16;
+    background: rgba(236, 125, 22, 0.1);
+  }
+}
+
+.rich-text-editor__symbol-empty {
+  grid-column: 1 / -1;
+  padding: 12px 0;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.45);
+}
