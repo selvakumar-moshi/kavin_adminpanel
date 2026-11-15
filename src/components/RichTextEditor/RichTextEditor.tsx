@@ -12,10 +12,10 @@ import {
   DeleteColumnOutlined,
   DeleteOutlined,
 } from '@ant-design/icons';
-import { cleanRichTextValue, normalizeUrl, sanitizeRichText } from '../../utils/richText';
+import { cleanRichTextValue, htmlToRichValue, normalizeUrl, richValueToHtml, sanitizeRichText, toInlineHtml } from '../../utils/richText';
 import { getPastedImage } from '../../utils/clipboardImage';
 import SymbolPicker from './SymbolPicker';
-import { EQUATION_CLASS, buildEquationHtml, decorateEquations } from '../../utils/richTextEquation';
+import { EQUATION_CLASS, buildEquationHtml, decorateEquations, readSingleLatex } from '../../utils/richTextEquation';
 
 // The equation editor (and the library behind it) is only downloaded the first time it is opened
 const EquationDialog = lazy(() => import('./EquationDialog'));
@@ -41,6 +41,13 @@ export interface RichTextEditorProps {
   disabled?: boolean;
   error?: string;
   onPasteImage?: (file: File) => void;
+  /** Called with pasted text first; return true when it was handled (e.g. lines spread over several fields) */
+  onPasteText?: (text: string) => boolean;
+  /**
+   * A one-line field (the options of a question): no always-visible toolbar (it appears while editing), no tables, and a
+   * value without any markup is kept as plain text, so it stays a plain string for everything that reads it.
+   */
+  compact?: boolean;
 }
 
 type FormatCommand = 'bold' | 'italic' | 'underline' | 'superscript' | 'subscript';
@@ -79,6 +86,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   disabled = false,
   error,
   onPasteImage,
+  onPasteText,
+  compact = false,
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   // The last value this editor emitted; a different incoming value means it was changed from outside (import, reset ...)
@@ -94,14 +103,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [equationDialog, setEquationDialog] = useState<{ initialLatex: string; target: HTMLElement | null } | null>(null);
   // Size highlighted in the table picker while the pointer moves over it
   const [pickerSize, setPickerSize] = useState({ rows: 0, cols: 0 });
+  const [isFocused, setIsFocused] = useState(false);
+  // Busy editing: the cursor is in the field, or a picker / dialog opened from it is (the cursor is in that then).
+  // Selection tracking and, in a compact field, the toolbar only exist while this is true, so hundreds of idle fields cost little.
+  const isEditing = isFocused || isLinkOpen || isTablePickerOpen || isSymbolPickerOpen || Boolean(equationDialog);
 
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor || value === lastEmittedRef.current) return;
-    editor.innerHTML = sanitizeRichText(value);
+    editor.innerHTML = sanitizeRichText(compact ? richValueToHtml(value) : value);
     decorateEquations(editor);
     lastEmittedRef.current = value;
-  }, [value]);
+  }, [value, compact]);
 
   const selectionInsideEditor = () => {
     const selection = globalThis.getSelection();
@@ -123,9 +136,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   }, []);
 
   useEffect(() => {
+    if (!isEditing) return;
     document.addEventListener('selectionchange', refreshActiveCommands);
     return () => document.removeEventListener('selectionchange', refreshActiveCommands);
-  }, [refreshActiveCommands]);
+  }, [isEditing, refreshActiveCommands]);
 
   const emitChange = () => {
     const editor = editorRef.current;
@@ -133,8 +147,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     const cleaned = cleanRichTextValue(editor.innerHTML);
     // Drop the stray <br> browsers leave behind once everything is deleted, so the placeholder shows again
     if (!cleaned && editor.innerHTML) editor.innerHTML = '';
-    lastEmittedRef.current = cleaned;
-    onChange(cleaned);
+    // A compact field saves plain text unless the content needs markup
+    const stored = compact ? htmlToRichValue(cleaned) : cleaned;
+    lastEmittedRef.current = stored;
+    onChange(stored);
   };
 
   const runCommand = (command: string, argument?: string) => {
@@ -153,29 +169,54 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const closeEquationDialog = () => setEquationDialog(null);
 
+  // Inserts HTML where the cursor was (savedRangeRef), or at the cursor when nothing was saved
+  const insertHtmlAtSavedRange = (html: string) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.focus();
+    const selection = globalThis.getSelection();
+    if (savedRangeRef.current && selection) {
+      selection.removeAllRanges();
+      selection.addRange(savedRangeRef.current);
+    }
+    document.execCommand('insertHTML', false, html);
+    // The browser drops the editing marks of equations that come in with the HTML
+    decorateEquations(editor);
+    emitChange();
+  };
+
+  // "$$ a^{m+1} $$" pasted as text (what the equation editor's own box copies) becomes a real equation. The conversion
+  // library is only downloaded when this happens.
+  const pasteLatexAsEquation = async (latex: string, originalText: string) => {
+    const selection = globalThis.getSelection();
+    savedRangeRef.current = selectionInsideEditor() && selection ? selection.getRangeAt(0).cloneRange() : null;
+    try {
+      const { convertLatexToMathMl, validateLatex } = await import('mathlive');
+      if (validateLatex(latex).length === 0) {
+        insertHtmlAtSavedRange(`${buildEquationHtml(latex, convertLatexToMathMl(latex))}${compact ? '' : '&nbsp;'}`);
+        return;
+      }
+    } catch {
+      // The library could not load: the text is pasted as it is
+    }
+    insertHtmlAtSavedRange(sanitizeRichText(originalText));
+  };
+
   const submitEquation = (latex: string, mathMl: string) => {
     const editor = editorRef.current;
     const target = equationDialog?.target;
     setEquationDialog(null);
     if (!editor) return;
 
-    const html = buildEquationHtml(latex, mathMl);
     if (target) {
       // Editing: the equation is swapped in place
       const holder = document.createElement('div');
-      holder.innerHTML = html;
+      holder.innerHTML = buildEquationHtml(latex, mathMl);
       if (holder.firstElementChild) target.replaceWith(holder.firstElementChild);
+      emitChange();
     } else {
-      editor.focus();
-      const selection = globalThis.getSelection();
-      if (savedRangeRef.current && selection) {
-        selection.removeAllRanges();
-        selection.addRange(savedRangeRef.current);
-      }
-      // The trailing space gives the cursor somewhere to go after the equation
-      document.execCommand('insertHTML', false, `${html}&nbsp;`);
+      insertHtmlAtSavedRange(`${buildEquationHtml(latex, mathMl)}&nbsp;`);
     }
-    emitChange();
   };
 
   const removeEquation = () => {
@@ -265,6 +306,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   // Tab / Shift+Tab move between cells; Tab in the last cell adds a row
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (compact && e.key === 'Enter') {
+      e.preventDefault();
+      return;
+    }
     if (e.key !== 'Tab' || !editorRef.current) return;
     const cell = getCurrentCell(editorRef.current);
     if (!cell) return;
@@ -278,16 +323,46 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
-    const image = onPasteImage ? getPastedImage(e.clipboardData) : null;
+    const clipboard = e.clipboardData;
+    const image = onPasteImage ? getPastedImage(clipboard) : null;
     if (image && onPasteImage) {
       e.preventDefault();
       onPasteImage(image);
       return;
     }
+
+    const text = clipboard.getData('text/plain');
+    if (onPasteText?.(text)) {
+      e.preventDefault();
+      return;
+    }
+
+    // Equations copied from a rich text box (this one, the question text ...) stay equations. Only the allowed tags are
+    // kept, so nothing else from the source comes with them.
+    const html = clipboard.getData('text/html');
+    if (html.includes(EQUATION_CLASS)) {
+      const cleaned = sanitizeRichText(html);
+      if (cleaned.includes(EQUATION_CLASS)) {
+        e.preventDefault();
+        const selection = globalThis.getSelection();
+        savedRangeRef.current = selectionInsideEditor() && selection ? selection.getRangeAt(0).cloneRange() : null;
+        insertHtmlAtSavedRange(compact ? toInlineHtml(cleaned) : cleaned);
+        return;
+      }
+    }
+
+    // A single equation pasted as LaTeX text
+    const latex = readSingleLatex(text);
+    if (latex) {
+      e.preventDefault();
+      void pasteLatexAsEquation(latex, text);
+      return;
+    }
+
     // A table copied from Word / Excel / a web page comes in as a real table (cleaned down to the allowed tags, so only
-    // its rows, cells and text are kept; the borders come from the editor's own style). Not inside an existing table.
-    const html = e.clipboardData.getData('text/html');
-    if (editorRef.current && /<table[\s>]/i.test(html) && !getCurrentCell(editorRef.current)) {
+    // its rows, cells and text are kept; the borders come from the editor's own style). Not inside an existing table,
+    // and not in a one-line field.
+    if (!compact && editorRef.current && /<table[\s>]/i.test(html) && !getCurrentCell(editorRef.current)) {
       const cleaned = sanitizeRichText(html);
       if (cleaned.includes('<table')) {
         e.preventDefault();
@@ -300,7 +375,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
     // Anything else is pasted as plain text so formatting from Word / web pages doesn't leak in
     e.preventDefault();
-    document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
+    document.execCommand('insertText', false, compact ? text.replace(/\s*\n+\s*/g, ' ') : text);
   };
 
   const openLinkPopover = (open: boolean) => {
@@ -339,6 +414,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     'rich-text-editor',
     hasError ? 'rich-text-editor--error' : '',
     disabled ? 'rich-text-editor--disabled' : '',
+    compact ? 'rich-text-editor--compact' : '',
   ].filter(Boolean).join(' ');
 
   return (
@@ -360,17 +436,20 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   contentEditable={!disabled}
                   suppressContentEditableWarning
                   role="textbox"
-                  aria-multiline="true"
+                  aria-multiline={!compact}
                   aria-label={label}
                   data-placeholder={placeholder}
                   data-testid={`input-${name}`}
                   onInput={emitChange}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
                   onDoubleClick={handleDoubleClick}
                   onKeyDown={handleKeyDown}
                   onPaste={handlePaste}
                 />
+                {(!compact || isEditing) && (
                 <div className="rich-text-editor__toolbar">
-                  {FORMAT_BUTTONS.map(({ command, tooltip, icon }) => (
+                  {FORMAT_BUTTONS.filter(({ command }) => !compact || command === 'superscript' || command === 'subscript').map(({ command, tooltip, icon }) => (
                     <Tooltip key={command} title={tooltip}>
                       <button
                         type="button"
@@ -385,6 +464,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                       </button>
                     </Tooltip>
                   ))}
+                  {!compact && (
+                  <>
                   <Popover
                     open={isLinkOpen}
                     onOpenChange={openLinkPopover}
@@ -478,6 +559,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                       ))}
                     </>
                   )}
+                  </>
+                  )}
                   <Popover
                     open={isSymbolPickerOpen}
                     onOpenChange={openSymbolPicker}
@@ -525,6 +608,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                     </button>
                   </Tooltip>
                 </div>
+                )}
               </div>
               {error && <div className="form-fields-section__error-message">{error}</div>}
               {equationDialog && (

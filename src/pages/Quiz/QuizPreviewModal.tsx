@@ -3,7 +3,7 @@ import { Spin } from 'antd';
 import PopupModal from '../../components/PopupModal/PopupModal';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 import superSalesAPI from '../../services/LearningAPI';
-import { sanitizeRichText } from '../../utils/richText';
+import { richValueToHtml, sanitizeRichText } from '../../utils/richText';
 import { QUESTION_OPTION_KEYS, type QuizQuestion, type QuizRecord } from './Constant';
 
 interface QuizPreviewModalProps {
@@ -90,7 +90,8 @@ const QuizPreviewModal = ({ quiz, onClose }: QuizPreviewModalProps) => {
                                         <div key={key} className={`quiz-preview__option${isCorrect ? ' quiz-preview__option--correct' : ''}`}>
                                             <span className="quiz-preview__letter">{letter}</span>
                                             <span className="quiz-preview__option-body keep-case">
-                                                {text}
+                                                {/* A plain option is escaped first; one with an equation / superscript is shown as saved (cleaned) */}
+                                                <span className="rich-text-content" dangerouslySetInnerHTML={{ __html: sanitizeRichText(richValueToHtml(String(text ?? ''))) }} />
                                                 {imageUrl && <img className="quiz-preview__image" src={imageUrl} alt={`Option ${letter}`} />}
                                             </span>
                                             {isCorrect && <span className="quiz-preview__correct-tag">Correct</span>}

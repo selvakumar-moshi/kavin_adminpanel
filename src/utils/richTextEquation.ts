@@ -33,3 +33,14 @@ export const decorateEquations = (root: HTMLElement) => {
         equation.setAttribute('title', EQUATION_TITLE);
     });
 };
+
+// Text that is one single equation in LaTeX ("$$ a^{m+1} $$", "\\( x \\)" ...), which is what the equation editor's own box
+// copies. Returns the LaTeX, or null for anything else.
+export const readSingleLatex = (text: string): string | null => {
+    const trimmed = text.trim();
+    for (const pattern of [/^\$\$([\s\S]+)\$\$$/, /^\\\(([\s\S]+)\\\)$/, /^\\\[([\s\S]+)\\\]$/]) {
+        const match = pattern.exec(trimmed);
+        if (match && !match[1].includes('$$')) return match[1].trim() || null;
+    }
+    return null;
+};

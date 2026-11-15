@@ -1,3 +1,4 @@
+import { latexToUnicode } from './latexToUnicode';
 import { EQUATION_CLASS, MATHML_ATTRIBUTES, MATHML_ELEMENTS, MATHML_NAMESPACE, MAX_LATEX_LENGTH, SAFE_MATHML_VALUE } from './richTextEquation';
 
 // Allow-list sanitizer for the rich text (bold / italic / underline / link / line breaks / tables only)
@@ -147,9 +148,9 @@ const mapCharacters = (text: string, mapped: string): string =>
 export const richTextToPlain = (html: string): string => {
     if (!html) return '';
     const doc = new DOMParser().parseFromString(html, 'text/html');
-    // An equation reads as its LaTeX in plain text (its MathML would just run the symbols together)
+    // An equation reads as plain Unicode in plain text (aᵐ⁺¹, a/b, √x ...); its MathML would just run the symbols together
     doc.querySelectorAll(`span.${EQUATION_CLASS}`).forEach((equation) => {
-        equation.replaceWith(doc.createTextNode(` ${equation.getAttribute('data-latex') || ''} `));
+        equation.replaceWith(doc.createTextNode(` ${latexToUnicode(equation.getAttribute('data-latex') || '')} `));
     });
     // Cells would otherwise run together ("NameAge"), so each one ends with a space
     doc.querySelectorAll('td, th').forEach((cell) => cell.append(' '));
@@ -164,4 +165,34 @@ export const cleanRichTextValue = (html: string): string => {
     const sanitized = sanitizeRichText(html);
     // A table counts as content even while all of its cells are still empty
     return richTextToPlain(sanitized).trim() || sanitized.includes('<table') ? sanitized : '';
+};
+
+// --- Fields that hold plain text unless they need markup (the options of a question) -------------------------------------
+// A plain option stays a plain string, so apps that show it as text keep working; only an option with an equation,
+// superscript ... is saved as HTML.
+const HTML_MARKUP = /<\/?(?:b|i|u|sup|sub|a|br|div|span|math|table|p)(?:\s[^<>]*)?\/?>/i;
+
+const escapeHtml = (text: string) => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+
+export const hasRichMarkup = (value: string): boolean => HTML_MARKUP.test(value);
+
+// What a stored value shows as in the editor / preview: HTML as it is, plain text escaped so "a<b" is not read as a tag
+export const richValueToHtml = (value: string): string => (HTML_MARKUP.test(value) ? value : escapeHtml(value));
+
+const htmlToText = (html: string): string => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return (doc.body.textContent || '').replace(/\xA0/g, ' ');
+};
+
+// What is saved for the editor's HTML: plain text when there is no markup, the HTML otherwise
+export const htmlToRichValue = (html: string): string => (HTML_MARKUP.test(html) ? html : htmlToText(html));
+
+// One line of rich text: block elements and line breaks become spaces, everything inline (equations, b, i, sup ...) stays
+export const toInlineHtml = (html: string): string => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    doc.querySelectorAll('br').forEach((lineBreak) => lineBreak.replaceWith(' '));
+    doc.querySelectorAll('div, p, table, thead, tbody, tfoot, tr, td, th').forEach((element) => {
+        element.replaceWith(...Array.from(element.childNodes), ' ');
+    });
+    return doc.body.innerHTML;
 };

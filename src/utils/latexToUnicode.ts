@@ -92,6 +92,20 @@ const fraction = (numerator: string, denominator: string): string => {
     return `${wrap(top)}/${wrap(bottom)}`;
 };
 
+const FRACTION_COMMANDS = new Set(['frac', 'tfrac', 'dfrac']);
+const VULGAR_GLYPHS = new Set(Object.values(VULGAR_FRACTIONS));
+
+// A fraction written right after a letter or digit must stay apart from it: "26" + "25/24" is the mixed number
+// 26 25/24, not 2625/24, and "2" + "a/b" is 2(a/b), not 2a/b
+const attachFraction = (before: string, fraction: string): string => {
+    const previous = before.slice(-1);
+    if (!/[\p{L}\p{Nd}]/u.test(previous)) return fraction;
+    // A single glyph can sit against the number: 26½
+    if (VULGAR_GLYPHS.has(fraction)) return fraction;
+    if (/^\p{Nd}/u.test(fraction) && /\p{Nd}/u.test(previous)) return ` ${fraction}`;
+    return `(${fraction})`;
+};
+
 const radical = (argument: string, index?: string): string => {
     const content = argument.trim();
     const body = /^(\p{N}+|\p{L}\p{M}*)$/u.test(content) ? content : `(${content})`;
@@ -273,7 +287,9 @@ function convert(source: string): string {
                 output += parseSequence(true);
             } else if (character === '\\') {
                 position++;
-                output += runCommand(readCommandName());
+                const name = readCommandName();
+                const piece = runCommand(name);
+                output += FRACTION_COMMANDS.has(name) ? attachFraction(output, piece) : piece;
             } else if (character === '^' || character === '_') {
                 position++;
                 // "sin ⁻¹": the space a function name leaves behind goes, so the script sits against it
