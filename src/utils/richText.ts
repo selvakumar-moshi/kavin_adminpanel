@@ -1,3 +1,5 @@
+import { EQUATION_CLASS, MATHML_ATTRIBUTES, MATHML_ELEMENTS, MATHML_NAMESPACE, MAX_LATEX_LENGTH, SAFE_MATHML_VALUE } from './richTextEquation';
+
 // Allow-list sanitizer for the rich text (bold / italic / underline / link / line breaks / tables only)
 const ALLOWED_TAGS: Record<string, string> = {
     B: 'b',
@@ -30,6 +32,39 @@ export const normalizeUrl = (url: string): string => {
     return /^[a-z][a-z0-9+.-]*:/i.test(trimmed) ? '' : `https://${trimmed}`;
 };
 
+// An equation: its LaTeX plus the MathML drawn from it. Only the MathML elements the equation editor produces are kept.
+const sanitizeMathNode = (source: Node, target: Node, doc: Document) => {
+    source.childNodes.forEach((child) => {
+        if (child.nodeType === Node.TEXT_NODE) {
+            target.appendChild(doc.createTextNode(child.textContent || ''));
+            return;
+        }
+        if (child.nodeType !== Node.ELEMENT_NODE) return;
+
+        const element = child as Element;
+        if (element.namespaceURI !== MATHML_NAMESPACE || !MATHML_ELEMENTS.has(element.localName)) return;
+
+        const clean = doc.createElementNS(MATHML_NAMESPACE, element.localName);
+        MATHML_ATTRIBUTES.forEach((attribute) => {
+            const value = element.getAttribute(attribute);
+            if (value !== null && SAFE_MATHML_VALUE.test(value)) clean.setAttribute(attribute, value);
+        });
+        sanitizeMathNode(element, clean, doc);
+        target.appendChild(clean);
+    });
+};
+
+const sanitizeEquation = (element: HTMLElement, doc: Document): HTMLElement | null => {
+    const latex = element.getAttribute('data-latex') || '';
+    if (!latex.trim() || latex.length > MAX_LATEX_LENGTH) return null;
+
+    const clean = doc.createElement('span');
+    clean.className = EQUATION_CLASS;
+    clean.setAttribute('data-latex', latex);
+    sanitizeMathNode(element, clean, doc);
+    return clean;
+};
+
 const TABLE_STRUCTURE_TAGS = ['TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR'];
 
 // Merged cells (rowspan / colspan) are kept when they hold a sensible number
@@ -54,6 +89,13 @@ const sanitizeNode = (source: Node, target: Node, doc: Document) => {
         if (child.nodeType !== Node.ELEMENT_NODE) return;
 
         const element = child as HTMLElement;
+        if (element.tagName === 'SPAN' && element.hasAttribute('data-latex')) {
+            const equation = sanitizeEquation(element, doc);
+            if (equation) {
+                target.appendChild(equation);
+                return;
+            }
+        }
         const tag = ALLOWED_TAGS[element.tagName];
         // Unknown elements (span, font, script ...) are dropped but their text is kept
         if (!tag) {
@@ -105,6 +147,10 @@ const mapCharacters = (text: string, mapped: string): string =>
 export const richTextToPlain = (html: string): string => {
     if (!html) return '';
     const doc = new DOMParser().parseFromString(html, 'text/html');
+    // An equation reads as its LaTeX in plain text (its MathML would just run the symbols together)
+    doc.querySelectorAll(`span.${EQUATION_CLASS}`).forEach((equation) => {
+        equation.replaceWith(doc.createTextNode(` ${equation.getAttribute('data-latex') || ''} `));
+    });
     // Cells would otherwise run together ("NameAge"), so each one ends with a space
     doc.querySelectorAll('td, th').forEach((cell) => cell.append(' '));
     // Without styling "10<sup>10</sup>" would read "1010", so powers and indices become their Unicode forms (10¹⁰)

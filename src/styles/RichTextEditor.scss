@@ -257,3 +257,144 @@
   text-align: center;
   color: rgba(0, 0, 0, 0.45);
 }
+
+// Equations, in the editor and wherever the saved rich text is shown
+.math-equation {
+  display: inline-block;
+  padding: 0 3px;
+  border-radius: 4px;
+  vertical-align: middle;
+
+  math {
+    // Only used for what the app font has no glyph for (the root sign, integral, sum, brackets ...) and for the
+    // layout of the equation, which needs a font made for math
+    font-family: var(--font-family), 'Cambria Math', 'Latin Modern Math', 'STIX Two Math', math;
+    font-size: 1.2em;
+    // Full-size fractions and limits above / below sums and integrals, as in Word's display equations
+    math-style: normal;
+  }
+
+  // Letters, numbers and words are set in the app font. (The browser would otherwise swap a single letter for a
+  // math-italic character from a math font, which the app font does not have.)
+  mi,
+  mn,
+  mtext {
+    font-family: var(--font-family), 'Cambria Math', 'Latin Modern Math', 'STIX Two Math', math;
+    text-transform: none;
+  }
+}
+
+.rich-text-editor__content .math-equation {
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(236, 125, 22, 0.12);
+  }
+}
+
+// Equation editor dialog
+.equation-dialog {
+  &__field math-field {
+    display: block;
+    width: 100%;
+    min-height: 56px;
+    padding: 6px 10px;
+    border: 1px solid #b3b3b3;
+    border-radius: 5px;
+    font-size: 26px;
+
+    &:focus-within {
+      border-color: #ec7d16;
+      outline: none;
+    }
+  }
+
+  &__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 14px 0 10px;
+  }
+
+  &__tab {
+    padding: 3px 10px;
+    border: 1px solid #d9d9d9;
+    border-radius: 14px;
+    background: #fff;
+    font-size: 13px;
+    cursor: pointer;
+
+    &--active {
+      border-color: #ec7d16;
+      background: rgba(236, 125, 22, 0.12);
+      color: #ec7d16;
+    }
+  }
+
+  &__gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    gap: 8px;
+    max-height: 230px;
+    overflow-y: auto;
+  }
+
+  &__template {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 64px;
+    padding: 4px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 17px;
+    cursor: pointer;
+
+    &:hover {
+      border-color: #ec7d16;
+      background: rgba(236, 125, 22, 0.08);
+    }
+  }
+
+  &__remove {
+    margin-top: 14px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #d13f3f;
+    cursor: pointer;
+  }
+}
+
+// MathLive adds its on-screen keyboard to <body> with z-index 105, which is below the dialog (antd modals are 1000), so
+// it opened behind the dialog and its mask
+:root {
+  --keyboard-zindex: 1100;
+}
+
+// While the keyboard is open (the dialog sets the variable from its height) the dialog is lifted so the keyboard does
+// not cover its Insert / Cancel buttons
+.equation-modal,
+.equation-modal.ant-modal,
+.equation-modal .ant-modal {
+  margin-bottom: var(--equation-keyboard-height, 0px) !important;
+  transition: margin-bottom 0.2s ease;
+}
+
+// Everything around the math is set in the app font: the dialog, the keyboard's labels and the field's menu
+.equation-dialog,
+.equation-dialog button,
+.equation-dialog .ant-btn {
+  font-family: var(--font-family), sans-serif;
+}
+
+math-field {
+  --ui-font-family: var(--font-family), sans-serif;
+}
+
+body .ML__keyboard,
+body .ML__keyboard aside,
+body .ML__keyboard .MLK__rows > .MLK__row div {
+  font-family: var(--font-family), sans-serif;
+}

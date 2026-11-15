@@ -10,6 +10,7 @@ import { getItemKey, type ListItem } from './useQuestionDetailHooks';
 import { CORRECT_OPTION_CHOICES, QUESTION_ITEM_RAIL_ACTIONS, type QuizQuestion, type QuizQuestionImages } from './Constant';
 import delete_Icon from '../../assets/delete_Icon2.svg';
 import { getPastedImage } from '../../utils/clipboardImage';
+import { getPastedMathText } from '../../utils/pastedMath';
 
 export interface QuestionsEditorProps {
     items: ListItem[];
@@ -101,6 +102,15 @@ const QuestionsEditor = ({
         if (image) {
             e.preventDefault();
             attachImage(key, imageKey, image);
+            return;
+        }
+
+        // An option is a plain text box, so a pasted equation (or LaTeX such as "$$ a^{m+1} $$") is written as plain
+        // Unicode text instead: aᵐ⁺¹, a/b, √x ...
+        const mathText = getPastedMathText(e.clipboardData);
+        if (mathText !== null) {
+            e.preventDefault();
+            if (!applySmartOptionsPaste(key, mathText)) document.execCommand('insertText', false, mathText);
             return;
         }
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { Input, Popover, Tooltip } from 'antd';
 import {
   BoldOutlined,
@@ -15,6 +15,10 @@ import {
 import { cleanRichTextValue, normalizeUrl, sanitizeRichText } from '../../utils/richText';
 import { getPastedImage } from '../../utils/clipboardImage';
 import SymbolPicker from './SymbolPicker';
+import { EQUATION_CLASS, buildEquationHtml, decorateEquations } from '../../utils/richTextEquation';
+
+// The equation editor (and the library behind it) is only downloaded the first time it is opened
+const EquationDialog = lazy(() => import('./EquationDialog'));
 import {
   addColumnRight,
   addRowBelow,
@@ -86,6 +90,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [isInTable, setIsInTable] = useState(false);
   const [isTablePickerOpen, setIsTablePickerOpen] = useState(false);
   const [isSymbolPickerOpen, setIsSymbolPickerOpen] = useState(false);
+  // The equation editor: closed (null), inserting a new equation (target null) or editing the one in `target`
+  const [equationDialog, setEquationDialog] = useState<{ initialLatex: string; target: HTMLElement | null } | null>(null);
   // Size highlighted in the table picker while the pointer moves over it
   const [pickerSize, setPickerSize] = useState({ rows: 0, cols: 0 });
 
@@ -93,6 +99,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     const editor = editorRef.current;
     if (!editor || value === lastEmittedRef.current) return;
     editor.innerHTML = sanitizeRichText(value);
+    decorateEquations(editor);
     lastEmittedRef.current = value;
   }, [value]);
 
@@ -135,6 +142,53 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     document.execCommand(command, false, argument);
     emitChange();
     refreshActiveCommands();
+  };
+
+  // Opens the equation editor for a new equation at the cursor, or for the equation that was double-clicked
+  const openEquationDialog = (target: HTMLElement | null = null) => {
+    const selection = globalThis.getSelection();
+    savedRangeRef.current = !target && selectionInsideEditor() && selection ? selection.getRangeAt(0).cloneRange() : null;
+    setEquationDialog({ initialLatex: target?.getAttribute('data-latex') ?? '', target });
+  };
+
+  const closeEquationDialog = () => setEquationDialog(null);
+
+  const submitEquation = (latex: string, mathMl: string) => {
+    const editor = editorRef.current;
+    const target = equationDialog?.target;
+    setEquationDialog(null);
+    if (!editor) return;
+
+    const html = buildEquationHtml(latex, mathMl);
+    if (target) {
+      // Editing: the equation is swapped in place
+      const holder = document.createElement('div');
+      holder.innerHTML = html;
+      if (holder.firstElementChild) target.replaceWith(holder.firstElementChild);
+    } else {
+      editor.focus();
+      const selection = globalThis.getSelection();
+      if (savedRangeRef.current && selection) {
+        selection.removeAllRanges();
+        selection.addRange(savedRangeRef.current);
+      }
+      // The trailing space gives the cursor somewhere to go after the equation
+      document.execCommand('insertHTML', false, `${html}&nbsp;`);
+    }
+    emitChange();
+  };
+
+  const removeEquation = () => {
+    equationDialog?.target?.remove();
+    setEquationDialog(null);
+    emitChange();
+  };
+
+  // Double-clicking an equation reopens it in the equation editor
+  const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (disabled) return;
+    const equation = (e.target as Element).closest?.(`.${EQUATION_CLASS}`);
+    if (equation instanceof HTMLElement && editorRef.current?.contains(equation)) openEquationDialog(equation);
   };
 
   const openSymbolPicker = (open: boolean) => {
@@ -311,6 +365,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   data-placeholder={placeholder}
                   data-testid={`input-${name}`}
                   onInput={emitChange}
+                  onDoubleClick={handleDoubleClick}
                   onKeyDown={handleKeyDown}
                   onPaste={handlePaste}
                 />
@@ -442,6 +497,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                       </button>
                     </Tooltip>
                   </Popover>
+                  <Tooltip title="Insert equation">
+                    <button
+                      type="button"
+                      className="rich-text-editor__btn rich-text-editor__btn--text"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => openEquationDialog()}
+                      aria-label="Insert equation"
+                      disabled={disabled}
+                    >
+                      √x
+                    </button>
+                  </Tooltip>
                   <Tooltip title="Remove formatting">
                     <button
                       type="button"
@@ -460,6 +527,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 </div>
               </div>
               {error && <div className="form-fields-section__error-message">{error}</div>}
+              {equationDialog && (
+                <Suspense fallback={null}>
+                  <EquationDialog
+                    initialLatex={equationDialog.initialLatex}
+                    onClose={closeEquationDialog}
+                    onSubmit={submitEquation}
+                    onRemove={equationDialog.target ? removeEquation : undefined}
+                  />
+                </Suspense>
+              )}
             </div>
           </div>
         </div>
