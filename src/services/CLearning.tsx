@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getSSLogin, getRegister, deleteUser, updateUser, getUsers, getUserById, updateEnrollmentStatus, getCourses, getCourseById, createCourse, updateCourse, deleteCourse, getBatches, createBatch, updateBatch, deleteBatch, getStudyMaterials, createStudyMaterial, updateStudyMaterial, deleteStudyMaterial, getVideoMaterials, createVideoMaterial, updateVideoMaterial, deleteVideoMaterial, getDashboardCounts, getQuizzes, getQuizById, createQuiz, updateQuiz, deleteQuiz, publishQuiz, copyQuiz, getQuizRankList, getNotifications, createNotification, updateNotification, deleteNotification} from "./LearningAction";
+import { getSSLogin, getRegister, deleteUser, updateUser, getUsers, getUserById, updateEnrollmentStatus, getCourses, getCourseById, createCourse, updateCourse, deleteCourse, getBatches, createBatch, updateBatch, deleteBatch, getStudyMaterials, createStudyMaterial, updateStudyMaterial, deleteStudyMaterial, getQuestionPapers, createQuestionPaper, updateQuestionPaper, deleteQuestionPaper, getVideoMaterials, createVideoMaterial, updateVideoMaterial, deleteVideoMaterial, getDashboardCounts, getQuizzes, getQuizById, createQuiz, updateQuiz, deleteQuiz, publishQuiz, copyQuiz, getQuizRankList, getNotifications, createNotification, updateNotification, deleteNotification} from "./LearningAction";
 import { initialState } from "./ILearning";
 
 const LearningSlice = createSlice({
@@ -400,6 +400,75 @@ const LearningSlice = createSlice({
                 state.apiStatus.StudyMaterialsData.loading = false;
                 state.apiStatus.StudyMaterialsData.success = false;
                 state.apiStatus.StudyMaterialsData.error = action.payload as string || "Failed to delete Study Material";
+            });
+
+        builder
+            .addCase(getQuestionPapers.pending, (state) => {
+                state.apiStatus.QuestionPaperData.loading = true;
+                state.apiStatus.QuestionPaperData.success = false;
+                state.apiStatus.QuestionPaperData.error = null;
+            })
+            .addCase(getQuestionPapers.fulfilled, (state, action) => {
+                state.QuestionPaperData = action.payload;
+                state.apiStatus.QuestionPaperData.loading = false;
+                state.apiStatus.QuestionPaperData.success = true;
+                state.apiStatus.QuestionPaperData.error = null;
+            })
+            .addCase(getQuestionPapers.rejected, (state, action) => {
+                state.apiStatus.QuestionPaperData.loading = false;
+                state.apiStatus.QuestionPaperData.success = false;
+                state.apiStatus.QuestionPaperData.error = action.payload as string || "Failed to fetch Question Papers";
+            });
+
+        builder
+            .addCase(createQuestionPaper.pending, (state) => {
+                state.apiStatus.QuestionPaperData.loading = true;
+                state.apiStatus.QuestionPaperData.success = false;
+                state.apiStatus.QuestionPaperData.error = null;
+            })
+            .addCase(createQuestionPaper.fulfilled, (state) => {
+                state.apiStatus.QuestionPaperData.loading = false;
+                state.apiStatus.QuestionPaperData.success = true;
+                state.apiStatus.QuestionPaperData.error = null;
+            })
+            .addCase(createQuestionPaper.rejected, (state, action) => {
+                state.apiStatus.QuestionPaperData.loading = false;
+                state.apiStatus.QuestionPaperData.success = false;
+                state.apiStatus.QuestionPaperData.error = action.payload as string || "Failed to create Question Paper";
+            });
+
+        builder
+            .addCase(updateQuestionPaper.pending, (state) => {
+                state.apiStatus.QuestionPaperData.loading = true;
+                state.apiStatus.QuestionPaperData.success = false;
+                state.apiStatus.QuestionPaperData.error = null;
+            })
+            .addCase(updateQuestionPaper.fulfilled, (state) => {
+                state.apiStatus.QuestionPaperData.loading = false;
+                state.apiStatus.QuestionPaperData.success = true;
+                state.apiStatus.QuestionPaperData.error = null;
+            })
+            .addCase(updateQuestionPaper.rejected, (state, action) => {
+                state.apiStatus.QuestionPaperData.loading = false;
+                state.apiStatus.QuestionPaperData.success = false;
+                state.apiStatus.QuestionPaperData.error = action.payload as string || "Failed to update Question Paper";
+            });
+
+        builder
+            .addCase(deleteQuestionPaper.pending, (state) => {
+                state.apiStatus.QuestionPaperData.loading = true;
+                state.apiStatus.QuestionPaperData.success = false;
+                state.apiStatus.QuestionPaperData.error = null;
+            })
+            .addCase(deleteQuestionPaper.fulfilled, (state) => {
+                state.apiStatus.QuestionPaperData.loading = false;
+                state.apiStatus.QuestionPaperData.success = true;
+                state.apiStatus.QuestionPaperData.error = null;
+            })
+            .addCase(deleteQuestionPaper.rejected, (state, action) => {
+                state.apiStatus.QuestionPaperData.loading = false;
+                state.apiStatus.QuestionPaperData.success = false;
+                state.apiStatus.QuestionPaperData.error = action.payload as string || "Failed to delete Question Paper";
             });
 
         builder

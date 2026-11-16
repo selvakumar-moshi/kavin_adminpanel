@@ -40,6 +40,8 @@ export interface EnrolledCourse {
     enrollmentStatus: string;
     verifiedAt: string | null;
     studyMaterials: StudyMaterial[];
+    // Same fields as a study material
+    questionPapers?: StudyMaterial[];
     videoMaterials: VideoMaterial[];
     allowedBatches?: AllowedBatch[];
 }
@@ -149,6 +151,10 @@ export const UserDetailtabs = [
         label: 'Study Materials',
     },
     {
+        key: 'questionPaper',
+        label: 'Question Papers',
+    },
+    {
         key: 'video',
         label: 'Video Materials',
     },
@@ -157,6 +163,13 @@ export const UserDetailtabs = [
         label: 'Payment Details',
     },
 ]
+
+// What the Payment Status dropdown of a Syllabus Wise payment offers
+export const SYLLABUS_PAYMENT_STATUS_OPTIONS = [
+    { value: 'Pending', label: 'Pending' },
+    { value: 'Verified', label: 'Verified' },
+    { value: 'Rejected', label: 'Rejected' },
+];
 
 export const COURSE_DETAILS_TAB_KEY = 'courseDetails';
 export const SYLLABUS_WISE_TAB_KEY = 'syllabusWise';

@@ -271,6 +271,58 @@ export const deleteStudyMaterial = createAsyncThunk<any, { id: string }>(
   }
 );
 
+export const getQuestionPapers = createAsyncThunk<any, { searchTerm?: string; courseId?: string; globalFilter?: Record<string, string>; pageNumber?: number; pageSize?: number } | undefined>(
+    "courseManagement/getQuestionPapers",
+    async (params, { rejectWithValue }) => {
+      try {
+        const res = await learningAPI.getQuestionPaper(params?.searchTerm, params?.courseId || '', params?.globalFilter, params?.pageNumber, params?.pageSize);
+        return res?.data?.data;
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || error.message || "Failed to fetch Question Papers";
+        return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const createQuestionPaper = createAsyncThunk<any, FormData>(
+    "courseManagement/createQuestionPaper",
+    async (formData, { rejectWithValue }) => {
+      try {
+        const res = await learningAPI.createQuestionPaper(formData);
+        return res?.data?.data || res?.data;
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || error.message || "Failed to create Question Paper";
+        return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const updateQuestionPaper = createAsyncThunk<any, { id: string; formData: FormData }>(
+    "courseManagement/updateQuestionPaper",
+    async ({ id, formData }, { rejectWithValue }) => {
+      try {
+        const res = await learningAPI.updateQuestionPaper(id, formData);
+        return res?.data?.data || res?.data;
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || error.message || "Failed to update Question Paper";
+        return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const deleteQuestionPaper = createAsyncThunk<any, { id: string }>(
+    "courseManagement/deleteQuestionPaper",
+    async ({ id }, { rejectWithValue }) => {
+      try {
+        const res = await learningAPI.deleteQuestionPaper(id);
+        return res?.data?.data;
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || error.message || "Failed to delete Question Paper";
+        return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 export const getVideoMaterials = createAsyncThunk<any, { searchTerm?: string; courseId?: string; material: string; globalFilter?: Record<string, string>; pageNumber?: number; pageSize?: number } | undefined>(
     "courseManagement/getVideoMaterials",
     async (params, { rejectWithValue }) => {

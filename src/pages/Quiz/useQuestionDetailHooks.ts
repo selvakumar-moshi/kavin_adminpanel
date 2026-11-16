@@ -104,6 +104,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
     });
 
     const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
     const [courseId, setCourseId] = useState('');
     const [batchId, setBatchId] = useState('');
     const [quizToViewInput, setQuizToView] = useState('');
@@ -161,7 +162,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
 
     // Previous Year quizzes live in a folder instead of having a Quiz To View / course / batch: they are always Free
     const isFolderQuiz = usesFolderSelector(quizType);
-    // Daily and Current Affairs quizzes belong to no course / batch
+    // Daily quizzes belong to no course / batch
     const isCourseLess = isCourseLessQuizType(quizType);
     // Creating a competitive quiz (Paid or Free) needs a course and a batch
     const courseBatchRequired = !isEditMode && !isFolderQuiz && !isCourseLess;
@@ -186,6 +187,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
     useEffect(() => {
         if (isEditMode && quizDetail && quizDetail.id === id) {
             setTitle(quizDetail.title || '');
+            setDescription(quizDetail.description || '');
             setCourseId(quizDetail.courseId || '');
             setBatchId(quizDetail.batchId || '');
             setQuizToView(quizDetail.quizToView || '');
@@ -742,6 +744,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
 
         const formData = new FormData();
         formData.append('title', title);
+        formData.append('description', description);
         formData.append('quizToView', SCHOOL_QUIZ_TO_VIEW);
         formData.append('quizType', SCHOOL_QUIZ_TYPE);
         appendQuizAttempt(formData);
@@ -765,6 +768,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
 
         const formData = new FormData();
         formData.append('title', title);
+        formData.append('description', description);
         formData.append('quizToView', quizToView);
         formData.append('quizType', quizType);
         if (extraFields) Object.entries(extraFields).forEach(([name, value]) => formData.append(name, value));
@@ -803,6 +807,8 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         loading,
         isSaving,
         title,
+        description,
+        setDescription,
         courseId,
         batchId,
         quizToView,

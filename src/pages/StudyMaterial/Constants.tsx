@@ -43,14 +43,15 @@ export const STUDY_MATERIAL_TEXT_FIELDS = [
         required: true,
         type: 'text' as const,
     },
-    {
-        name: 'description',
-        label: 'Description',
-        placeholder: 'Enter description',
-        required: false,
-        type: 'text' as const,
-    },
 ];
+
+// The description of every material is a rich text box (bold / italic / underline / link / ...), so it is not one of the
+// plain input fields
+export const MATERIAL_DESCRIPTION_FIELD = {
+    name: 'description',
+    label: 'Description',
+    placeholder: 'Enter description',
+};
 
 export const getStudyMaterialTableColumns = (getCourseName: (courseId: string) => string): ITableColumn[] => [
     {
@@ -142,13 +143,9 @@ export const VIDEO_MATERIAL_TEXT_FIELDS = [
         required: true,
         type: 'text' as const,
     },
-    {
-        name: 'description',
-        label: 'Description',
-        placeholder: 'Enter description',
-        required: false,
-        type: 'text' as const,
-    },
+];
+
+export const VIDEO_MATERIAL_LINK_FIELDS = [
     {
         name: 'youtubeLink',
         label: 'YouTube Link',
@@ -227,11 +224,13 @@ export const getVideoMaterialTableColumns = (getCourseName: (courseId: string) =
 ];
 
 export const SYLLABUS_MATERIAL_TAB_KEY = 'syllabus';
+export const QUESTION_PAPER_TAB_KEY = 'questionPaper';
 
 export const MATERIAL_TAB_ITEMS = [
     { key: 'study', label: 'Study Material' },
     { key: 'video', label: 'Video Material' },
     { key: SYLLABUS_MATERIAL_TAB_KEY, label: 'Syllabus Material' },
+    { key: QUESTION_PAPER_TAB_KEY, label: 'Question Paper' },
 ];
 
 export interface StudyMaterialProps {
@@ -239,6 +238,10 @@ export interface StudyMaterialProps {
     appliedFilters?: Record<string, string>;
     courseId?: string;
 }
+
+// A question paper has the same fields and list columns as a study material
+export type QuestionPaperRecord = StudyMaterialRecord;
+export type QuestionPaperProps = StudyMaterialProps;
 
 export interface VideoMaterialProps {
     searchTerm?: string;
@@ -274,13 +277,6 @@ export const SYLLABUS_MATERIAL_TEXT_FIELDS = [
         label: 'Title',
         placeholder: 'Enter title',
         required: true,
-        type: 'text' as const,
-    },
-    {
-        name: 'description',
-        label: 'Description',
-        placeholder: 'Enter description',
-        required: false,
         type: 'text' as const,
     },
 ];

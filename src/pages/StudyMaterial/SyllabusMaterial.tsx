@@ -4,6 +4,7 @@ import TableWithPagination from '../../components/Table/TableWithPagination';
 import { withSortAndSearch } from '../../components/Table/withSortAndSearch';
 import PopupModal from '../../components/PopupModal/PopupModal';
 import InputFields from '../../components/InputFields/InputFields';
+import { RichTextEditor } from '../../components/RichTextEditor';
 import FileUploadSection from '../../components/FileUploadSection/FileUploadSection';
 import FileUploadDisplay from '../../components/FileUploadDisplay/FileUploadDisplay';
 import ActionIcons from '../../components/Table/ActionIcons';
@@ -12,7 +13,7 @@ import ToastMessages from '../../components/ToastMessages';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 import PreviousYearQuizFields from '../Quiz/previousYear/PreviousYearQuizFields';
 import { useSyllabusMaterialManagement } from './useSyllabusMaterialHooks';
-import { SYLLABUS_MATERIAL_TEXT_FIELDS, getSyllabusMaterialTableColumns, type SyllabusMaterialProps, type SyllabusMaterialRecord } from './Constants';
+import { SYLLABUS_MATERIAL_TEXT_FIELDS, MATERIAL_DESCRIPTION_FIELD, getSyllabusMaterialTableColumns, type SyllabusMaterialProps, type SyllabusMaterialRecord } from './Constants';
 import add_Icon from '../../assets/add_Icon.svg';
 
 const SyllabusMaterial: React.FC<SyllabusMaterialProps> = ({ searchTerm = '' }) => {
@@ -144,6 +145,13 @@ const SyllabusMaterial: React.FC<SyllabusMaterialProps> = ({ searchTerm = '' }) 
                         values={formValues}
                         errors={formErrors}
                         onChange={handleInputChange}
+                        disabled={isSaving}
+                    />
+                    <RichTextEditor
+                        {...MATERIAL_DESCRIPTION_FIELD}
+                        value={formValues.description || ''}
+                        error={formErrors.description}
+                        onChange={(value) => handleInputChange('description', value)}
                         disabled={isSaving}
                     />
                     <PreviousYearQuizFields

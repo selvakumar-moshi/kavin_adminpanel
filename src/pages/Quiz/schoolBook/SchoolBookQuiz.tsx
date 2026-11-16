@@ -1,6 +1,7 @@
 import Button from '../../../components/Button/Button';
 import Breadcrumbs from '../../../components/Breadcrumb/Breadcrumbs';
 import InputFields from '../../../components/InputFields/InputFields';
+import { RichTextEditor } from '../../../components/RichTextEditor';
 import ToastMessages from '../../../components/ToastMessages';
 import PageTitle from '../../../components/PageTitle';
 import QuestionsEditor from '../QuestionsEditor';
@@ -9,7 +10,7 @@ import SavingOverlay from '../../../components/SavingOverlay/SavingOverlay';
 import PreviousYearQuizFields from '../previousYear/PreviousYearQuizFields';
 import { useFolderSelector } from '../previousYear/useFolderSelectorHooks';
 import { useQuestionDetailManagement } from '../useQuestionDetailHooks';
-import { QUIZ_TITLE_FIELD, QUIZ_ATTEMPT_FIELD, QUIZ_TYPE_SCHOOL, getQuizPageTitle } from '../Constant';
+import { QUIZ_TITLE_FIELD, QUIZ_ATTEMPT_FIELD, QUIZ_DESCRIPTION_FIELD, QUIZ_TYPE_SCHOOL, getQuizPageTitle } from '../Constant';
 
 // "Add School Quiz": the breadcrumb and the page title
 const ADD_TITLE = getQuizPageTitle(false, QUIZ_TYPE_SCHOOL);
@@ -32,6 +33,8 @@ const SchoolBookQuiz = ({ onCancel, onCreated }: SchoolBookQuizProps) => {
         isSaving,
         isImporting,
         title,
+        description,
+        setDescription,
         titleError,
         handleTitleChange,
         quizAttempt,
@@ -96,6 +99,13 @@ const SchoolBookQuiz = ({ onCancel, onCreated }: SchoolBookQuizProps) => {
                         values={{ title }}
                         errors={titleError ? { title: titleError } : {}}
                         onChange={handleTitleChange}
+                        disabled={isSaving}
+                    />
+
+                    <RichTextEditor
+                        {...QUIZ_DESCRIPTION_FIELD}
+                        value={description}
+                        onChange={setDescription}
                         disabled={isSaving}
                     />
 

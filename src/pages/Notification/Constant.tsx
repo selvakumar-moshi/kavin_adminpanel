@@ -2,6 +2,7 @@ import type { ITableColumn } from '../../components/Table/ITable';
 import { formatDate } from '../../utils/dateUtils';
 import dayjs from 'dayjs';
 import { renderTruncatedCellWithTooltip } from '../../utils/tableCellRender';
+import { richTextToPlain } from '../../utils/richText';
 
 export interface NotificationRecord {
     id: string;
@@ -20,10 +21,12 @@ export interface NotificationRecord {
 
 export const NOTIFICATION_TAB_KEY = 'notification';
 export const SYLLABUS_WISE_TAB_KEY = 'syllabusWise';
+export const LIVE_CLASSES_TAB_KEY = 'liveClasses';
 
 export const NOTIFICATION_PAGE_TABS = [
     { key: NOTIFICATION_TAB_KEY, label: 'Notification', title: 'Notifications' },
     { key: SYLLABUS_WISE_TAB_KEY, label: 'Syllabus Wise', title: 'Syllabus Wise' },
+    { key: LIVE_CLASSES_TAB_KEY, label: 'Live Classes', title: 'Live Classes' },
 ];
 
 export const NOTIFICATION_SEARCH_INPUT_FIELDS = [
@@ -60,12 +63,16 @@ export const NOTIFICATION_INPUT_FIELDS = [
         placeholder: 'Enter notification title',
         type: 'text' as const,
     },
-    {
-        name: 'description',
-        label: 'Description',
-        placeholder: 'Enter notification description',
-        type: 'textarea' as const,
-    },
+];
+
+// A rich text box (bold / italic / underline / link / ...), so it is not one of the plain input fields
+export const NOTIFICATION_DESCRIPTION_FIELD = {
+    name: 'description',
+    label: 'Description',
+    placeholder: 'Enter notification description',
+};
+
+export const NOTIFICATION_LINK_FIELDS = [
     {
         name: 'link',
         label: 'Link',
@@ -118,8 +125,9 @@ export const getNotificationTableColumns = (): ITableColumn[] => [
         dataIndex: 'description',
         key: 'description',
         searchType: 'text',
-        sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(a.description, b.description),
-        render: (description: string) => renderTruncatedCellWithTooltip(description),
+        // The description is saved as rich text (HTML); the table shows, sorts and searches its plain text
+        sorter: (a: NotificationRecord, b: NotificationRecord) => compareText(richTextToPlain(a.description || ''), richTextToPlain(b.description || '')),
+        render: (description: string) => renderTruncatedCellWithTooltip(richTextToPlain(description || '')),
     },
     {
         title: 'Link',

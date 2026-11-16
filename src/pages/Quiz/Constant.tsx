@@ -128,6 +128,7 @@ export interface QuizRecord {
     batchId?: string;
     batchTitle?: string;
     title: string;
+    description?: string | null;
     status: string;
     quizToView: string;
     quizType?: string;
@@ -198,6 +199,13 @@ export const QUIZ_TITLE_FIELD = [
     },
 ];
 
+// The description under the quiz title: a rich text box, so it is not one of the plain input fields
+export const QUIZ_DESCRIPTION_FIELD = {
+    name: 'description',
+    label: 'Description',
+    placeholder: 'Enter quiz description',
+};
+
 export const emptyQuestion = (): QuizQuestion => ({
     questionText: '',
     optionA: '',
@@ -214,9 +222,8 @@ export const QUIZ_TYPE_DAILY = 'daily';
 // quizType of Current Affairs quizzes (a Free MCQ kind)
 export const QUIZ_TYPE_CURRENT_AFFAIRS = 'currentAffairs';
 
-// Daily and Current Affairs quizzes belong to no course / batch / folder
-export const isCourseLessQuizType = (quizType?: string) =>
-    quizType === QUIZ_TYPE_DAILY || quizType === QUIZ_TYPE_CURRENT_AFFAIRS;
+// Daily quizzes belong to no course / batch / folder (Current Affairs quizzes live in a folder, see usesFolderSelector)
+export const isCourseLessQuizType = (quizType?: string) => quizType === QUIZ_TYPE_DAILY;
 
 // quizType / tab key of the School Book tab
 export const QUIZ_TYPE_SCHOOL = 'school';
@@ -228,12 +235,12 @@ export const QUIZ_TYPE_PREVIOUS_YEAR = 'previousYear';
 // quizType of Syllabus Wise quizzes
 export const QUIZ_TYPE_SYLLABUS_WISE = 'syllabusWise';
 
-// Previous Year and Syllabus Wise quizzes
+// Previous Year, Syllabus Wise and Current Affairs quizzes
 export const isFolderQuizType = (quizType?: string) =>
-    quizType === QUIZ_TYPE_PREVIOUS_YEAR || quizType === QUIZ_TYPE_SYLLABUS_WISE;
+    quizType === QUIZ_TYPE_PREVIOUS_YEAR || quizType === QUIZ_TYPE_SYLLABUS_WISE || quizType === QUIZ_TYPE_CURRENT_AFFAIRS;
 
 // These quizzes are kept in a folder / sub folder / nested sub folder (instead of a course / batch): Previous Year,
-// Syllabus Wise and School Book
+// Syllabus Wise, Current Affairs and School Book
 export const usesFolderSelector = (quizType?: string) => isFolderQuizType(quizType) || quizType === QUIZ_TYPE_SCHOOL;
 
 export const QUIZ_TYPE_LABELS: Record<string, string> = {
@@ -252,7 +259,7 @@ export const getQuizPageTitle = (isEdit: boolean, quizType?: string) =>
 // The columns that differ per tab live next to that tab's code (competitive/, previousYear/)
 const getQuizScopeColumns = (quizType?: string): ITableColumn[] => {
     if (usesFolderSelector(quizType)) return previousYearScopeColumns;
-    // Daily and Current Affairs quizzes belong to no course / batch / folder
+    // Daily quizzes belong to no course / batch / folder
     if (isCourseLessQuizType(quizType)) return [];
     return competitiveScopeColumns;
 };

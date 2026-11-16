@@ -3,11 +3,12 @@ import TableWithPagination from '../../components/Table/TableWithPagination';
 import { withSortAndSearch } from '../../components/Table/withSortAndSearch';
 import PopupModal from '../../components/PopupModal/PopupModal';
 import InputFields from '../../components/InputFields/InputFields';
+import { RichTextEditor } from '../../components/RichTextEditor';
 import DropdownField from '../../components/DropdownField/DropdownField';
 import ActionIcons from '../../components/Table/ActionIcons';
 import ToastMessages from '../../components/ToastMessages';
 import { useVideoMaterialManagement } from './useVideoMaterialHooks';
-import { VIDEO_MATERIAL_TEXT_FIELDS, MATERIAL_TO_VIEW_OPTIONS, getVideoMaterialTableColumns, type VideoMaterialProps, type VideoMaterialRecord } from './Constants';
+import { VIDEO_MATERIAL_TEXT_FIELDS, VIDEO_MATERIAL_LINK_FIELDS, MATERIAL_DESCRIPTION_FIELD, MATERIAL_TO_VIEW_OPTIONS, getVideoMaterialTableColumns, type VideoMaterialProps, type VideoMaterialRecord } from './Constants';
 import add_Icon from '../../assets/add_Icon.svg'
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 import Loader from '../../components/Loader/Loader';
@@ -128,10 +129,25 @@ const VideoMaterial: React.FC<VideoMaterialProps> = ({ searchTerm = '', appliedF
                 primaryButtonDisabled={loading || !hasFormChanges}
                 contentHeight="auto"
                 minHeight={450}
+                maxHeight="calc(100vh - 200px)"
             >
                 <div style={{ padding: '0 8px' }}>
                     <InputFields
                         fields={VIDEO_MATERIAL_TEXT_FIELDS}
+                        values={formValues}
+                        errors={formErrors}
+                        onChange={handleInputChange}
+                        disabled={loading}
+                    />
+                    <RichTextEditor
+                        {...MATERIAL_DESCRIPTION_FIELD}
+                        value={formValues.description || ''}
+                        error={formErrors.description}
+                        onChange={(value) => handleInputChange('description', value)}
+                        disabled={loading}
+                    />
+                    <InputFields
+                        fields={VIDEO_MATERIAL_LINK_FIELDS}
                         values={formValues}
                         errors={formErrors}
                         onChange={handleInputChange}

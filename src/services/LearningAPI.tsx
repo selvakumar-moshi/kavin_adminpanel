@@ -7,6 +7,15 @@ export interface SyllabusWisePayload {
     folderId: string;
 }
 
+export interface LiveClassPayload {
+    title: string;
+    description: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    status: string;
+}
+
 class LearningAPI {
     getSSLogin(email: string, password: string) {
         return Super_Sales.post(`/Auth/login`, { email, password });
@@ -43,6 +52,10 @@ class LearningAPI {
 
     updateEnrollmentStatus(enrollmentId: string, status: string, paymentMethod: string, transactionReference: string) {
         return Super_Sales.put(`/Enrollment/${enrollmentId}/status`, { status, paymentMethod, transactionReference });
+    }
+
+    updateSyllabusWisePaymentStatus(paymentId: string, paymentStatus: string) {
+        return Super_Sales.put(`/SyllabusWise/payments/${paymentId}/status`, { paymentStatus });
     }
 
     // `courseType` ("All" / "Paid" / "Free") is only sent when given; other callers still get every course
@@ -125,6 +138,36 @@ class LearningAPI {
 
     deleteStudyMaterial(id: string) {
         return Super_Sales.delete(`/StudyMaterial/${id}`);
+    }
+
+    getQuestionPaper(searchTerm?: string, courseId?: string, globalFilter?: Record<string, string>, pageNumber?: number, pageSize?: number) {
+        return Super_Sales.post('/QuestionPaper/search', {
+            searchTerm: searchTerm || '',
+            courseId: courseId || '',
+            globalFilter: globalFilter || {},
+            pageNumber: pageNumber || 1,
+            pageSize: pageSize || 10,
+        });
+    }
+
+    createQuestionPaper(formData: FormData) {
+        return Super_Sales.post('/QuestionPaper', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    }
+
+    updateQuestionPaper(id: string, formData: FormData) {
+        return Super_Sales.put(`/QuestionPaper/${id}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    }
+
+    deleteQuestionPaper(id: string) {
+        return Super_Sales.delete(`/QuestionPaper/${id}`);
     }
 
     getVideoMaterials(searchTerm?: string, courseId?: string, material?: string, globalFilter?: Record<string, string>, pageNumber?: number, pageSize?: number) {
@@ -336,6 +379,26 @@ class LearningAPI {
 
     deleteSyllabusWise(id: string) {
         return Super_Sales.delete(`/SyllabusWise/${id}`);
+    }
+
+    getLiveClasses() {
+        return Super_Sales.get('/LiveClasses');
+    }
+
+    getLiveClassById(id: string) {
+        return Super_Sales.get(`/LiveClasses/${id}`);
+    }
+
+    createLiveClass(payload: LiveClassPayload) {
+        return Super_Sales.post('/LiveClasses', payload);
+    }
+
+    updateLiveClass(id: string, payload: LiveClassPayload) {
+        return Super_Sales.put(`/LiveClasses/${id}`, payload);
+    }
+
+    deleteLiveClass(id: string) {
+        return Super_Sales.delete(`/LiveClasses/${id}`);
     }
 
     deleteNotification(id: string) {

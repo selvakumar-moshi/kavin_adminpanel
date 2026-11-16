@@ -8,6 +8,7 @@ export interface IinitialState {
     CourseDetailData: any;
     BatchesData: any;
     StudyMaterialsData: any;
+    QuestionPaperData: any;
     VideoMaterialsData: any;
     DashboardCountsData: any;
     QuizzesData: any;
@@ -46,6 +47,7 @@ export const initialState: IinitialState = {
     CourseDetailData: null,
     BatchesData: [],
     StudyMaterialsData: [],
+    QuestionPaperData: [],
     VideoMaterialsData: [],
     DashboardCountsData: null,
     QuizzesData: [],
@@ -65,6 +67,7 @@ export const initialState: IinitialState = {
         CourseDetailData: { loading: false, success: false, error: null },
         BatchesData: { loading: false, success: false, error: null },
         StudyMaterialsData: { loading: false, success: false, error: null },
+        QuestionPaperData: { loading: false, success: false, error: null },
         VideoMaterialsData: { loading: false, success: false, error: null },
         DashboardCountsData: { loading: false, success: false, error: null },
         QuizzesData: { loading: false, success: false, error: null },

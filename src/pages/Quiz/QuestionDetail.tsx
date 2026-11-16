@@ -1,5 +1,6 @@
 import Button from '../../components/Button/Button';
 import InputFields from '../../components/InputFields/InputFields';
+import { RichTextEditor } from '../../components/RichTextEditor';
 import Loader from '../../components/Loader/Loader';
 import ToastMessages from '../../components/ToastMessages';
 import Breadcrumbs from '../../components/Breadcrumb/Breadcrumbs';
@@ -11,7 +12,7 @@ import CompetitiveQuizFields from './competitive/CompetitiveQuizFields';
 import PreviousYearQuizFields from './previousYear/PreviousYearQuizFields';
 import { useQuestionDetailManagement } from './useQuestionDetailHooks';
 import { useFolderSelector } from './previousYear/useFolderSelectorHooks';
-import { QUIZ_TITLE_FIELD, QUIZ_ATTEMPT_FIELD, getQuizPageTitle } from './Constant';
+import { QUIZ_TITLE_FIELD, QUIZ_ATTEMPT_FIELD, QUIZ_DESCRIPTION_FIELD, getQuizPageTitle } from './Constant';
 
 // Add / Edit Quiz page. The title, questions editor and Word import are the same for every quiz; the fields on the
 // left that differ per quiz type live in ./competitive and ./previousYear.
@@ -25,6 +26,8 @@ const QuestionDetail = () => {
         loading,
         isSaving,
         title,
+        description,
+        setDescription,
         courseId,
         batchId,
         quizToView,
@@ -123,6 +126,13 @@ const QuestionDetail = () => {
                         values={{ title }}
                         errors={titleError ? { title: titleError } : {}}
                         onChange={handleTitleChange}
+                        disabled={isSaving}
+                    />
+
+                    <RichTextEditor
+                        {...QUIZ_DESCRIPTION_FIELD}
+                        value={description}
+                        onChange={setDescription}
                         disabled={isSaving}
                     />
 

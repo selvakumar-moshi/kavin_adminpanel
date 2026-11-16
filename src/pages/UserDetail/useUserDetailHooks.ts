@@ -245,6 +245,25 @@ export const useUserDetailManagement = () => {
         }) as any);
     };
 
+    // Syllabus Wise payment whose status-change API call is currently in flight
+    const [updatingPaymentId, setUpdatingPaymentId] = useState<string | null>(null);
+
+    // Returns true once the status is saved (the user is reloaded so the table shows what the server has)
+    const handlePaymentStatusChange = async (paymentId: string, paymentStatus: string): Promise<boolean> => {
+        setUpdatingPaymentId(paymentId);
+        try {
+            const res = await superSalesAPI.updateSyllabusWisePaymentStatus(paymentId, paymentStatus);
+            showSuccess(res?.data?.message || 'Payment status updated successfully');
+            if (id) dispatch(getUserById(id) as any);
+            return true;
+        } catch (error: any) {
+            showError(error?.response?.data?.message || error?.message || 'Failed to update the payment status');
+            return false;
+        } finally {
+            setUpdatingPaymentId(null);
+        }
+    };
+
     const handleStatusChange = (enrollmentId: string, status: string) => {
         setUpdatingEnrollmentId(enrollmentId);
         dispatch(updateEnrollmentStatus({ enrollmentId, status, paymentMethod: '', transactionReference: '' }) as any);
@@ -282,6 +301,8 @@ export const useUserDetailManagement = () => {
         handleEditSubmit,
         updatingEnrollmentId,
         handleStatusChange,
+        updatingPaymentId,
+        handlePaymentStatusChange,
         toastMessages,
         showError,
         hideToast,

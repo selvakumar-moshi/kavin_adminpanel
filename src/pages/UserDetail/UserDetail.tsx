@@ -17,7 +17,7 @@ import { useUserDetailManagement, ALLOWED_BATCH_SEPARATOR } from './useUserDetai
 import { usePageBodyClass } from '../../utils/pageBodyClass';
 import { useResetPassword } from '../Users/useResetPassword';
 import ResetPasswordModals from '../Users/ResetPasswordModals';
-import { EDIT_USER_FIELDS, PENDING_ENROLLMENT_STATUS_OPTIONS, UserDetailtabs, DISTRICT_OPTIONS, UserDetailMainTabs, COURSE_DETAILS_TAB_KEY, SYLLABUS_WISE_TAB_KEY, SYLLABUS_MATERIAL_TAB_KEY } from './Constants';
+import { EDIT_USER_FIELDS, PENDING_ENROLLMENT_STATUS_OPTIONS, UserDetailtabs, DISTRICT_OPTIONS, UserDetailMainTabs, SYLLABUS_PAYMENT_STATUS_OPTIONS, COURSE_DETAILS_TAB_KEY, SYLLABUS_WISE_TAB_KEY, SYLLABUS_MATERIAL_TAB_KEY } from './Constants';
 import { formatDate } from '../../utils/dateUtils';
 import dot_Icon from '../../assets/dot_Icon.svg';
 import person_add_Icon from '../../assets/person_add_Icon.svg'
@@ -27,6 +27,7 @@ import arrow_drop_down_Icon from "../../assets/arrow_drop_down_Icon.svg";
 import arrow_drop_right_Icon from "../../assets/arrow_drop_right_Icon.svg";
 import manage_acc_Icon from "../../assets/manage_acc_Icon.svg";
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
+import { richValueToHtml, sanitizeRichText } from '../../utils/richText';
 
 /** Applied to document.body while this page is shown; user.scss targets this. */
 const USER_DETAIL_PAGE_BODY_CLASS = 'user-detail-page';
@@ -54,7 +55,6 @@ const SYLLABUS_PAYMENT_COLUMNS: ITableColumn[] = [
     { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (amount: number) => `₹${Number(amount).toLocaleString()}` },
     { title: 'Payment Method', dataIndex: 'paymentMethod', key: 'paymentMethod', render: (value: string | null) => value || '-' },
     { title: 'Transaction Reference', dataIndex: 'transactionReference', key: 'transactionReference', render: (value: string | null) => value || '-' },
-    { title: 'Payment Status', dataIndex: 'paymentStatus', key: 'paymentStatus', render: (status: string) => (status ? <StatusBadge status={status} /> : '-') },
     { title: 'Verified At', dataIndex: 'verifiedAt', key: 'verifiedAt', render: (value: string | null) => (value ? formatDate(value) : '-') },
     { title: 'Paid On', dataIndex: 'createdAt', key: 'createdAt', render: (value: string) => (value ? formatDate(value) : '-') },
 ];
@@ -84,6 +84,8 @@ const UserDetail = () => {
         handleEditSubmit,
         updatingEnrollmentId,
         handleStatusChange,
+        updatingPaymentId,
+        handlePaymentStatusChange,
         toastMessages,
         showError,
         hideToast,
@@ -94,6 +96,10 @@ const UserDetail = () => {
     const [activeMainTab, setActiveMainTab] = useState(COURSE_DETAILS_TAB_KEY);
     const [expandedCourseIds, setExpandedCourseIds] = useState<Set<string>>(new Set());
     const [activeMaterialTabs, setActiveMaterialTabs] = useState<Record<string, string>>({});
+    // Syllabus Wise payments: the one whose status change is being confirmed, and the verified ones that were then opened
+    // for a change (a payment that is not verified always shows the dropdown)
+    const [paymentToEdit, setPaymentToEdit] = useState<{ paymentId: string; planTitle: string } | null>(null);
+    const [editingPaymentIds, setEditingPaymentIds] = useState<Set<string>>(new Set());
     const [courseToDrop, setCourseToDrop] = useState<{ enrollmentId: string; courseName: string } | null>(null);
 
     // Auto-close the drop confirmation once its status update finishes (success or error is
@@ -165,6 +171,68 @@ const UserDetail = () => {
     }
 
     const syllabusPayments = userDetail.syllabusWisePayments || [];
+
+    const confirmPaymentStatusEdit = () => {
+        if (!paymentToEdit) return;
+        setEditingPaymentIds((prev) => new Set(prev).add(paymentToEdit.paymentId));
+        setPaymentToEdit(null);
+    };
+
+    // Payment Status is the last column. A verified payment shows its badge with an edit icon (the dropdown opens once the
+    // change is confirmed); any other payment shows the dropdown straight away. Picking a status saves it.
+    const syllabusPaymentColumns: ITableColumn[] = [
+        ...SYLLABUS_PAYMENT_COLUMNS,
+        {
+            title: 'Payment Status',
+            dataIndex: 'paymentStatus',
+            key: 'paymentStatus',
+            render: (status: string, record: { paymentId: string; planTitle: string }) => {
+                const isVerified = status === 'Verified';
+                if (isVerified && !editingPaymentIds.has(record.paymentId)) {
+                    return (
+                        <span className="user-course__status-with-edit">
+                            <StatusBadge status={status} />
+                            <button
+                                type="button"
+                                className="user-course__status-edit-btn"
+                                onClick={() => setPaymentToEdit({ paymentId: record.paymentId, planTitle: record.planTitle })}
+                                aria-label={`Change payment status for ${record.planTitle}`}
+                            >
+                                <EditOutlined />
+                            </button>
+                        </span>
+                    );
+                }
+                const saving = updatingPaymentId === record.paymentId;
+                return (
+                    <DropdownField
+                        className="user-course__status-dropdown"
+                        fields={[{
+                            name: 'paymentStatus',
+                            label: '',
+                            placeholder: 'Select status',
+                            options: SYLLABUS_PAYMENT_STATUS_OPTIONS,
+                            loading: saving,
+                            disabled: saving,
+                            allowClear: false,
+                        }]}
+                        values={{ paymentStatus: status }}
+                        onChange={async (_, value) => {
+                            const next = Array.isArray(value) ? value[0] || '' : value;
+                            if (!next || next === status) {
+                                // Same status picked again: nothing to save, a verified payment goes back to its badge
+                                setEditingPaymentIds((prev) => { const n = new Set(prev); n.delete(record.paymentId); return n; });
+                                return;
+                            }
+                            if (await handlePaymentStatusChange(record.paymentId, next)) {
+                                setEditingPaymentIds((prev) => { const n = new Set(prev); n.delete(record.paymentId); return n; });
+                            }
+                        }}
+                    />
+                );
+            },
+        },
+    ];
     const syllabusMaterials = userDetail.syllabusMaterials || [];
 
     const menuItems: MenuProps['items'] = [
@@ -312,13 +380,31 @@ const UserDetail = () => {
                                                                             {material.title}
                                                                         </a>
                                                                         {material.description && (
-                                                                            <div  className='user-detail-course__materials-desc'> — {material.description}</div>
+                                                                            <div className='user-detail-course__materials-desc rich-text-content' dangerouslySetInnerHTML={{ __html: `— ${sanitizeRichText(richValueToHtml(material.description))}` }} />
                                                                         )}
                                                                     </div>
                                                                 ))}
                                                             </ul>
                                                         ) : (
                                                             <NoDataFound type="nodata" description="No study material" />
+                                                        )
+                                                    ) : getActiveMaterialTab(course.enrollmentId) === 'questionPaper' ? (
+                                                        course.questionPapers && course.questionPapers.length > 0 ? (
+                                                            <ul className="user-detail-course__materials">
+                                                                {course.questionPapers.map((paper) => (
+                                                                    <div key={paper.id} className="user-detail-course__materials-main">
+                                                                        <FilePdfOutlined /> {' '}
+                                                                        <a href={paper.pdfUrl} target="_blank" rel="noopener noreferrer">
+                                                                            {paper.title}
+                                                                        </a>
+                                                                        {paper.description && (
+                                                                            <div className='user-detail-course__materials-desc rich-text-content' dangerouslySetInnerHTML={{ __html: `— ${sanitizeRichText(richValueToHtml(paper.description))}` }} />
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </ul>
+                                                        ) : (
+                                                            <NoDataFound type="nodata" description="No question papers" />
                                                         )
                                                     ) : getActiveMaterialTab(course.enrollmentId) === 'video' ? (
                                                         course.videoMaterials && course.videoMaterials.length > 0 ? (
@@ -373,7 +459,7 @@ const UserDetail = () => {
                             <NoDataFound type="nodata" description="No syllabus wise payments" />
                         ) : (
                             <TableWithPagination
-                                columns={SYLLABUS_PAYMENT_COLUMNS}
+                                columns={syllabusPaymentColumns}
                                 dataSource={syllabusPayments.map((payment) => ({ ...payment, key: payment.paymentId }))}
                             />
                         )}
@@ -530,6 +616,24 @@ const UserDetail = () => {
                         {formErrors.courses && (
                             <div className="form-fields-section__error-message">{formErrors.courses}</div>
                         )}
+                    </div>
+                </PopupModal>
+
+                {/* Confirm changing a Syllabus Wise payment status */}
+                <PopupModal
+                    open={Boolean(paymentToEdit)}
+                    onClose={() => setPaymentToEdit(null)}
+                    onSubmit={confirmPaymentStatusEdit}
+                    title="Confirm Status Change"
+                    subtitle=""
+                    primaryButtonText="Yes"
+                    secondaryButtonText="No"
+                    showFooter={true}
+                    contentHeight="auto"
+                    minHeight={100}
+                >
+                    <div className="popup-modal__content-content-text">
+                        Are you sure you want to change the verified payment status? Do you want to continue?
                     </div>
                 </PopupModal>
 

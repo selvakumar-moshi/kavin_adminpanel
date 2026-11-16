@@ -16,7 +16,8 @@ import ToastMessages from '../../components/ToastMessages';
 import PageTitle from '../../components/PageTitle';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 import { useNotificationManagement } from './useNotification';
-import { getNotificationTableColumns, NOTIFICATION_TYPE_FIELD, NOTIFICATION_INPUT_FIELDS, NOTIFICATION_DATE_FIELD, FLASH_NOTIFICATION_TYPE, type NotificationRecord } from './Constant';
+import { RichTextEditor } from '../../components/RichTextEditor';
+import { getNotificationTableColumns, NOTIFICATION_TYPE_FIELD, NOTIFICATION_INPUT_FIELDS, NOTIFICATION_DESCRIPTION_FIELD, NOTIFICATION_LINK_FIELDS, NOTIFICATION_DATE_FIELD, FLASH_NOTIFICATION_TYPE, type NotificationRecord } from './Constant';
 import add_Icon from '../../assets/add_Icon.svg';
 import filter_Icon from '../../assets/filter_Icon.svg';
 
@@ -186,6 +187,20 @@ const Notification = ({ pageTitle = 'Notifications', tabs }: NotificationProps) 
                     />
                     <InputFields
                         fields={NOTIFICATION_INPUT_FIELDS}
+                        values={formValues}
+                        errors={formErrors}
+                        onChange={handleInputChange}
+                        disabled={loading}
+                    />
+                    <RichTextEditor
+                        {...NOTIFICATION_DESCRIPTION_FIELD}
+                        value={formValues.description || ''}
+                        error={formErrors.description}
+                        onChange={(value) => handleInputChange('description', value)}
+                        disabled={loading}
+                    />
+                    <InputFields
+                        fields={NOTIFICATION_LINK_FIELDS}
                         values={formValues}
                         errors={formErrors}
                         onChange={handleInputChange}

@@ -8,9 +8,10 @@ import FilterModal from '../../components/FilterModal/FilterModal';
 import StudyMaterial from './StudyMaterial';
 import VideoMaterial from './VideoMaterial';
 import SyllabusMaterial from './SyllabusMaterial';
+import QuestionPaper from './QuestionPaper';
 import { useMaterialManagement, ALL_COURSES_VALUE } from './useMaterialHooks';
 import filter_Icon from '../../assets/filter_Icon.svg';
-import { MATERIAL_TAB_ITEMS, SYLLABUS_MATERIAL_TAB_KEY } from './Constants';
+import { MATERIAL_TAB_ITEMS, SYLLABUS_MATERIAL_TAB_KEY, QUESTION_PAPER_TAB_KEY } from './Constants';
 
 const Material = () => {
     const [activeTab, setActiveTab] = useState('study');
@@ -44,6 +45,7 @@ const Material = () => {
                     {activeTab === 'study' && <StudyMaterial searchTerm={searchValue} appliedFilters={appliedFilters} courseId={courseIdFilter} />}
                     {activeTab === 'video' && <VideoMaterial searchTerm={searchValue} appliedFilters={appliedFilters} courseId={courseIdFilter} />}
                     {activeTab === SYLLABUS_MATERIAL_TAB_KEY && <SyllabusMaterial searchTerm={searchValue} />}
+                    {activeTab === QUESTION_PAPER_TAB_KEY && <QuestionPaper searchTerm={searchValue} appliedFilters={appliedFilters} courseId={courseIdFilter} />}
                 </>
             </div>
 

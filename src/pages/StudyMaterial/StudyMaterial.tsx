@@ -4,6 +4,7 @@ import TableWithPagination from '../../components/Table/TableWithPagination';
 import { withSortAndSearch } from '../../components/Table/withSortAndSearch';
 import PopupModal from '../../components/PopupModal/PopupModal';
 import InputFields from '../../components/InputFields/InputFields';
+import { RichTextEditor } from '../../components/RichTextEditor';
 import DropdownField from '../../components/DropdownField/DropdownField';
 import FileUploadSection from '../../components/FileUploadSection/FileUploadSection';
 import FileUploadDisplay from '../../components/FileUploadDisplay/FileUploadDisplay';
@@ -11,7 +12,7 @@ import ActionIcons from '../../components/Table/ActionIcons';
 import Loader from '../../components/Loader/Loader';
 import ToastMessages from '../../components/ToastMessages';
 import { useStudyMaterialManagement } from './useStudyMaterialHooks';
-import { STUDY_MATERIAL_TEXT_FIELDS, MATERIAL_TO_VIEW_OPTIONS, getStudyMaterialTableColumns, type StudyMaterialProps, type StudyMaterialRecord } from './Constants';
+import { STUDY_MATERIAL_TEXT_FIELDS, MATERIAL_DESCRIPTION_FIELD, MATERIAL_TO_VIEW_OPTIONS, getStudyMaterialTableColumns, type StudyMaterialProps, type StudyMaterialRecord } from './Constants';
 import add_Icon from '../../assets/add_Icon.svg';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 
@@ -141,6 +142,7 @@ const StudyMaterial: React.FC<StudyMaterialProps> = ({ searchTerm = '', appliedF
                 primaryButtonDisabled={loading || !hasFormChanges}
                 contentHeight="auto"
                 minHeight={520}
+                maxHeight="calc(100vh - 200px)"
             >
                 <div style={{ padding: '0 8px' }}>
                     <InputFields
@@ -148,6 +150,13 @@ const StudyMaterial: React.FC<StudyMaterialProps> = ({ searchTerm = '', appliedF
                         values={formValues}
                         errors={formErrors}
                         onChange={handleInputChange}
+                        disabled={loading}
+                    />
+                    <RichTextEditor
+                        {...MATERIAL_DESCRIPTION_FIELD}
+                        value={formValues.description || ''}
+                        error={formErrors.description}
+                        onChange={(value) => handleInputChange('description', value)}
                         disabled={loading}
                     />
                     <DropdownField
