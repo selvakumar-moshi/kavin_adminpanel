@@ -21,6 +21,7 @@ import {
     toDateValue,
     LIVE_CLASS_INPUT_FIELDS,
     LIVE_CLASS_DESCRIPTION_FIELD,
+    LIVE_CLASS_LINK_FIELDS,
     LIVE_CLASS_DATE_FIELD,
     LIVE_CLASS_TIME_FIELDS,
     LIVE_CLASS_STATUS_FIELD,
@@ -181,6 +182,13 @@ const LiveClasses = ({ pageTitle, tabs }: LiveClassesProps) => {
                         value={formValues.description || ''}
                         error={formErrors.description}
                         onChange={(value) => handleInputChange('description', value)}
+                        disabled={isSaving}
+                    />
+                    <InputFields
+                        fields={LIVE_CLASS_LINK_FIELDS}
+                        values={formValues}
+                        errors={formErrors}
+                        onChange={handleInputChange}
                         disabled={isSaving}
                     />
                     <DateFieldsSection

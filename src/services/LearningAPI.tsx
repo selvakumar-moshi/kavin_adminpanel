@@ -14,6 +14,8 @@ export interface LiveClassPayload {
     startTime: string;
     endTime: string;
     status: string;
+    youTubeLink: string;
+    googleMeetLink: string;
 }
 
 class LearningAPI {

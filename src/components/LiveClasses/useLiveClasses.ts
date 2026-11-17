@@ -162,6 +162,8 @@ export const useLiveClasses = () => {
                 startTime: toTimeValue(liveClass.startTime),
                 endTime: toTimeValue(liveClass.endTime),
                 status: liveClass.status || '',
+                youTubeLink: liveClass.youTubeLink || '',
+                googleMeetLink: liveClass.googleMeetLink || '',
             };
             setSelectedRecord({ ...liveClass, ...values });
             setFormValues(values);
@@ -194,6 +196,8 @@ export const useLiveClasses = () => {
             startTime: toTimePayload(formValues.startTime),
             endTime: toTimePayload(formValues.endTime),
             status: formValues.status,
+            youTubeLink: (formValues.youTubeLink || '').trim(),
+            googleMeetLink: (formValues.googleMeetLink || '').trim(),
         };
 
         setIsSaving(true);
@@ -238,7 +242,9 @@ export const useLiveClasses = () => {
             (formValues.date || '') !== (selectedRecord.date || '') ||
             (formValues.startTime || '') !== (selectedRecord.startTime || '') ||
             (formValues.endTime || '') !== (selectedRecord.endTime || '') ||
-            (formValues.status || '') !== (selectedRecord.status || '')
+            (formValues.status || '') !== (selectedRecord.status || '') ||
+            (formValues.youTubeLink || '') !== (selectedRecord.youTubeLink || '') ||
+            (formValues.googleMeetLink || '') !== (selectedRecord.googleMeetLink || '')
         )
         : Object.values(formValues).some((value) => Boolean((value || '').trim()));
 

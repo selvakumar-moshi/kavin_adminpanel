@@ -17,6 +17,8 @@ export interface LiveClassRecord {
     /** HH:mm or HH:mm:ss */
     endTime: string;
     status: string;
+    youTubeLink?: string | null;
+    googleMeetLink?: string | null;
     createdAt?: string;
     updatedAt?: string | null;
 }
@@ -57,6 +59,24 @@ export const LIVE_CLASS_DESCRIPTION_FIELD = {
     label: 'Description',
     placeholder: 'Enter description',
 };
+
+// Both links are optional
+export const LIVE_CLASS_LINK_FIELDS = [
+    {
+        name: 'youTubeLink',
+        label: 'YouTube Link',
+        placeholder: 'Enter YouTube link',
+        required: false,
+        type: 'text' as const,
+    },
+    {
+        name: 'googleMeetLink',
+        label: 'Google Meet Link',
+        placeholder: 'Enter Google Meet link',
+        required: false,
+        type: 'text' as const,
+    },
+];
 
 export const LIVE_CLASS_DATE_FIELD = [
     {
