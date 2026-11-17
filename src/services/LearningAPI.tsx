@@ -42,7 +42,7 @@ class LearningAPI {
         return Super_Sales.get(`/User/${id}`);
     }
 
-    updateUser(id: string, firstName: string, lastName: string, phoneNumber: string, district: string, courses?: { courseId: string; batchId: string }[]) {
+    updateUser(id: string, firstName: string, lastName: string, phoneNumber: string, district: string, courses?: { courseId: string; batchId: string; mode?: string; fromBatchId?: string; paymentRequired?: boolean; reason?: string }[]) {
         return Super_Sales.put(`/User/${id}`, { firstName, lastName, phoneNumber, district, courses: courses || [] });
     }
 

@@ -17,7 +17,7 @@ import { useUserDetailManagement, ALLOWED_BATCH_SEPARATOR } from './useUserDetai
 import { usePageBodyClass } from '../../utils/pageBodyClass';
 import { useResetPassword } from '../Users/useResetPassword';
 import ResetPasswordModals from '../Users/ResetPasswordModals';
-import { EDIT_USER_FIELDS, PENDING_ENROLLMENT_STATUS_OPTIONS, UserDetailtabs, DISTRICT_OPTIONS, UserDetailMainTabs, SYLLABUS_PAYMENT_STATUS_OPTIONS, COURSE_DETAILS_TAB_KEY, SYLLABUS_WISE_TAB_KEY, SYLLABUS_MATERIAL_TAB_KEY } from './Constants';
+import { EDIT_USER_FIELDS, EDIT_USER_MODE_OPTIONS, EDIT_USER_PAYMENT_REQUIRED_OPTIONS, EDIT_USER_REASON_FIELDS, TRANSFER_MODE, PENDING_ENROLLMENT_STATUS_OPTIONS, UserDetailtabs, DISTRICT_OPTIONS, UserDetailMainTabs, SYLLABUS_PAYMENT_STATUS_OPTIONS, COURSE_DETAILS_TAB_KEY, SYLLABUS_WISE_TAB_KEY, SYLLABUS_MATERIAL_TAB_KEY } from './Constants';
 import { formatDate } from '../../utils/dateUtils';
 import dot_Icon from '../../assets/dot_Icon.svg';
 import person_add_Icon from '../../assets/person_add_Icon.svg'
@@ -64,6 +64,7 @@ const UserDetail = () => {
 
     const {
         userDetail,
+        enrollments,
         coursesArray,
         selectedCourses,
         batchesByCourse,
@@ -153,7 +154,7 @@ const UserDetail = () => {
     // One combined list of every purchased course's allowed batches; the label carries the course name
     const allowedBatchOptions = (userDetail?.courses || []).flatMap((c) =>
         (c.allowedBatches || []).map((batch) => ({
-            value: `${c.enrollmentId}${ALLOWED_BATCH_SEPARATOR}${batch.batchId}`,
+            value: `${c.courseId}${ALLOWED_BATCH_SEPARATOR}${batch.batchId}`,
             label: `${batch.title} - ${c.courseName} (${formatDate(batch.batchFrom)} - ${formatDate(batch.batchTo)})`,
         }))
     );
@@ -290,11 +291,11 @@ const UserDetail = () => {
 
                 {activeMainTab === COURSE_DETAILS_TAB_KEY && (
                 <div className="user-detail-course-list">
-                {(!userDetail.courses || userDetail.courses.length === 0) ? (
+                {enrollments.length === 0 ? (
                     <NoDataFound type="nodata" description="No courses enrolled" />
                 ) : (
                     <>
-                        {userDetail.courses.map((course) => {
+                        {enrollments.map((course) => {
                             const isExpanded = expandedCourseIds.has(course.enrollmentId);
                             return (
                                 <div className='user-course__module-div' key={course.enrollmentId}>
@@ -308,7 +309,7 @@ const UserDetail = () => {
                                             )}
                                             </span>
                                             <img src={manage_acc_Icon} alt="manage-acc-icon" />
-                                            <span className="user-course__module-title">{course.courseName}</span>
+                                            <span className="user-course__module-title">{course.batchTitle ? `${course.courseName} - ${course.batchTitle}` : course.courseName}</span>
                                             <div className="user-course__payment-status" style={{ marginLeft: 'auto' }} onClick={(e) => e.stopPropagation()}>
                                                 <span className="user-detail__info-item-label2">Payment Status:</span>
                                                 {course.enrollmentStatus === 'Pending' ? (
@@ -357,13 +358,14 @@ const UserDetail = () => {
 
                                                     {getActiveMaterialTab(course.enrollmentId) === 'purchased' ? (
                                                         <ul className="user-detail-course__amounts">
-                                                            <li className='user-detail__info-item-label2'>Course Amount:
-                                                                <span className='user-detail__info-item-value2'> ₹{course.courseAmount.toLocaleString()}</span>
+                                                            <li className='user-detail__info-item-label2'>Amount:
+                                                                <span className='user-detail__info-item-value2'> ₹{Number(course.amount ?? 0).toLocaleString()}</span>
                                                             </li>
-
-                                                            <li className='user-detail__info-item-label2'>Total Amount:
-                                                                <span className='user-detail__info-item-value2'> ₹{course.totalAmount.toLocaleString()}</span>
-                                                            </li>
+                                                            {course.enrolledAt && (
+                                                                <li className='user-detail__info-item-label2'>Enrolled At:
+                                                                    <span className='user-detail__info-item-value2'> {formatDate(course.enrolledAt)}</span>
+                                                                </li>
+                                                            )}
                                                             {course.verifiedAt && (
                                                                 <li className='user-detail__info-item-label2'>Verified At:
                                                                     <span className='user-detail__info-item-value2'> {formatDate(course.verifiedAt)}</span>
@@ -426,6 +428,16 @@ const UserDetail = () => {
                                                                 <li className='user-detail__info-item-label2'>Batch:
                                                                     <span className='user-detail__info-item-value2'> {course.batchTitle}</span>
                                                                 </li>
+                                                                {course.transferredFromBatchTitle && (
+                                                                    <li className='user-detail__info-item-label2'>Transferred From:
+                                                                        <span className='user-detail__info-item-value2'> {course.transferredFromBatchTitle}{course.transferredAt ? ` (${formatDate(course.transferredAt)})` : ''}</span>
+                                                                    </li>
+                                                                )}
+                                                                {course.transferReason && (
+                                                                    <li className='user-detail__info-item-label2'>Transfer Reason:
+                                                                        <span className='user-detail__info-item-value2'> {course.transferReason}</span>
+                                                                    </li>
+                                                                )}
                                                             </ul>
                                                         ) : (
                                                             <NoDataFound type="nodata" description="No batch assigned" />
@@ -533,7 +545,7 @@ const UserDetail = () => {
                                 handleCourseSelectionChange(ids.filter((courseId) => !purchasedCourseIds.has(courseId)));
                             }}
                         />
-                        {(userDetail.courses || []).length === 0 && selectedCourses.length === 0 ? (
+                        {enrollments.length === 0 && selectedCourses.length === 0 ? (
                             <DropdownField
                                 fields={[
                                     {
@@ -549,7 +561,7 @@ const UserDetail = () => {
                         ) : (
                             <>
                                 {/* Already-purchased enrollments' batches — reference only, not editable here */}
-                                {(userDetail.courses || []).some((c) => c.batchTitle) && (
+                                {enrollments.some((c) => c.batchTitle) && (
                                     <DropdownField
                                         fields={[
                                             {
@@ -557,7 +569,7 @@ const UserDetail = () => {
                                                 label: 'Batch',
                                                 placeholder: 'No batch assigned',
                                                 mode: 'multiple',
-                                                options: (userDetail.courses || [])
+                                                options: enrollments
                                                     .filter((c) => c.batchTitle)
                                                     .map((c) => ({
                                                         value: c.enrollmentId,
@@ -567,7 +579,7 @@ const UserDetail = () => {
                                             },
                                         ]}
                                         values={{
-                                            purchasedBatches: (userDetail.courses || [])
+                                            purchasedBatches: enrollments
                                                 .filter((c) => c.batchTitle)
                                                 .map((c) => c.enrollmentId),
                                         }}
@@ -616,6 +628,58 @@ const UserDetail = () => {
                         {formErrors.courses && (
                             <div className="form-fields-section__error-message">{formErrors.courses}</div>
                         )}
+                        {/* How the courses / batches above are added (all optional; sent with each of them) */}
+                        <DropdownField
+                            fields={[
+                                {
+                                    name: 'mode',
+                                    label: 'Mode',
+                                    placeholder: 'Select mode',
+                                    options: EDIT_USER_MODE_OPTIONS,
+                                    disabled: isUpdating,
+                                },
+                                {
+                                    name: 'paymentRequired',
+                                    label: 'Payment Required',
+                                    placeholder: 'Select payment required',
+                                    options: EDIT_USER_PAYMENT_REQUIRED_OPTIONS,
+                                    disabled: isUpdating,
+                                },
+                            ]}
+                            values={{ mode: formValues.mode || '', paymentRequired: formValues.paymentRequired || '' }}
+                            onChange={(name, value) => {
+                                const next = Array.isArray(value) ? value[0] || '' : value;
+                                handleInputChange(name, next);
+                                // The from batch only applies to a transfer
+                                if (name === 'mode' && next !== TRANSFER_MODE) handleInputChange('fromBatchId', '');
+                            }}
+                        />
+                        {/* Only a transfer moves the user out of a batch, so the field is shown for that mode alone */}
+                        {formValues.mode === TRANSFER_MODE && (
+                            <DropdownField
+                                fields={[
+                                    {
+                                        name: 'fromBatchId',
+                                        label: 'From Batch',
+                                        placeholder: 'Select from batch',
+                                        // The batches the user is in now (a batch listed once, whatever its course)
+                                        options: enrollments
+                                            .filter((enrollment, index, all) => enrollment.batchId && all.findIndex((other) => other.batchId === enrollment.batchId) === index)
+                                            .map((enrollment) => ({ value: enrollment.batchId as string, label: `${enrollment.batchTitle} (${enrollment.courseName})` })),
+                                        disabled: isUpdating,
+                                    },
+                                ]}
+                                values={{ fromBatchId: formValues.fromBatchId || '' }}
+                                onChange={(_, value) => handleInputChange('fromBatchId', Array.isArray(value) ? value[0] || '' : value)}
+                            />
+                        )}
+                        <InputFields
+                            fields={EDIT_USER_REASON_FIELDS}
+                            values={formValues}
+                            errors={formErrors}
+                            onChange={handleInputChange}
+                            disabled={isUpdating}
+                        />
                     </div>
                 </PopupModal>
 

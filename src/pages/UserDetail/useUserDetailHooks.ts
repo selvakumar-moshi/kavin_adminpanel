@@ -5,7 +5,7 @@ import { useToastMessages } from '../../components/ToastMessages/useToastMessage
 import type { RootState } from '../../services/Store';
 import { getUserById, updateUser, updateEnrollmentStatus, getCourses } from '../../services/LearningAction';
 import superSalesAPI from '../../services/LearningAPI';
-import type { UserDetailRecord } from './Constants';
+import { flattenEnrollments, TRANSFER_MODE, type UserDetailRecord } from './Constants';
 import { EDIT_USER_VALIDATION_RULES } from '../../utils/validationUtils';
 import type { CourseRecord, BatchRecord } from '../Course/Constant';
 
@@ -32,7 +32,7 @@ export const useUserDetailManagement = () => {
     const [batchesByCourse, setBatchesByCourse] = useState<Record<string, BatchRecord[]>>({});
     const [batchesLoadingByCourse, setBatchesLoadingByCourse] = useState<Record<string, boolean>>({});
 
-    // Allowed (extra) batches picked for already-purchased enrollments, as `${enrollmentId}${ALLOWED_BATCH_SEPARATOR}${batchId}`
+    // Allowed (extra) batches picked for already-purchased enrollments, as `${courseId}${ALLOWED_BATCH_SEPARATOR}${batchId}`
     const [allowedBatchSelections, setAllowedBatchSelections] = useState<string[]>([]);
 
     // Enrollment whose status-change API call is currently in flight
@@ -43,6 +43,8 @@ export const useUserDetailManagement = () => {
     );
 
     const userDetail = UserDetailData as UserDetailRecord | null;
+    // Every batch enrollment of every course, one entry each
+    const enrollments = flattenEnrollments(userDetail?.courses);
     const coursesArray = Array.isArray(CoursesData) ? (CoursesData as CourseRecord[]) : [];
     const detailStatus = apiStatus.UserDetailData;
     const updateStatus = apiStatus.UsersData;
@@ -227,6 +229,15 @@ export const useUserDetailManagement = () => {
             return;
         }
 
+        // Mode / payment / reason / from batch are all optional: only the ones that were filled in are sent, on every course entry
+        const isTransfer = formValues.mode === TRANSFER_MODE;
+        const enrollmentOptions = {
+            ...(formValues.mode ? { mode: formValues.mode } : {}),
+            ...(isTransfer && formValues.fromBatchId ? { fromBatchId: formValues.fromBatchId } : {}),
+            ...(formValues.paymentRequired ? { paymentRequired: formValues.paymentRequired === 'true' } : {}),
+            ...(formValues.reason?.trim() ? { reason: formValues.reason.trim() } : {}),
+        };
+
         setIsUpdating(true);
         dispatch(updateUser({
             id: userDetail.userId,
@@ -237,11 +248,10 @@ export const useUserDetailManagement = () => {
             courses: [
                 ...selectedCourses,
                 ...allowedBatchSelections.flatMap(selection => {
-                    const [enrollmentId, batchId] = selection.split(ALLOWED_BATCH_SEPARATOR);
-                    const enrollment = (userDetail.courses || []).find(c => c.enrollmentId === enrollmentId);
-                    return enrollment && batchId ? [{ courseId: enrollment.courseId, batchId }] : [];
+                    const [courseId, batchId] = selection.split(ALLOWED_BATCH_SEPARATOR);
+                    return courseId && batchId ? [{ courseId, batchId }] : [];
                 }),
-            ],
+            ].map((entry) => ({ ...entry, ...enrollmentOptions })),
         }) as any);
     };
 
@@ -281,6 +291,7 @@ export const useUserDetailManagement = () => {
 
     return {
         userDetail,
+        enrollments,
         coursesArray,
         selectedCourses,
         allowedBatchSelections,

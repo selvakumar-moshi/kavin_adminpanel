@@ -63,7 +63,7 @@ export const getUserById = createAsyncThunk<any, string>(
   }
 );
 
-export const updateUser = createAsyncThunk<any, { id: string; firstName: string; lastName: string; phoneNumber: string; district: string; courses?: { courseId: string; batchId: string }[] }>(
+export const updateUser = createAsyncThunk<any, { id: string; firstName: string; lastName: string; phoneNumber: string; district: string; courses?: { courseId: string; batchId: string; mode?: string; fromBatchId?: string; paymentRequired?: boolean; reason?: string }[] }>(
     "userManagement/updateUser",
     async ({ id, firstName, lastName, phoneNumber, district, courses }, { rejectWithValue }) => {
       try {
