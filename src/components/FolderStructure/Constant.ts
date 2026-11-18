@@ -23,8 +23,6 @@ export type FolderKind = 'folder' | 'subfolder' | 'nested';
 export const MAX_FOLDER_DEPTH = 10;
 const SUB_FOLDER_DEPTH = 2;
 
-export const NAME_MAX_LENGTH = 100;
-
 // Singular names used in modal titles and toast messages
 export const FOLDER_LABELS: Record<FolderKind, string> = {
     folder: 'Folder',
@@ -38,7 +36,6 @@ export const FOLDER_NAME_FIELD = {
     placeholder: 'Enter name',
     required: true,
     type: 'text' as const,
-    maxLength: NAME_MAX_LENGTH,
 };
 
 // --- Reading the API -----------------------------------------------------------------------------------------------

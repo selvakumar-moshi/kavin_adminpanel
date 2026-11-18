@@ -4,7 +4,6 @@ import { useToastMessages } from '../ToastMessages/useToastMessages';
 import { toTitleCase } from '../../utils/textUtils';
 import {
     FOLDER_LABELS,
-    NAME_MAX_LENGTH,
     addNode,
     getChildren,
     getNodeAt,
@@ -174,10 +173,6 @@ export const useFolderStructureManagement = () => {
         const trimmed = name.trim();
         if (!trimmed) {
             setNameError('Name is required');
-            return;
-        }
-        if (trimmed.length > NAME_MAX_LENGTH) {
-            setNameError(`Name must not exceed ${NAME_MAX_LENGTH} characters.`);
             return;
         }
         if (findDuplicate(formTarget, trimmed)) {
