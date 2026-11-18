@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import NegativeMarkModal from './NegativeMarkModal';
 import Button from '../../components/Button/Button';
 import InputFields from '../../components/InputFields/InputFields';
 import { RichTextEditor } from '../../components/RichTextEditor';
@@ -36,6 +38,11 @@ const QuestionDetail = () => {
         quizAttempt,
         quizAttemptError,
         handleQuizAttemptChange,
+        negativeMark,
+        wrongAnswersPerDeduction,
+        markPerQuestion,
+        setNegativeMark,
+        setWrongAnswersPerDeduction,
         batchError,
         quizType,
         isFolderQuiz,
@@ -72,6 +79,8 @@ const QuestionDetail = () => {
         toastMessages,
         hideToast,
     } = useQuestionDetailManagement();
+
+    const [isNegativeMarkOpen, setIsNegativeMarkOpen] = useState(false);
 
     // Previous Year, Syllabus Wise and School Book quizzes: Folder / Sub Folder / Nested Sub Folder replace Quiz To View,
     // Course and Batch (pre-filled when editing)
@@ -205,7 +214,23 @@ const QuestionDetail = () => {
                 />
             </div>
 
+            <NegativeMarkModal
+                open={isNegativeMarkOpen}
+                negativeMark={negativeMark}
+                wrongAnswersPerDeduction={wrongAnswersPerDeduction}
+                markPerQuestion={markPerQuestion}
+                onClose={() => setIsNegativeMarkOpen(false)}
+                onSubmit={(values) => {
+                    setNegativeMark(values.negativeMark);
+                    setWrongAnswersPerDeduction(values.wrongAnswersPerDeduction);
+                    setIsNegativeMarkOpen(false);
+                }}
+            />
+
             <div className="question-detail-actions">
+                <Button variant="secondary" className="popup-modal__button" onClick={() => setIsNegativeMarkOpen(true)} disabled={isSaving}>
+                    Negative Mark
+                </Button>
                 <Button variant="secondary" className="popup-modal__button" onClick={handleCancel} disabled={isSaving}>
                     Cancel
                 </Button>

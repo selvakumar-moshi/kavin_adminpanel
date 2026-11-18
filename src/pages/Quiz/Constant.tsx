@@ -133,6 +133,8 @@ export interface QuizRecord {
     quizToView: string;
     quizType?: string;
     quizAttempt?: number | null;
+    negativeMark?: number | null;
+    wrongAnswersPerDeduction?: number | null;
     // The document the questions were imported from, when the quiz was created from one
     sourceFileName?: string | null;
     sourceFileUrl?: string | null;
@@ -206,7 +208,14 @@ export const QUIZ_DESCRIPTION_FIELD = {
     placeholder: 'Enter quiz description',
 };
 
-export const emptyQuestion = (): QuizQuestion => ({
+// Negative Mark popup: all optional; markPerQuestion is shown from the quiz's question mark and can't be edited
+export const NEGATIVE_MARK_FIELDS = [
+    { name: 'negativeMark', label: 'Negative Mark', placeholder: 'Enter negative mark', required: false, type: 'text' as const },
+    { name: 'wrongAnswersPerDeduction', label: 'Wrong Answers Per Deduction', placeholder: 'Enter wrong answers per deduction', required: false, type: 'text' as const },
+    { name: 'markPerQuestion', label: 'Mark Per Question', placeholder: 'Set from the question mark', required: false, type: 'text' as const },
+];
+
+export const emptyQuestion =(): QuizQuestion => ({
     questionText: '',
     optionA: '',
     optionB: '',

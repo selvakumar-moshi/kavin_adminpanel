@@ -114,6 +114,9 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
     const [batchError, setBatchError] = useState('');
     const [quizAttempt, setQuizAttempt] = useState('');
     const [quizAttemptError, setQuizAttemptError] = useState('');
+    // Negative marking (optional), set in the Negative Mark popup
+    const [negativeMark, setNegativeMark] = useState('');
+    const [wrongAnswersPerDeduction, setWrongAnswersPerDeduction] = useState('');
     const [quizToViewError, setQuizToViewError] = useState('');
     const [questionErrors, setQuestionErrors] = useState<QuestionErrors>({});
     const [isSaving, setIsSaving] = useState(false);
@@ -192,6 +195,8 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
             setBatchId(quizDetail.batchId || '');
             setQuizToView(quizDetail.quizToView || '');
             setQuizAttempt(quizDetail.quizAttempt == null ? '' : String(quizDetail.quizAttempt));
+            setNegativeMark(quizDetail.negativeMark == null ? '' : String(quizDetail.negativeMark));
+            setWrongAnswersPerDeduction(quizDetail.wrongAnswersPerDeduction == null ? '' : String(quizDetail.wrongAnswersPerDeduction));
             originalTitleRef.current = quizDetail.title || '';
             originalQuizToViewRef.current = quizDetail.quizToView || '';
             if (quizDetail.courseId) {
@@ -282,6 +287,19 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
     const appendQuizAttempt = (formData: FormData) => {
         const value = quizAttempt.trim();
         if (value) formData.append('quizAttempt', value);
+    };
+
+    // Mark of the first question: what the Negative Mark popup shows as the mark per question
+    const markPerQuestion = (items.find((it): it is { type: 'question'; question: KeyedQuizQuestion } => it.type === 'question')?.question.mark || '').trim();
+
+    // Only sent when a value was entered, so a quiz without negative marking is saved exactly as before
+    const appendNegativeMark = (formData: FormData) => {
+        const negative = negativeMark.trim();
+        const perDeduction = wrongAnswersPerDeduction.trim();
+        if (!negative && !perDeduction) return;
+        if (negative) formData.append('negativeMark', negative);
+        if (perDeduction) formData.append('wrongAnswersPerDeduction', perDeduction);
+        if (markPerQuestion) formData.append('markPerQuestion', markPerQuestion);
     };
 
     const handleQuizToViewChange = (value: string | string[]) => {
@@ -748,6 +766,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         formData.append('quizToView', SCHOOL_QUIZ_TO_VIEW);
         formData.append('quizType', SCHOOL_QUIZ_TYPE);
         appendQuizAttempt(formData);
+        appendNegativeMark(formData);
         Object.entries(fields).forEach(([name, value]) => formData.append(name, value));
         appendSourceFile(formData);
         appendQuestionsToFormData(formData);
@@ -773,6 +792,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         formData.append('quizType', quizType);
         if (extraFields) Object.entries(extraFields).forEach(([name, value]) => formData.append(name, value));
         appendQuizAttempt(formData);
+        appendNegativeMark(formData);
         // Course / batch go with competitive quizzes, Paid and Free alike (the course can't change once the quiz exists);
         // a Daily quiz has neither
         if (!isCourseLess && !isFolderQuiz) {
@@ -824,6 +844,11 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         quizAttempt,
         quizAttemptError,
         handleQuizAttemptChange,
+        negativeMark,
+        wrongAnswersPerDeduction,
+        markPerQuestion,
+        setNegativeMark,
+        setWrongAnswersPerDeduction,
         isCourseLess,
         quizToViewError,
         questionErrors,
