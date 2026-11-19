@@ -63,6 +63,11 @@
   text-transform: capitalize;
 }
 
+// Values that must keep their own case (e-mail addresses)
+.user-detail__info-item-value--keep-case {
+  text-transform: none;
+}
+
 // ============================================================
 // Users list page (Users.tsx)
 // ============================================================

@@ -35,6 +35,10 @@ class LearningAPI {
         return Super_Sales.post(`/User/${id}/reset-device`);
     }
 
+    getUsersDownload() {
+        return Super_Sales.get('/User/download', { responseType: 'blob' });
+    }
+
     getUsers(searchTerm?: string, globalFilter?: Record<string, string>, pageNumber?: number, pageSize?: number) {
         return Super_Sales.post('/User', {
             searchTerm: searchTerm || '',

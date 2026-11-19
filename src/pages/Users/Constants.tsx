@@ -17,6 +17,8 @@ export interface UserRecord {
     district?: string;
     createdAt?: string;
     updatedAt?: string;
+    // When the user uploaded their payment (null until they have)
+    paymentUploadedAt?: string | null;
 }
 
 const compareText = (a?: string | null, b?: string | null) =>
@@ -99,6 +101,13 @@ export const getUserTableColumns = (): ITableColumn[] => [
         disableFutureDates: true,
         sorter: (a: UserRecord, b: UserRecord) => compareText(a.createdAt, b.createdAt),
         render: (text: string) => formatDate(text),
+    },
+    {
+        title: 'Payment Date',
+        dataIndex: 'paymentUploadedAt',
+        key: 'paymentUploadedAt',
+        sorter: (a: UserRecord, b: UserRecord) => compareText(a.paymentUploadedAt, b.paymentUploadedAt),
+        render: (value: string | null) => (value ? formatDate(value) : '-'),
     },
 ];
 

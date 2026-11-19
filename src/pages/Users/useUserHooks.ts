@@ -16,6 +16,13 @@ const COLUMN_FILTER_FIELD_MAP: Record<string, string> = {
     userName: 'firstName',
 };
 
+// Pulls a filename out of a Content-Disposition header (e.g. attachment; filename="users.xlsx")
+const parseFileNameFromContentDisposition = (contentDisposition: string | undefined): string | null => {
+    if (!contentDisposition) return null;
+    const match = contentDisposition.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+    return match?.[1] ? decodeURIComponent(match[1]) : null;
+};
+
 export const useUserManagement = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -235,6 +242,31 @@ export const useUserManagement = () => {
         }
     };
 
+    // Download: GET /User/download, saved as a file
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    const handleDownload = async () => {
+        if (isDownloading) return;
+        setIsDownloading(true);
+        try {
+            const res = await superSalesAPI.getUsersDownload();
+            const fileName = parseFileNameFromContentDisposition(res.headers?.['content-disposition']) || 'Users.xlsx';
+
+            const url = URL.createObjectURL(res.data as Blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        } catch (error: any) {
+            showError(error?.response?.data?.message || error?.message || 'Failed to download users');
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
     // Reset device: asks first, then POST /User/{id}/reset-device
     const [deviceResetUser, setDeviceResetUser] = useState<UserRecord | null>(null);
     const [isResettingDevice, setIsResettingDevice] = useState(false);
@@ -334,6 +366,8 @@ export const useUserManagement = () => {
 
         // Reset password
         resetPassword,
+        isDownloading,
+        handleDownload,
         deviceResetUser,
         isResettingDevice,
         closeResetDevice: () => setDeviceResetUser(null),

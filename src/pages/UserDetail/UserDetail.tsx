@@ -289,7 +289,7 @@ const UserDetail = () => {
                 <div className='organization__user-details-content'>
                     <div className='organization__user-details-content-items'>
                     <InfoItem icon={person_add_Icon} label="Username:" value={`${userDetail.firstName} ${userDetail.lastName}`} />
-                        <InfoItem icon={email_Icon} label="Email:" value={userDetail.email} />
+                        <InfoItem icon={email_Icon} label="Email:" value={userDetail.email} valueClassName="user-detail__info-item-value--keep-case" />
                         <InfoItem icon={person_add_Icon} label="Phone:" value={userDetail.phoneNumber} />
                         <InfoItem icon={person_add_Icon} label="District:" value={userDetail.district} />
                         <InfoItem icon={calendar_Icon} label="Joined Date:" value={userDetail.createdAt ? formatDate(userDetail.createdAt) : ''} />
@@ -454,14 +454,25 @@ const UserDetail = () => {
                                                             <NoDataFound type="nodata" description="No batch assigned" />
                                                         )
                                                     ) : (
-                                                        course.paymentScreenshot ? (
-                                                            <div className="user-detail-course__payment-screenshot">
-                                                                <a href={course.paymentScreenshot} target="_blank" rel="noopener noreferrer">
-                                                                    <img src={course.paymentScreenshot} alt="Payment Screenshot" />
-                                                                </a>
-                                                            </div>
+                                                        course.paymentScreenshot || course.transactionReference ? (
+                                                            <>
+                                                                {course.transactionReference && (
+                                                                    <ul className="user-detail-course__amounts">
+                                                                        <li className='user-detail__info-item-label2'>Transaction Reference:
+                                                                            <span className='user-detail__info-item-value2'> {course.transactionReference}</span>
+                                                                        </li>
+                                                                    </ul>
+                                                                )}
+                                                                {course.paymentScreenshot && (
+                                                                    <div className="user-detail-course__payment-screenshot">
+                                                                        <a href={course.paymentScreenshot} target="_blank" rel="noopener noreferrer">
+                                                                            <img src={course.paymentScreenshot} alt="Payment Screenshot" />
+                                                                        </a>
+                                                                    </div>
+                                                                )}
+                                                            </>
                                                         ) : (
-                                                            <NoDataFound type="nodata" description="No payment screenshot" />
+                                                            <NoDataFound type="nodata" description="No payment details" />
                                                         )
                                                     )}
                                                 </div>
