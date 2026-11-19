@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Dropdown } from 'antd';
-import { FilePdfOutlined, EditOutlined } from '@ant-design/icons';
+import { FilePdfOutlined, FileImageOutlined, EditOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import TabsComponent from '../../components/Tabs/Tabs';
 import PopupModal from '../../components/PopupModal/PopupModal';
@@ -55,6 +55,17 @@ const SYLLABUS_PAYMENT_COLUMNS: ITableColumn[] = [
     { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (amount: number) => `₹${Number(amount).toLocaleString()}` },
     { title: 'Payment Method', dataIndex: 'paymentMethod', key: 'paymentMethod', render: (value: string | null) => value || '-' },
     { title: 'Transaction Reference', dataIndex: 'transactionReference', key: 'transactionReference', render: (value: string | null) => value || '-' },
+    {
+        title: 'Transaction File',
+        dataIndex: 'paymentScreenshot',
+        key: 'paymentScreenshot',
+        // The payment screenshot opens in a new tab
+        render: (url: string | null) => (url ? (
+            <a href={url} target="_blank" rel="noopener noreferrer">
+                <FileImageOutlined /> View
+            </a>
+        ) : '-'),
+    },
     { title: 'Verified At', dataIndex: 'verifiedAt', key: 'verifiedAt', render: (value: string | null) => (value ? formatDate(value) : '-') },
     { title: 'Paid On', dataIndex: 'createdAt', key: 'createdAt', render: (value: string) => (value ? formatDate(value) : '-') },
 ];

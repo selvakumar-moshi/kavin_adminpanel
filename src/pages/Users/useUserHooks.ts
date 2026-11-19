@@ -235,8 +235,29 @@ export const useUserManagement = () => {
         }
     };
 
+    // Reset device: asks first, then POST /User/{id}/reset-device
+    const [deviceResetUser, setDeviceResetUser] = useState<UserRecord | null>(null);
+    const [isResettingDevice, setIsResettingDevice] = useState(false);
+
+    const handleResetDeviceConfirm = async () => {
+        if (!deviceResetUser) return;
+        setIsResettingDevice(true);
+        try {
+            const res = await superSalesAPI.resetUserDevice(deviceResetUser.userId);
+            showSuccess(res?.data?.message);
+            setDeviceResetUser(null);
+        } catch (error: any) {
+            showError(error?.response?.data?.message || error?.message || 'Failed to reset the device');
+        } finally {
+            setIsResettingDevice(false);
+        }
+    };
+
     const handleActionClick = (action: string, record: UserRecord) => {
         switch (action.toLowerCase()) {
+            case 'reset-device':
+                setDeviceResetUser(record);
+                break;
             case 'reset-password':
                 resetPassword.openConfirm({ userId: record.userId, name: `${record.firstName} ${record.lastName}`.trim() });
                 break;
@@ -313,6 +334,10 @@ export const useUserManagement = () => {
 
         // Reset password
         resetPassword,
+        deviceResetUser,
+        isResettingDevice,
+        closeResetDevice: () => setDeviceResetUser(null),
+        handleResetDeviceConfirm,
 
         // Toast
         toastMessages,

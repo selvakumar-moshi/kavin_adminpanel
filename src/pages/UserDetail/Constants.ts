@@ -95,6 +95,7 @@ export interface SyllabusWisePayment {
     amount: number;
     paymentMethod: string | null;
     transactionReference: string | null;
+    paymentScreenshot?: string | null;
     paymentStatus: string;
     verifiedAt: string | null;
     createdAt: string;

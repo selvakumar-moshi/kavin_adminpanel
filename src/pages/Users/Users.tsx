@@ -62,6 +62,10 @@ const Users = () => {
         handleCreateChange,
         handleCreateSubmit,
         resetPassword,
+        deviceResetUser,
+        isResettingDevice,
+        closeResetDevice,
+        handleResetDeviceConfirm,
     } = useUserManagement();
 
     // Prepare columns with sort icons, per-column search, and action handlers
@@ -98,11 +102,11 @@ const Users = () => {
             {
                 title: 'Actions',
                 key: 'actions',
-                onHeaderCell: () => ({ style: { width: 120, minWidth: 120, maxWidth: 120 } }),
+                onHeaderCell: () => ({ style: { width: 160, minWidth: 160, maxWidth: 160 } }),
                 onCell: () => ({ style: { width: 120, minWidth: 120, maxWidth: 120 } }),
                 render: (_: any, record: any) => (
                     <ActionIcons
-                        actions={['edit', 'reset-password', 'delete']}
+                        actions={['edit', 'reset-password', 'reset-device', 'delete']}
                         disabledActions={[]}
                         onActionClick={(action, record) => handleActionClick(action, record)}
                         record={record}
@@ -201,6 +205,26 @@ const Users = () => {
             </PopupModal>
 
             <ResetPasswordModals reset={resetPassword} />
+
+            {/* Reset Device Confirmation Modal */}
+            <PopupModal
+                open={Boolean(deviceResetUser)}
+                onClose={closeResetDevice}
+                onSubmit={handleResetDeviceConfirm}
+                title="Reset Device"
+                subtitle=""
+                primaryButtonText="Reset"
+                secondaryButtonText="Cancel"
+                showFooter={true}
+                primaryButtonLoading={isResettingDevice}
+                primaryButtonDisabled={isResettingDevice}
+                contentHeight="auto"
+                minHeight={100}
+            >
+                <div className="popup-modal__content-content-text">
+                    Are you sure you want to reset the device of <b>"{deviceResetUser?.firstName} {deviceResetUser?.lastName}"</b>?
+                </div>
+            </PopupModal>
 
             {/* Delete Confirmation Modal */}
             <PopupModal

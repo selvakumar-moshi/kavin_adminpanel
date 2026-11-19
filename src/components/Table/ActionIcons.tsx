@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Spin, Tooltip } from "antd";
-import { CopyOutlined, EyeOutlined, KeyOutlined } from "@ant-design/icons";
+import { CopyOutlined, EyeOutlined, KeyOutlined, MobileOutlined } from "@ant-design/icons";
 import pngEdit from "../../assets/pngEdit.svg";
 import pngDelete from "../../assets/pngDelete.svg";
 import publish_Icon from "../../assets/publish_Icon.svg"
@@ -52,6 +52,8 @@ const ActionIcons: React.FC<ActionIconsProps> = ({
         return <CopyOutlined className="action-icon-img" style={{ fontSize: 18 }} />;
       case "reset-password":
         return <KeyOutlined className="action-icon-img" style={{ fontSize: 18 }} />;
+      case "reset-device":
+        return <MobileOutlined className="action-icon-img" style={{ fontSize: 18 }} />;
       default:
         return null;
     }
