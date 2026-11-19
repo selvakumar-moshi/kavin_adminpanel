@@ -33,6 +33,13 @@ export const USER_FILTER_FIELDS: FilterColumnConfig[] = [
         title: 'Phone Number',
         displayOrder: 5,
     },
+    {
+        key: 'paymentUploadedAt',
+        title: 'Payment Date',
+        searchType: 'date',
+        disableFutureDates: true,
+        displayOrder: 6,
+    },
 ];
 
 export const MATERIAL_FILTER_FIELDS: FilterColumnConfig[] = [

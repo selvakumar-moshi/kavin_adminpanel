@@ -106,6 +106,8 @@ export const getUserTableColumns = (): ITableColumn[] => [
         title: 'Payment Date',
         dataIndex: 'paymentUploadedAt',
         key: 'paymentUploadedAt',
+        searchType: 'date',
+        disableFutureDates: true,
         sorter: (a: UserRecord, b: UserRecord) => compareText(a.paymentUploadedAt, b.paymentUploadedAt),
         render: (value: string | null) => (value ? formatDate(value) : '-'),
     },
