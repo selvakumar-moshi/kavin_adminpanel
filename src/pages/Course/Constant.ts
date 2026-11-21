@@ -58,6 +58,7 @@ export interface BatchRecord {
     batchTo: string;
     whatsAppLink?: string | null;
     telegramLink?: string | null;
+    description?: string | null;
     createdAt?: string;
     updatedAt?: string | null;
     isExpired: boolean;
@@ -82,6 +83,13 @@ export const BATCH_TITLE_FIELD = [
         type: 'text' as const,
     },
 ];
+
+// A rich text box, so it is not one of the plain input fields
+export const BATCH_DESCRIPTION_FIELD = {
+    name: 'description',
+    label: 'Description',
+    placeholder: 'Enter batch description',
+};
 
 export const BATCH_LINK_FIELDS = [
     {

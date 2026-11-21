@@ -180,11 +180,11 @@ export const getBatches = createAsyncThunk<any, { courseId: string; searchTerm?:
   }
 );
 
-export const createBatch = createAsyncThunk<any, { title: string; courseId: string; batchFrom: string; batchTo: string; whatsAppLink: string; telegramLink: string }>(
+export const createBatch = createAsyncThunk<any, { title: string; courseId: string; batchFrom: string; batchTo: string; whatsAppLink: string; telegramLink: string; description: string }>(
     "courseManagement/createBatch",
-    async ({ title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink }, { rejectWithValue }) => {
+    async ({ title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink, description }, { rejectWithValue }) => {
       try {
-        const res = await learningAPI.createBatch(title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink);
+        const res = await learningAPI.createBatch(title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink, description);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to create Batch";
@@ -193,11 +193,11 @@ export const createBatch = createAsyncThunk<any, { title: string; courseId: stri
   }
 );
 
-export const updateBatch = createAsyncThunk<any, { id: string; title: string; courseId: string; batchFrom: string; batchTo: string; whatsAppLink: string; telegramLink: string }>(
+export const updateBatch = createAsyncThunk<any, { id: string; title: string; courseId: string; batchFrom: string; batchTo: string; whatsAppLink: string; telegramLink: string; description: string }>(
     "courseManagement/updateBatch",
-    async ({ id, title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink }, { rejectWithValue }) => {
+    async ({ id, title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink, description }, { rejectWithValue }) => {
       try {
-        const res = await learningAPI.updateBatch(id, title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink);
+        const res = await learningAPI.updateBatch(id, title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink, description);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to update Batch";
@@ -453,11 +453,11 @@ export const deleteQuiz = createAsyncThunk<any, { id: string }>(
   }
 );
 
-export const publishQuiz = createAsyncThunk<any, { id: string; expiresAt: string }>(
+export const publishQuiz = createAsyncThunk<any, { id: string; date?: string; startTime?: string; endTime?: string }>(
     "quizManagement/publishQuiz",
-    async ({ id, expiresAt }, { rejectWithValue }) => {
+    async ({ id, date, startTime, endTime }, { rejectWithValue }) => {
       try {
-        const res = await learningAPI.publishQuiz(id, expiresAt);
+        const res = await learningAPI.publishQuiz(id, { date, startTime, endTime });
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to publish Quiz";

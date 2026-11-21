@@ -1,5 +1,4 @@
 ﻿import type { ReactNode } from 'react';
-import dayjs from 'dayjs';
 import { PlusOutlined, PictureOutlined } from '@ant-design/icons';
 import type { ITableColumn } from '../../components/Table/ITable';
 import { formatDate } from '../../utils/dateUtils';
@@ -156,22 +155,18 @@ export interface QuizRecord {
     timeLeftSeconds: number | null;
 }
 
-// Converts a dayjs value (or anything dayjs can parse) into an ISO string for the publish payload
-export const dayjsToISOString = (value: unknown): string => {
-    if (!value) return '';
-    if (dayjs.isDayjs(value)) return value.toISOString();
-    const parsed = dayjs(value as string);
-    return parsed.isValid() ? parsed.toISOString() : '';
-};
-
-export const QUIZ_EXPIRES_AT_FIELD = [
+// Publish popup: optional date and start / end time next to the expiry
+export const QUIZ_PUBLISH_DATE_FIELD = [
     {
-        name: 'expiresAt',
-        label: 'Expires At',
-        placeholder: 'Select expiry date & time',
-        required: true,
-        disablePastDates: true,
+        name: 'date',
+        label: 'Date',
+        placeholder: 'Select date',
     },
+];
+
+export const QUIZ_PUBLISH_TIME_FIELDS = [
+    { name: 'startTime', label: 'Start Time', placeholder: 'Select start time' },
+    { name: 'endTime', label: 'End Time', placeholder: 'Select end time' },
 ];
 
 export const CORRECT_OPTION_CHOICES = [

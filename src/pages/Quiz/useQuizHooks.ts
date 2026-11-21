@@ -6,7 +6,8 @@ import type { RootState } from '../../services/Store';
 import { getQuizzes, deleteQuiz, publishQuiz, copyQuiz, getBatches, getCourses } from '../../services/LearningAction';
 import type { QuizRecord } from './Constant';
 import type { BatchRecord, CourseRecord } from '../Course/Constant';
-import { getQuizTableColumns, isCourseLessQuizType, dayjsToISOString, QUIZ_SEARCH_INPUT_FIELDS, QUIZ_TO_VIEW_PAID, DEFAULT_FREE_KIND, getQuizScope, getTabForQuiz, usesFolderSelector } from './Constant';
+import { toDateValue, toTimePayload } from '../../components/LiveClasses/Constant';
+import { getQuizTableColumns, isCourseLessQuizType, QUIZ_SEARCH_INPUT_FIELDS, QUIZ_TO_VIEW_PAID, DEFAULT_FREE_KIND, getQuizScope, getTabForQuiz, usesFolderSelector } from './Constant';
 import { QUIZ_FILTER_FIELDS } from '../../utils/filterUtils';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 
@@ -20,8 +21,9 @@ export const useQuizManagement = () => {
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [isPublishModalVisible, setIsPublishModalVisible] = useState(false);
     const [selectedQuiz, setSelectedQuiz] = useState<QuizRecord | null>(null);
-    const [publishExpiresAt, setPublishExpiresAt] = useState<unknown>(null);
-    const [publishExpiresAtError, setPublishExpiresAtError] = useState('');
+    // Optional schedule of the published quiz: date (YYYY-MM-DD) and start / end time (HH:mm)
+    const [publishSchedule, setPublishSchedule] = useState<Record<string, string>>({});
+    const [publishScheduleErrors, setPublishScheduleErrors] = useState<Record<string, string>>({});
     const [isCopyModalVisible, setIsCopyModalVisible] = useState(false);
     const [copyTitle, setCopyTitle] = useState('');
     const [copyCourseId, setCopyCourseId] = useState('');
@@ -206,34 +208,44 @@ export const useQuizManagement = () => {
 
     const openPublishModal = (quiz: QuizRecord) => {
         setSelectedQuiz(quiz);
-        setPublishExpiresAt(null);
-        setPublishExpiresAtError('');
+        setPublishSchedule({});
+        setPublishScheduleErrors({});
         setIsPublishModalVisible(true);
     };
 
     const closePublishModal = () => {
         setIsPublishModalVisible(false);
         setSelectedQuiz(null);
-        setPublishExpiresAt(null);
-        setPublishExpiresAtError('');
+        setPublishSchedule({});
+        setPublishScheduleErrors({});
     };
 
-    const handlePublishExpiresAtChange = (_name: string, value: unknown) => {
-        setPublishExpiresAt(value);
-        if (publishExpiresAtError) setPublishExpiresAtError('');
+    // The class can't end before (or when) it starts
+    const getScheduleError = (schedule: Record<string, string>): Record<string, string> =>
+        schedule.startTime && schedule.endTime && schedule.endTime <= schedule.startTime
+            ? { endTime: 'End time must be after the start time' }
+            : {};
+
+    const handlePublishScheduleChange = (name: string, value: unknown) => {
+        const next = { ...publishSchedule, [name]: name === 'date' ? toDateValue(value) : String(value ?? '') };
+        setPublishSchedule(next);
+        setPublishScheduleErrors(getScheduleError(next));
     };
 
     const handlePublishConfirm = () => {
         if (!selectedQuiz) return;
 
-        const expiresAt = dayjsToISOString(publishExpiresAt);
-        if (!expiresAt) {
-            setPublishExpiresAtError('Expiry date & time is required');
-            return;
-        }
+        const scheduleErrors = getScheduleError(publishSchedule);
+        setPublishScheduleErrors(scheduleErrors);
+        if (Object.keys(scheduleErrors).length > 0) return;
 
         setOperationType('publish');
-        dispatch(publishQuiz({ id: selectedQuiz.id, expiresAt }) as any);
+        dispatch(publishQuiz({
+            id: selectedQuiz.id,
+            ...(publishSchedule.date ? { date: publishSchedule.date } : {}),
+            ...(publishSchedule.startTime ? { startTime: toTimePayload(publishSchedule.startTime) } : {}),
+            ...(publishSchedule.endTime ? { endTime: toTimePayload(publishSchedule.endTime) } : {}),
+        }) as any);
     };
 
     const openCopyModal = (quiz: QuizRecord) => {
@@ -356,8 +368,9 @@ export const useQuizManagement = () => {
         handleCopyBatchChange,
         handleCopyConfirm,
         selectedQuiz,
-        publishExpiresAt,
-        publishExpiresAtError,
+        publishSchedule,
+        publishScheduleErrors,
+        handlePublishScheduleChange,
         activeTab,
         setActiveTab,
         listQuizType,
@@ -371,7 +384,6 @@ export const useQuizManagement = () => {
         handleDeleteConfirm,
         openPublishModal,
         closePublishModal,
-        handlePublishExpiresAtChange,
         handlePublishConfirm,
         toastMessages,
         hideToast,

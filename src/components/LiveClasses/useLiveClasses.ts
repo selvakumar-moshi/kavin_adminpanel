@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToastMessages } from '../ToastMessages/useToastMessages';
 import { useClientSideTableSortSearch, searchAcrossFields } from '../Table/useColumnSortSearch';
 import superSalesAPI from '../../services/LearningAPI';
+import { useCourseBatchOptions } from '../../utils/useCourseBatchOptions';
 import {
     getLiveClassTableColumns,
     withPlainDescription,
@@ -39,6 +40,9 @@ export const useLiveClasses = () => {
     const [selectedRecord, setSelectedRecord] = useState<LiveClassRecord | null>(null);
     const [formValues, setFormValues] = useState<Record<string, string>>({});
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+    // Course / batch dropdowns of the form
+    const { courses, batches, batchesLoading, loadBatches } = useCourseBatchOptions(showError);
 
     const {
         sortState,
@@ -108,6 +112,11 @@ export const useLiveClasses = () => {
     const handleInputChange = (name: string, value: any) => {
         const stringValue = Array.isArray(value) ? value[0] || '' : String(value ?? '');
         const nextValues = { ...formValues, [name]: stringValue };
+        // Another course means another set of batches, so the chosen batch no longer applies
+        if (name === 'courseId') {
+            nextValues.batchId = '';
+            loadBatches(stringValue);
+        }
         setFormValues(nextValues);
 
         setFormErrors((prev) => {
@@ -136,6 +145,7 @@ export const useLiveClasses = () => {
     };
 
     const closeModal = () => {
+        loadBatches('');
         setIsModalVisible(false);
         setSelectedRecord(null);
         setFormValues({});
@@ -143,6 +153,7 @@ export const useLiveClasses = () => {
     };
 
     const openCreateModal = () => {
+        loadBatches('');
         setSelectedRecord(null);
         setFormValues({});
         setFormErrors({});
@@ -164,7 +175,11 @@ export const useLiveClasses = () => {
                 status: liveClass.status || '',
                 youTubeLink: liveClass.youTubeLink || '',
                 googleMeetLink: liveClass.googleMeetLink || '',
+                liveClassesType: liveClass.liveClassesType || '',
+                courseId: liveClass.courseId || '',
+                batchId: liveClass.batchId || '',
             };
+            loadBatches(values.courseId);
             setSelectedRecord({ ...liveClass, ...values });
             setFormValues(values);
             setFormErrors({});
@@ -192,12 +207,16 @@ export const useLiveClasses = () => {
         const payload = {
             title: (formValues.title || '').trim(),
             description: (formValues.description || '').trim(),
-            date: formValues.date,
-            startTime: toTimePayload(formValues.startTime),
-            endTime: toTimePayload(formValues.endTime),
-            status: formValues.status,
             youTubeLink: (formValues.youTubeLink || '').trim(),
             googleMeetLink: (formValues.googleMeetLink || '').trim(),
+            // Everything is optional: a date, time, status, type, course or batch that was not chosen is left out
+            ...(formValues.date ? { date: formValues.date } : {}),
+            ...(formValues.startTime ? { startTime: toTimePayload(formValues.startTime) } : {}),
+            ...(formValues.endTime ? { endTime: toTimePayload(formValues.endTime) } : {}),
+            ...(formValues.status ? { status: formValues.status } : {}),
+            ...(formValues.liveClassesType ? { liveClassesType: formValues.liveClassesType } : {}),
+            ...(formValues.courseId ? { courseId: formValues.courseId } : {}),
+            ...(formValues.batchId ? { batchId: formValues.batchId } : {}),
         };
 
         setIsSaving(true);
@@ -244,7 +263,10 @@ export const useLiveClasses = () => {
             (formValues.endTime || '') !== (selectedRecord.endTime || '') ||
             (formValues.status || '') !== (selectedRecord.status || '') ||
             (formValues.youTubeLink || '') !== (selectedRecord.youTubeLink || '') ||
-            (formValues.googleMeetLink || '') !== (selectedRecord.googleMeetLink || '')
+            (formValues.googleMeetLink || '') !== (selectedRecord.googleMeetLink || '') ||
+            (formValues.liveClassesType || '') !== (selectedRecord.liveClassesType || '') ||
+            (formValues.courseId || '') !== (selectedRecord.courseId || '') ||
+            (formValues.batchId || '') !== (selectedRecord.batchId || '')
         )
         : Object.values(formValues).some((value) => Boolean((value || '').trim()));
 
@@ -274,6 +296,9 @@ export const useLiveClasses = () => {
         selectedRecord,
         formValues,
         formErrors,
+        courses,
+        batches,
+        batchesLoading,
         hasFormChanges,
         openCreateModal,
         openEditModal,

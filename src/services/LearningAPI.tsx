@@ -10,12 +10,16 @@ export interface SyllabusWisePayload {
 export interface LiveClassPayload {
     title: string;
     description: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    status: string;
     youTubeLink: string;
     googleMeetLink: string;
+    // Optional: only sent when chosen
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+    status?: string;
+    liveClassesType?: string;
+    courseId?: string;
+    batchId?: string;
 }
 
 class LearningAPI {
@@ -107,12 +111,12 @@ class LearningAPI {
         });
     }
 
-    createBatch(title: string, courseId: string, batchFrom: string, batchTo: string, whatsAppLink: string, telegramLink: string) {
-        return Super_Sales.post('/Batch', { title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink });
+    createBatch(title: string, courseId: string, batchFrom: string, batchTo: string, whatsAppLink: string, telegramLink: string, description: string) {
+        return Super_Sales.post('/Batch', { title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink, description });
     }
 
-    updateBatch(id: string, title: string, courseId: string, batchFrom: string, batchTo: string, whatsAppLink: string, telegramLink: string) {
-        return Super_Sales.put(`/Batch/${id}`, { title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink });
+    updateBatch(id: string, title: string, courseId: string, batchFrom: string, batchTo: string, whatsAppLink: string, telegramLink: string, description: string) {
+        return Super_Sales.put(`/Batch/${id}`, { title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink, description });
     }
 
     deleteBatch(id: string) {
@@ -250,8 +254,9 @@ class LearningAPI {
         return Super_Sales.delete(`/quiz/${id}`);
     }
 
-    publishQuiz(id: string, expiresAt: string) {
-        return Super_Sales.post(`/quiz/${id}/publish`, { expiresAt });
+    // date / startTime / endTime are optional and only sent when filled in
+    publishQuiz(id: string, schedule?: { date?: string; startTime?: string; endTime?: string }) {
+        return Super_Sales.post(`/quiz/${id}/publish`, { ...schedule });
     }
 
     getFolders() {

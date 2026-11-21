@@ -6,10 +6,12 @@ import type { RootState } from '../../services/Store';
 import { getNotifications, createNotification, updateNotification, deleteNotification } from '../../services/LearningAction';
 import type { NotificationRecord } from './Constant';
 import dayjs from 'dayjs';
-import { getNotificationTableColumns, dayjsToISOString, NOTIFICATION_SEARCH_INPUT_FIELDS, FLASH_NOTIFICATION_TYPE } from './Constant';
+import { getNotificationTableColumns, dayjsToISOString, NOTIFICATION_SEARCH_INPUT_FIELDS, FLASH_NOTIFICATION_TYPE, AUDIENCE_USERS } from './Constant';
 import { NOTIFICATION_FILTER_FIELDS } from '../../utils/filterUtils';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 import { NOTIFICATION_VALIDATION_RULES } from '../../utils/validationUtils';
+import { useCourseBatchOptions } from '../../utils/useCourseBatchOptions';
+import superSalesAPI from '../../services/LearningAPI';
 
 export const useNotificationManagement = () => {
     const dispatch = useDispatch();
@@ -30,6 +32,11 @@ export const useNotificationManagement = () => {
     const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
     const [appliedFilters, setAppliedFilters] = useState<Record<string, string>>({});
     const activeFilterCount = Object.values(appliedFilters).filter(value => value && value.trim() !== '').length;
+
+    // Course / batch dropdowns, and the users the notification can be sent to (loaded the first time the form opens)
+    const { courses, batches, batchesLoading, loadBatches } = useCourseBatchOptions(showError);
+    const [users, setUsers] = useState<{ id: string; name: string }[]>([]);
+    const [usersLoading, setUsersLoading] = useState(false);
 
     const { NotificationsData, apiStatus } = useSelector(
         (state: RootState) => state.learning
@@ -129,7 +136,27 @@ export const useNotificationManagement = () => {
         }
     }, [notificationStatus, operationType, showSuccess, showError, dispatch, currentPage, pageSize, searchValue, appliedFilters]);
 
+    // Users are listed by name, 1000 at a time (the Users API is paged); each keeps its id for the request
+    const loadUsers = async () => {
+        if (users.length > 0 || usersLoading) return;
+        setUsersLoading(true);
+        try {
+            const res = await superSalesAPI.getUsers('', {}, 1, 1000);
+            const items: any[] = Array.isArray(res?.data?.data?.items) ? res.data.data.items : [];
+            setUsers(items.map((user) => ({
+                id: user.userId,
+                name: `${user.firstName || ''} ${user.lastName || ''}`.trim() + (user.applicationNo ? ` (${user.applicationNo})` : ''),
+            })));
+        } catch (error: any) {
+            showError(error?.response?.data?.message || error?.message || 'Failed to load users');
+        } finally {
+            setUsersLoading(false);
+        }
+    };
+
     const openCreateModal = () => {
+        loadBatches('');
+        loadUsers();
         setSelectedNotification(null);
         setFormValues({});
         setFormErrors({});
@@ -139,6 +166,8 @@ export const useNotificationManagement = () => {
     };
 
     const openEditModal = (notification: NotificationRecord) => {
+        loadBatches(notification.courseId || '');
+        loadUsers();
         setSelectedNotification(notification);
         setFormValues({
             notificationType: notification.notificationType || '',
@@ -147,6 +176,13 @@ export const useNotificationManagement = () => {
             link: notification.link || '',
             startDate: notification.startDate || null,
             endDate: notification.endDate || null,
+            courseType: notification.courseType || '',
+            courseId: notification.courseId || '',
+            batchId: notification.batchId || '',
+            sendPush: typeof notification.sendPush === 'boolean' ? notification.sendPush : undefined,
+            audienceType: notification.audienceType || '',
+            userIds: notification.userIds ?? (notification.userId ? [notification.userId] : []),
+            pushScheduledAt: notification.pushScheduledAt || null,
         });
         setFormErrors({});
         setFileList([]);
@@ -155,6 +191,7 @@ export const useNotificationManagement = () => {
     };
 
     const closeModal = () => {
+        loadBatches('');
         setIsModalVisible(false);
         setSelectedNotification(null);
         setFormValues({});
@@ -196,7 +233,16 @@ export const useNotificationManagement = () => {
     };
 
     const handleInputChange = (name: string, value: any) => {
-        setFormValues(prev => ({ ...prev, [name]: value }));
+        setFormValues(prev => {
+            const next = { ...prev, [name]: value };
+            // Another course means another set of batches; the chosen batch no longer applies
+            if (name === 'courseId') next.batchId = '';
+            // Users only apply to the Users audience, and a schedule only to a push
+            if (name === 'audienceType' && value !== AUDIENCE_USERS) next.userIds = [];
+            if (name === 'sendPush' && !value) next.pushScheduledAt = null;
+            return next;
+        });
+        if (name === 'courseId') loadBatches(value || '');
 
         const error = validateSingleField(name, value);
         setFormErrors(prev => {
@@ -248,6 +294,18 @@ export const useNotificationManagement = () => {
         if (startDate) formData.append('startDate', startDate);
         if (endDate) formData.append('endDate', endDate);
         formData.append('notificationType', formValues.notificationType || '');
+        // Targeting is optional: only what was chosen is sent
+        if (formValues.courseType) formData.append('courseType', formValues.courseType);
+        if (formValues.courseId) formData.append('courseId', formValues.courseId);
+        if (formValues.batchId) formData.append('batchId', formValues.batchId);
+        if (typeof formValues.sendPush === 'boolean') formData.append('sendPush', String(formValues.sendPush));
+        if (formValues.audienceType) formData.append('audienceType', formValues.audienceType);
+        // One `userId` entry per chosen user
+        if (formValues.audienceType === AUDIENCE_USERS) {
+            ((formValues.userIds as string[] | undefined) || []).forEach((userId) => formData.append('userId', userId));
+        }
+        const pushScheduledAt = dayjsToISOString(formValues.pushScheduledAt);
+        if (formValues.sendPush && pushScheduledAt) formData.append('pushScheduledAt', pushScheduledAt);
 
         const file = fileList[0]?.originFileObj;
         if (file) {
@@ -278,7 +336,14 @@ export const useNotificationManagement = () => {
             String(formValues.link || '') !== (selectedNotification.link || '') ||
             fileList.length > 0 ||
             dayjsToISOString(formValues.startDate) !== dayjsToISOString(selectedNotification.startDate) ||
-            dayjsToISOString(formValues.endDate) !== dayjsToISOString(selectedNotification.endDate)
+            dayjsToISOString(formValues.endDate) !== dayjsToISOString(selectedNotification.endDate) ||
+            String(formValues.courseType || '') !== (selectedNotification.courseType || '') ||
+            String(formValues.courseId || '') !== (selectedNotification.courseId || '') ||
+            String(formValues.batchId || '') !== (selectedNotification.batchId || '') ||
+            Boolean(formValues.sendPush) !== Boolean(selectedNotification.sendPush) ||
+            String(formValues.audienceType || '') !== (selectedNotification.audienceType || '') ||
+            [...(formValues.userIds || [])].sort().join(',') !== [...(selectedNotification.userIds ?? (selectedNotification.userId ? [selectedNotification.userId] : []))].sort().join(',') ||
+            dayjsToISOString(formValues.pushScheduledAt) !== dayjsToISOString(selectedNotification.pushScheduledAt)
         )
         : (
             Boolean(formValues.notificationType) ||
@@ -287,7 +352,14 @@ export const useNotificationManagement = () => {
             Boolean(String(formValues.link || '').trim()) ||
             fileList.length > 0 ||
             Boolean(formValues.startDate) ||
-            Boolean(formValues.endDate)
+            Boolean(formValues.endDate) ||
+            Boolean(formValues.courseType) ||
+            Boolean(formValues.courseId) ||
+            Boolean(formValues.batchId) ||
+            Boolean(formValues.sendPush) ||
+            Boolean(formValues.audienceType) ||
+            (formValues.userIds || []).length > 0 ||
+            Boolean(formValues.pushScheduledAt)
         );
 
     return {
@@ -326,6 +398,11 @@ export const useNotificationManagement = () => {
         formValues,
         formErrors,
         hasFormChanges,
+        courses,
+        batches,
+        batchesLoading,
+        users,
+        usersLoading,
         fileList,
         replacingFile,
         setReplacingFile,

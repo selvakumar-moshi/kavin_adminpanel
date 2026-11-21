@@ -9,7 +9,8 @@ import StatusBadge from '../../components/Table/StatusBadge';
 import ToastMessages from '../../components/ToastMessages';
 import PageTitle from '../../components/PageTitle';
 import { useBatchManagement } from './useBatchHooks';
-import { BATCH_TITLE_FIELD, BATCH_DATE_FIELDS, BATCH_LINK_FIELDS, getBatchTableColumns, type BatchRecord } from './Constant';
+import { RichTextEditor } from '../../components/RichTextEditor';
+import { BATCH_TITLE_FIELD, BATCH_DESCRIPTION_FIELD, BATCH_DATE_FIELDS, BATCH_LINK_FIELDS, getBatchTableColumns, type BatchRecord } from './Constant';
 import { formatDate } from '../../utils/dateUtils';
 import add_Icon from '../../assets/add_Icon.svg';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
@@ -146,6 +147,7 @@ const BatchDetails: React.FC<BatchDetailsProps> = ({ courseId }) => {
                 primaryButtonDisabled={batchLoading || !hasBatchFormChanges}
                 contentHeight="auto"
                 minHeight={250}
+                maxHeight="calc(100vh - 200px)"
             >
                 <div style={{ padding: '0 8px' }}>
                     <InputFields
@@ -153,6 +155,13 @@ const BatchDetails: React.FC<BatchDetailsProps> = ({ courseId }) => {
                         values={batchFormValues}
                         errors={batchFormErrors}
                         onChange={handleBatchInputChange}
+                        disabled={batchLoading}
+                    />
+                    <RichTextEditor
+                        {...BATCH_DESCRIPTION_FIELD}
+                        value={batchFormValues.description || ''}
+                        error={batchFormErrors.description}
+                        onChange={(value) => handleBatchInputChange('description', value)}
                         disabled={batchLoading}
                     />
                     <DateFieldsSection

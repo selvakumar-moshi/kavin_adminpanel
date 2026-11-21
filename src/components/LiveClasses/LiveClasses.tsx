@@ -26,6 +26,10 @@ import {
     LIVE_CLASS_TIME_FIELDS,
     LIVE_CLASS_STATUS_FIELD,
     LIVE_CLASS_STATUS_OPTIONS,
+    LIVE_CLASS_TYPE_FIELD,
+    LIVE_CLASS_TYPE_OPTIONS,
+    LIVE_CLASS_COURSE_FIELD,
+    LIVE_CLASS_BATCH_FIELD,
     TIME_FORMAT,
     type LiveClassRecord,
 } from './Constant';
@@ -61,6 +65,9 @@ const LiveClasses = ({ pageTitle, tabs }: LiveClassesProps) => {
         selectedRecord,
         formValues,
         formErrors,
+        courses,
+        batches,
+        batchesLoading,
         hasFormChanges,
         openCreateModal,
         openEditModal,
@@ -184,6 +191,37 @@ const LiveClasses = ({ pageTitle, tabs }: LiveClassesProps) => {
                         onChange={(value) => handleInputChange('description', value)}
                         disabled={isSaving}
                     />
+                    <DropdownField
+                        fields={[{
+                            ...LIVE_CLASS_TYPE_FIELD,
+                            options: LIVE_CLASS_TYPE_OPTIONS,
+                            disabled: isSaving,
+                        }]}
+                        values={{ liveClassesType: formValues.liveClassesType || '' }}
+                        errors={formErrors.liveClassesType ? { liveClassesType: formErrors.liveClassesType } : {}}
+                        onChange={(_, value) => handleInputChange('liveClassesType', value)}
+                    />
+                    <DropdownField
+                        fields={[
+                            {
+                                ...LIVE_CLASS_COURSE_FIELD,
+                                options: courses.map((course) => ({ value: course.id, label: course.courseName })),
+                                disabled: isSaving,
+                            },
+                            {
+                                ...LIVE_CLASS_BATCH_FIELD,
+                                options: batches.map((batch) => ({ value: batch.id, label: batch.title })),
+                                loading: batchesLoading,
+                                disabled: isSaving || !formValues.courseId,
+                            },
+                        ]}
+                        values={{ courseId: formValues.courseId || '', batchId: formValues.batchId || '' }}
+                        errors={{
+                            ...(formErrors.courseId ? { courseId: formErrors.courseId } : {}),
+                            ...(formErrors.batchId ? { batchId: formErrors.batchId } : {}),
+                        }}
+                        onChange={(name, value) => handleInputChange(name, value)}
+                    />
                     <InputFields
                         fields={LIVE_CLASS_LINK_FIELDS}
                         values={formValues}
@@ -204,10 +242,7 @@ const LiveClasses = ({ pageTitle, tabs }: LiveClassesProps) => {
                             <div className="date-fields-section__fields-container">
                                 {LIVE_CLASS_TIME_FIELDS.map((field) => (
                                     <div key={field.name} className="date-fields-section__field">
-                                        <label className="date-fields-section__label">
-                                            {field.label}
-                                            <span className="date-fields-section__required">*</span>
-                                        </label>
+                                        <label className="date-fields-section__label">{field.label}</label>
                                         <TimePicker
                                             data-testid={`time-picker-${field.name}`}
                                             className="date-fields-section__date-picker"

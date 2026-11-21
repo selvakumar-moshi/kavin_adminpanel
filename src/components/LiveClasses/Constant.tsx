@@ -19,6 +19,9 @@ export interface LiveClassRecord {
     status: string;
     youTubeLink?: string | null;
     googleMeetLink?: string | null;
+    liveClassesType?: string | null;
+    courseId?: string | null;
+    batchId?: string | null;
     createdAt?: string;
     updatedAt?: string | null;
 }
@@ -29,6 +32,32 @@ export const LIVE_CLASS_STATUS_OPTIONS = [
     { value: 'Online', label: 'Online' },
     { value: 'Expired', label: 'Expired' },
 ];
+
+export const LIVE_CLASS_TYPE_PAID = 'Paid';
+
+// The values the Live Classes Type dropdown offers (and sends as `liveClassesType`)
+export const LIVE_CLASS_TYPE_OPTIONS = [
+    { value: LIVE_CLASS_TYPE_PAID, label: 'Paid' },
+    { value: 'Free', label: 'Free' },
+];
+
+export const LIVE_CLASS_TYPE_FIELD = {
+    name: 'liveClassesType',
+    label: 'Live Classes Type',
+    placeholder: 'Select live classes type',
+};
+
+export const LIVE_CLASS_COURSE_FIELD = {
+    name: 'courseId',
+    label: 'Course',
+    placeholder: 'Select course',
+};
+
+export const LIVE_CLASS_BATCH_FIELD = {
+    name: 'batchId',
+    label: 'Batch',
+    placeholder: 'Select batch',
+};
 
 // The table's search box looks in the plain text of these (the description is saved as rich text)
 export const LIVE_CLASS_SEARCH_FIELDS = ['title', 'description', 'status'];
@@ -48,7 +77,7 @@ export const LIVE_CLASS_INPUT_FIELDS = [
         name: 'title',
         label: 'Title',
         placeholder: 'Enter title',
-        required: true,
+        required: false,
         type: 'text' as const,
     },
 ];
@@ -83,7 +112,7 @@ export const LIVE_CLASS_DATE_FIELD = [
         name: 'date',
         label: 'Date',
         placeholder: 'Select date',
-        required: true,
+        required: false,
     },
 ];
 
@@ -96,33 +125,19 @@ export const LIVE_CLASS_STATUS_FIELD = {
     name: 'status',
     label: 'Status',
     placeholder: 'Select status',
-    required: true,
 };
 
+// Every field is optional; the only check is that the end time comes after the start time (in the hook)
 export const LIVE_CLASS_VALIDATION_RULES: Record<string, ValidationRule> = {
-    title: {
-        required: true,
-        errorMessages: { required: 'Title is required' },
-    },
-    description: {
-        errorMessages: {},
-    },
-    date: {
-        required: true,
-        errorMessages: { required: 'Date is required' },
-    },
-    startTime: {
-        required: true,
-        errorMessages: { required: 'Start time is required' },
-    },
-    endTime: {
-        required: true,
-        errorMessages: { required: 'End time is required' },
-    },
-    status: {
-        required: true,
-        errorMessages: { required: 'Status is required' },
-    },
+    title: { errorMessages: {} },
+    description: { errorMessages: {} },
+    date: { errorMessages: {} },
+    startTime: { errorMessages: {} },
+    endTime: { errorMessages: {} },
+    status: { errorMessages: {} },
+    liveClassesType: { errorMessages: {} },
+    courseId: { errorMessages: {} },
+    batchId: { errorMessages: {} },
 };
 
 export const TIME_FORMAT = 'HH:mm';

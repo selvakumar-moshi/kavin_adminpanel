@@ -15,6 +15,15 @@ export interface NotificationRecord {
     attachmentUrl?: string | null;
     startDate: string;
     endDate: string;
+    courseType?: string | null;
+    courseId?: string | null;
+    batchId?: string | null;
+    sendPush?: boolean | null;
+    audienceType?: string | null;
+    // The users the notification is for (when the audience is Users)
+    userIds?: string[] | null;
+    userId?: string | null;
+    pushScheduledAt?: string | null;
     createdAt?: string;
     updatedAt?: string | null;
 }
@@ -91,6 +100,58 @@ export const NOTIFICATION_DATE_FIELD = [
         name: 'endDate',
         label: 'End Date',
         placeholder: 'Select end date',
+    },
+];
+
+// Targeting (all optional): the course / batch the notification is for, and who gets the push
+export const NOTIFICATION_COURSE_TYPE_FIELD = {
+    name: 'courseType',
+    label: 'Course Type',
+    placeholder: 'Select course type',
+    options: [
+        { value: 'Paid', label: 'Paid' },
+        { value: 'Free', label: 'Free' },
+    ],
+};
+
+export const NOTIFICATION_COURSE_FIELD = {
+    name: 'courseId',
+    label: 'Course',
+    placeholder: 'Select course',
+};
+
+export const NOTIFICATION_BATCH_FIELD = {
+    name: 'batchId',
+    label: 'Batch',
+    placeholder: 'Select batch',
+};
+
+export const SEND_PUSH_LABEL = 'Send Push Notification';
+
+export const AUDIENCE_USERS = 'Users';
+
+export const NOTIFICATION_AUDIENCE_FIELD = {
+    name: 'audienceType',
+    label: 'Audience Type',
+    placeholder: 'Select audience type',
+    options: [
+        { value: AUDIENCE_USERS, label: 'Users' },
+    ],
+};
+
+// Shown for the Users audience: the names are listed, the ids are what is sent
+export const NOTIFICATION_USER_FIELD = {
+    name: 'userId',
+    label: 'Users',
+    placeholder: 'Select users',
+};
+
+export const NOTIFICATION_PUSH_SCHEDULED_FIELD = [
+    {
+        name: 'pushScheduledAt',
+        label: 'Push Scheduled At',
+        placeholder: 'Select date & time',
+        disablePastDates: true,
     },
 ];
 
