@@ -19,8 +19,7 @@ export interface NotificationRecord {
     courseId?: string | null;
     batchId?: string | null;
     sendPush?: boolean | null;
-    audienceType?: string | null;
-    // The users the notification is for (when the audience is Users)
+    // The users the notification is for
     userIds?: string[] | null;
     userId?: string | null;
     pushScheduledAt?: string | null;
@@ -128,18 +127,7 @@ export const NOTIFICATION_BATCH_FIELD = {
 
 export const SEND_PUSH_LABEL = 'Send Push Notification';
 
-export const AUDIENCE_USERS = 'Users';
-
-export const NOTIFICATION_AUDIENCE_FIELD = {
-    name: 'audienceType',
-    label: 'Audience Type',
-    placeholder: 'Select audience type',
-    options: [
-        { value: AUDIENCE_USERS, label: 'Users' },
-    ],
-};
-
-// Shown for the Users audience: the names are listed, the ids are what is sent
+// The names are listed, the ids are what is sent
 export const NOTIFICATION_USER_FIELD = {
     name: 'userId',
     label: 'Users',

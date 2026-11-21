@@ -6,7 +6,7 @@ import type { RootState } from '../../services/Store';
 import { getNotifications, createNotification, updateNotification, deleteNotification } from '../../services/LearningAction';
 import type { NotificationRecord } from './Constant';
 import dayjs from 'dayjs';
-import { getNotificationTableColumns, dayjsToISOString, NOTIFICATION_SEARCH_INPUT_FIELDS, FLASH_NOTIFICATION_TYPE, AUDIENCE_USERS } from './Constant';
+import { getNotificationTableColumns, dayjsToISOString, NOTIFICATION_SEARCH_INPUT_FIELDS, FLASH_NOTIFICATION_TYPE } from './Constant';
 import { NOTIFICATION_FILTER_FIELDS } from '../../utils/filterUtils';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 import { NOTIFICATION_VALIDATION_RULES } from '../../utils/validationUtils';
@@ -180,7 +180,6 @@ export const useNotificationManagement = () => {
             courseId: notification.courseId || '',
             batchId: notification.batchId || '',
             sendPush: typeof notification.sendPush === 'boolean' ? notification.sendPush : undefined,
-            audienceType: notification.audienceType || '',
             userIds: notification.userIds ?? (notification.userId ? [notification.userId] : []),
             pushScheduledAt: notification.pushScheduledAt || null,
         });
@@ -237,8 +236,7 @@ export const useNotificationManagement = () => {
             const next = { ...prev, [name]: value };
             // Another course means another set of batches; the chosen batch no longer applies
             if (name === 'courseId') next.batchId = '';
-            // Users only apply to the Users audience, and a schedule only to a push
-            if (name === 'audienceType' && value !== AUDIENCE_USERS) next.userIds = [];
+            // A schedule only applies to a push
             if (name === 'sendPush' && !value) next.pushScheduledAt = null;
             return next;
         });
@@ -299,11 +297,8 @@ export const useNotificationManagement = () => {
         if (formValues.courseId) formData.append('courseId', formValues.courseId);
         if (formValues.batchId) formData.append('batchId', formValues.batchId);
         if (typeof formValues.sendPush === 'boolean') formData.append('sendPush', String(formValues.sendPush));
-        if (formValues.audienceType) formData.append('audienceType', formValues.audienceType);
         // One `userId` entry per chosen user
-        if (formValues.audienceType === AUDIENCE_USERS) {
-            ((formValues.userIds as string[] | undefined) || []).forEach((userId) => formData.append('userId', userId));
-        }
+        ((formValues.userIds as string[] | undefined) || []).forEach((userId) => formData.append('userId', userId));
         const pushScheduledAt = dayjsToISOString(formValues.pushScheduledAt);
         if (formValues.sendPush && pushScheduledAt) formData.append('pushScheduledAt', pushScheduledAt);
 
@@ -341,7 +336,6 @@ export const useNotificationManagement = () => {
             String(formValues.courseId || '') !== (selectedNotification.courseId || '') ||
             String(formValues.batchId || '') !== (selectedNotification.batchId || '') ||
             Boolean(formValues.sendPush) !== Boolean(selectedNotification.sendPush) ||
-            String(formValues.audienceType || '') !== (selectedNotification.audienceType || '') ||
             [...(formValues.userIds || [])].sort().join(',') !== [...(selectedNotification.userIds ?? (selectedNotification.userId ? [selectedNotification.userId] : []))].sort().join(',') ||
             dayjsToISOString(formValues.pushScheduledAt) !== dayjsToISOString(selectedNotification.pushScheduledAt)
         )
@@ -357,7 +351,6 @@ export const useNotificationManagement = () => {
             Boolean(formValues.courseId) ||
             Boolean(formValues.batchId) ||
             Boolean(formValues.sendPush) ||
-            Boolean(formValues.audienceType) ||
             (formValues.userIds || []).length > 0 ||
             Boolean(formValues.pushScheduledAt)
         );
