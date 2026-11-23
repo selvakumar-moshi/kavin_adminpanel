@@ -52,6 +52,7 @@ const QuestionDetail = () => {
         courseError,
         quizToViewError,
         questionErrors,
+        passageErrors,
         applyMarkToAll,
         quizFileList,
         isImporting,
@@ -65,6 +66,9 @@ const QuestionDetail = () => {
         handleBatchChange,
         handleQuizToViewChange,
         addQuestionAfter,
+        addPassage,
+        addQuestionAtEnd,
+        handlePassageChange,
         addSectionAfter,
         removeItem,
         handleQuestionFieldChange,
@@ -199,9 +203,13 @@ const QuestionDetail = () => {
                     items={items}
                     questionCount={questionCount}
                     questionErrors={questionErrors}
+                    passageErrors={passageErrors}
                     applyMarkToAll={applyMarkToAll}
                     isSaving={isSaving}
                     addQuestionAfter={addQuestionAfter}
+                    addPassage={addPassage}
+                    addQuestionAtEnd={addQuestionAtEnd}
+                    handlePassageChange={handlePassageChange}
                     addSectionAfter={addSectionAfter}
                     removeItem={removeItem}
                     handleQuestionFieldChange={handleQuestionFieldChange}

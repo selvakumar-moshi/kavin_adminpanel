@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import QuizPreviewModal from './QuizPreviewModal';
-import { Badge, TimePicker } from 'antd';
-import { ClockCircleOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import { Badge } from 'antd';
 import TabsComponent from '../../components/Tabs/Tabs';
 import Button from '../../components/Button/Button';
 import TableWithPagination from '../../components/Table/TableWithPagination';
@@ -18,8 +16,7 @@ import ToastMessages from '../../components/ToastMessages';
 import PageTitle from '../../components/PageTitle';
 import { useQuizManagement } from './useQuizHooks';
 import SchoolBookQuiz from './schoolBook/SchoolBookQuiz';
-import { TIME_FORMAT } from '../../components/LiveClasses/Constant';
-import { getQuizTableColumns, QUIZ_PUBLISH_DATE_FIELD, QUIZ_PUBLISH_TIME_FIELDS, QUIZ_COPY_TITLE_FIELD, QUIZ_TO_VIEW_PAID, QUIZ_TAB_FREE, QUIZ_TYPE_SCHOOL, isCourseLessQuizType, FREE_QUIZ_KINDS, usesFolderSelector, type QuizRecord, Quiz_TAB_ITEMS } from './Constant';
+import { getQuizTableColumns, QUIZ_PUBLISH_DATE_FIELDS, QUIZ_PUBLISH_EXPIRE_FIELD, QUIZ_COPY_TITLE_FIELD, QUIZ_TO_VIEW_PAID, QUIZ_TAB_FREE, QUIZ_TYPE_SCHOOL, isCourseLessQuizType, FREE_QUIZ_KINDS, usesFolderSelector, type QuizRecord, Quiz_TAB_ITEMS } from './Constant';
 import add_Icon from '../../assets/add_Icon.svg';
 import filter_Icon from '../../assets/filter_Icon.svg';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
@@ -246,40 +243,26 @@ const Quiz = () => {
                     Are you sure you want to publish the quiz <b>"{selectedQuiz?.title}"</b>? Once published, students can attempt it.
                 </div>
                 <div style={{ padding: '0 8px' }}>
-                    {/* Optional: the date and the start / end time of the quiz */}
+                    {/* Optional: when the quiz starts, ends and expires (date & time) */}
                     <DateFieldsSection
-                        fields={QUIZ_PUBLISH_DATE_FIELD}
+                        className="date-fields-section--row"
+                        fields={QUIZ_PUBLISH_DATE_FIELDS}
+                        showTime
+                        format="YYYY-MM-DD HH:mm"
                         values={publishSchedule}
+                        errors={publishScheduleErrors}
                         onChange={handlePublishScheduleChange}
                         disabled={loading}
                     />
-                    <div className="date-fields-section date-fields-section--row">
-                        <div className="date-fields-section__form">
-                            <div className="date-fields-section__fields-container">
-                                {QUIZ_PUBLISH_TIME_FIELDS.map((field) => (
-                                    <div key={field.name} className="date-fields-section__field">
-                                        <label className="date-fields-section__label">{field.label}</label>
-                                        <TimePicker
-                                            data-testid={`publish-time-picker-${field.name}`}
-                                            className="date-fields-section__date-picker"
-                                            placeholder={field.placeholder}
-                                            status={publishScheduleErrors[field.name] ? 'error' : undefined}
-                                            suffixIcon={<ClockCircleOutlined />}
-                                            format="hh:mm A"
-                                            use12Hours
-                                            needConfirm={false}
-                                            value={publishSchedule[field.name] ? dayjs(`2000-01-01T${publishSchedule[field.name]}`) : null}
-                                            onChange={(time) => handlePublishScheduleChange(field.name, time ? time.format(TIME_FORMAT) : '')}
-                                            disabled={loading}
-                                        />
-                                        {publishScheduleErrors[field.name] && (
-                                            <div className="form-fields-section__error-message">{publishScheduleErrors[field.name]}</div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+                    <DateFieldsSection
+                        fields={QUIZ_PUBLISH_EXPIRE_FIELD}
+                        showTime
+                        format="YYYY-MM-DD HH:mm"
+                        values={publishSchedule}
+                        errors={publishScheduleErrors}
+                        onChange={handlePublishScheduleChange}
+                        disabled={loading}
+                    />
                 </div>
             </PopupModal>
 

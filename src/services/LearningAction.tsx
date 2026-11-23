@@ -453,11 +453,11 @@ export const deleteQuiz = createAsyncThunk<any, { id: string }>(
   }
 );
 
-export const publishQuiz = createAsyncThunk<any, { id: string; date?: string; startTime?: string; endTime?: string }>(
+export const publishQuiz = createAsyncThunk<any, { id: string; startDate?: string; endDate?: string; expireAt?: string }>(
     "quizManagement/publishQuiz",
-    async ({ id, date, startTime, endTime }, { rejectWithValue }) => {
+    async ({ id, startDate, endDate, expireAt }, { rejectWithValue }) => {
       try {
-        const res = await learningAPI.publishQuiz(id, { date, startTime, endTime });
+        const res = await learningAPI.publishQuiz(id, { startDate, endDate, expireAt });
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to publish Quiz";

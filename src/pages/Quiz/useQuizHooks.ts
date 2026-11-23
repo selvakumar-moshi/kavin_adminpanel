@@ -6,8 +6,7 @@ import type { RootState } from '../../services/Store';
 import { getQuizzes, deleteQuiz, publishQuiz, copyQuiz, getBatches, getCourses } from '../../services/LearningAction';
 import type { QuizRecord } from './Constant';
 import type { BatchRecord, CourseRecord } from '../Course/Constant';
-import { toDateValue, toTimePayload } from '../../components/LiveClasses/Constant';
-import { getQuizTableColumns, isCourseLessQuizType, QUIZ_SEARCH_INPUT_FIELDS, QUIZ_TO_VIEW_PAID, DEFAULT_FREE_KIND, getQuizScope, getTabForQuiz, usesFolderSelector } from './Constant';
+import { getQuizTableColumns, isCourseLessQuizType, dayjsToISOString, QUIZ_SEARCH_INPUT_FIELDS, QUIZ_TO_VIEW_PAID, DEFAULT_FREE_KIND, getQuizScope, getTabForQuiz, usesFolderSelector } from './Constant';
 import { QUIZ_FILTER_FIELDS } from '../../utils/filterUtils';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 
@@ -21,8 +20,8 @@ export const useQuizManagement = () => {
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [isPublishModalVisible, setIsPublishModalVisible] = useState(false);
     const [selectedQuiz, setSelectedQuiz] = useState<QuizRecord | null>(null);
-    // Optional schedule of the published quiz: date (YYYY-MM-DD) and start / end time (HH:mm)
-    const [publishSchedule, setPublishSchedule] = useState<Record<string, string>>({});
+    // Optional dates of the published quiz (startDate, endDate, expireAt), each a date & time picked in the popup
+    const [publishSchedule, setPublishSchedule] = useState<Record<string, unknown>>({});
     const [publishScheduleErrors, setPublishScheduleErrors] = useState<Record<string, string>>({});
     const [isCopyModalVisible, setIsCopyModalVisible] = useState(false);
     const [copyTitle, setCopyTitle] = useState('');
@@ -220,14 +219,14 @@ export const useQuizManagement = () => {
         setPublishScheduleErrors({});
     };
 
-    // The class can't end before (or when) it starts
-    const getScheduleError = (schedule: Record<string, string>): Record<string, string> =>
-        schedule.startTime && schedule.endTime && schedule.endTime <= schedule.startTime
-            ? { endTime: 'End time must be after the start time' }
+    // The quiz can't end before it starts
+    const getScheduleError = (schedule: Record<string, unknown>): Record<string, string> =>
+        schedule.startDate && schedule.endDate && dayjsToISOString(schedule.endDate) < dayjsToISOString(schedule.startDate)
+            ? { endDate: 'End date must not be before the start date' }
             : {};
 
     const handlePublishScheduleChange = (name: string, value: unknown) => {
-        const next = { ...publishSchedule, [name]: name === 'date' ? toDateValue(value) : String(value ?? '') };
+        const next = { ...publishSchedule, [name]: value || null };
         setPublishSchedule(next);
         setPublishScheduleErrors(getScheduleError(next));
     };
@@ -242,9 +241,9 @@ export const useQuizManagement = () => {
         setOperationType('publish');
         dispatch(publishQuiz({
             id: selectedQuiz.id,
-            ...(publishSchedule.date ? { date: publishSchedule.date } : {}),
-            ...(publishSchedule.startTime ? { startTime: toTimePayload(publishSchedule.startTime) } : {}),
-            ...(publishSchedule.endTime ? { endTime: toTimePayload(publishSchedule.endTime) } : {}),
+            ...(publishSchedule.startDate ? { startDate: dayjsToISOString(publishSchedule.startDate) } : {}),
+            ...(publishSchedule.endDate ? { endDate: dayjsToISOString(publishSchedule.endDate) } : {}),
+            ...(publishSchedule.expireAt ? { expireAt: dayjsToISOString(publishSchedule.expireAt) } : {}),
         }) as any);
     };
 

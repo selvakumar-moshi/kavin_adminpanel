@@ -43,6 +43,7 @@ const SchoolBookQuiz = ({ onCancel, onCreated }: SchoolBookQuizProps) => {
         items,
         questionCount,
         questionErrors,
+        passageErrors,
         applyMarkToAll,
         quizFileList,
         importWarnings,
@@ -51,6 +52,9 @@ const SchoolBookQuiz = ({ onCancel, onCreated }: SchoolBookQuizProps) => {
         handleQuizFileChange,
         documentRemoval,
         addQuestionAfter,
+        addPassage,
+        addQuestionAtEnd,
+        handlePassageChange,
         addSectionAfter,
         removeItem,
         handleQuestionFieldChange,
@@ -140,9 +144,13 @@ const SchoolBookQuiz = ({ onCancel, onCreated }: SchoolBookQuizProps) => {
                     items={items}
                     questionCount={questionCount}
                     questionErrors={questionErrors}
+                    passageErrors={passageErrors}
                     applyMarkToAll={applyMarkToAll}
                     isSaving={isSaving}
                     addQuestionAfter={addQuestionAfter}
+                    addPassage={addPassage}
+                    addQuestionAtEnd={addQuestionAtEnd}
+                    handlePassageChange={handlePassageChange}
                     addSectionAfter={addSectionAfter}
                     removeItem={removeItem}
                     handleQuestionFieldChange={handleQuestionFieldChange}

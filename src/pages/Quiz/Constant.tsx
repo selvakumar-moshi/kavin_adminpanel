@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 ﻿import type { ReactNode } from 'react';
 import { PlusOutlined, PictureOutlined } from '@ant-design/icons';
 import type { ITableColumn } from '../../components/Table/ITable';
@@ -7,6 +8,21 @@ import { renderTruncatedCellWithTooltip } from '../../utils/tableCellRender';
 import { compareText } from './quizTableUtils';
 import { competitiveScopeColumns } from './competitive/columns';
 import { previousYearScopeColumns } from './previousYear/columns';
+
+// A passage with the questions about it (what GET /quiz/{id} lists in place of those questions)
+export interface QuizPassageGroup {
+    passageQuiz: string;
+    questions: QuizQuestion[];
+}
+
+export type QuizQuestionEntry = QuizQuestion | QuizPassageGroup;
+
+export const isPassageGroup = (entry: QuizQuestionEntry): entry is QuizPassageGroup =>
+    Array.isArray((entry as QuizPassageGroup).questions);
+
+// Every question of the quiz in order, with the passage groups opened up
+export const flattenQuizQuestions = (entries?: QuizQuestionEntry[] | null): QuizQuestion[] =>
+    (entries || []).flatMap((entry) => (isPassageGroup(entry) ? entry.questions : [entry]));
 
 export interface QuizQuestion {
     questionNumber?: number;
@@ -27,6 +43,8 @@ export interface QuizQuestion {
     optionDImageKey?: string;
     correctOption: string;
     mark: string;
+    // The passage this question is about (several questions can share one)
+    passageQuiz?: string | null;
 }
 
 // Client-side image state for a question and its options: `images` holds whatever should be
@@ -146,7 +164,8 @@ export interface QuizRecord {
     /** e.g. "6th/part-1/lesson-1" */
     subFolderPath?: string | null;
     publishedAt: string | null;
-    questions: QuizQuestion[];
+    // Regular questions and passage groups, in the order they appear in the quiz
+    questions: QuizQuestionEntry[];
     questionCount: string;
     createdAt: string;
     updatedAt: string | null;
@@ -155,18 +174,22 @@ export interface QuizRecord {
     timeLeftSeconds: number | null;
 }
 
-// Publish popup: optional date and start / end time next to the expiry
-export const QUIZ_PUBLISH_DATE_FIELD = [
-    {
-        name: 'date',
-        label: 'Date',
-        placeholder: 'Select date',
-    },
+// Converts a dayjs value (or anything dayjs can parse) into an ISO string for the publish payload
+export const dayjsToISOString = (value: unknown): string => {
+    if (!value) return '';
+    if (dayjs.isDayjs(value)) return value.toISOString();
+    const parsed = dayjs(value as string);
+    return parsed.isValid() ? parsed.toISOString() : '';
+};
+
+// Publish popup: three optional date & time pickers
+export const QUIZ_PUBLISH_DATE_FIELDS = [
+    { name: 'startDate', label: 'Start Date', placeholder: 'Select start date & time' },
+    { name: 'endDate', label: 'End Date', placeholder: 'Select end date & time' },
 ];
 
-export const QUIZ_PUBLISH_TIME_FIELDS = [
-    { name: 'startTime', label: 'Start Time', placeholder: 'Select start time' },
-    { name: 'endTime', label: 'End Time', placeholder: 'Select end time' },
+export const QUIZ_PUBLISH_EXPIRE_FIELD = [
+    { name: 'expireAt', label: 'Expire At', placeholder: 'Select expiry date & time' },
 ];
 
 export const CORRECT_OPTION_CHOICES = [
@@ -283,7 +306,7 @@ export const getQuizTableColumns = (quizType?: string): ITableColumn[] => [
         dataIndex: 'questions',
         key: 'questionCount',
         searchType: 'text',
-        render: (questions: QuizQuestion[]) => questions?.length || 0,
+        render: (questions: QuizQuestionEntry[]) => flattenQuizQuestions(questions).length,
         sorter: (a: QuizRecord, b: QuizRecord) => compareText(a.questionCount, b.questionCount),
     },
     {

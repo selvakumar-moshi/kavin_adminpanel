@@ -254,8 +254,8 @@ class LearningAPI {
         return Super_Sales.delete(`/quiz/${id}`);
     }
 
-    // date / startTime / endTime are optional and only sent when filled in
-    publishQuiz(id: string, schedule?: { date?: string; startTime?: string; endTime?: string }) {
+    // startDate / endDate / expireAt are optional and only sent when filled in
+    publishQuiz(id: string, schedule?: { startDate?: string; endDate?: string; expireAt?: string }) {
         return Super_Sales.post(`/quiz/${id}/publish`, { ...schedule });
     }
 

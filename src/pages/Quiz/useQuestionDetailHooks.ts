@@ -7,7 +7,7 @@ import type { RootState } from '../../services/Store';
 import { getQuizById, createQuiz, updateQuiz, getCourses, getBatches } from '../../services/LearningAction';
 import superSalesAPI from '../../services/LearningAPI';
 import { savingOverlay, waitForPaint } from '../../components/SavingOverlay/SavingOverlay';
-import { usesFolderSelector, isCourseLessQuizType, emptyQuestion, parsePastedOptionsList, QUESTION_OPTION_KEYS, IMAGE_FIELD_NAMES, IMAGE_URL_FIELD_NAMES, type QuizQuestion, type QuizQuestionImages, type QuizQuestionImageFiles, type QuizRecord } from './Constant';
+import { usesFolderSelector, isPassageGroup, isCourseLessQuizType, emptyQuestion, parsePastedOptionsList, QUESTION_OPTION_KEYS, IMAGE_FIELD_NAMES, IMAGE_URL_FIELD_NAMES, type QuizQuestion, type QuizQuestionImages, type QuizQuestionImageFiles, type QuizRecord } from './Constant';
 import type { CourseRecord, BatchRecord } from '../Course/Constant';
 import { QUIZ_VALIDATION_RULES, QUIZ_QUESTION_VALIDATION_RULES, type ValidationRule } from '../../utils/validationUtils';
 
@@ -15,7 +15,8 @@ type QuestionErrors = Record<number, Partial<Record<keyof QuizQuestion, string>>
 
 // Client-only identity + image state — `images`/`imageFiles` are never sent as-is (handleSubmit
 // rebuilds the multipart payload from imageFiles, and derives text fields directly from `question`)
-export type KeyedQuizQuestion = QuizQuestion & { _key: number; images: QuizQuestionImages; imageFiles: QuizQuestionImageFiles };
+// `passageKey` (client-only) points at the passage item the question belongs to
+export type KeyedQuizQuestion = QuizQuestion & { _key: number; images: QuizQuestionImages; imageFiles: QuizQuestionImageFiles; passageKey?: number };
 
 // "Quiz To View" value that makes Course and Batch applicable
 const PAID_QUIZ = 'Paid';
@@ -60,11 +61,22 @@ export interface KeyedSection {
     description: string;
 }
 
+// A reading passage (rich text) that the questions linked to it are about
+export interface KeyedPassage {
+    _key: number;
+    text: string;
+}
+
 export type ListItem =
     | { type: 'question'; question: KeyedQuizQuestion }
-    | { type: 'section'; section: KeyedSection };
+    | { type: 'section'; section: KeyedSection }
+    | { type: 'passage'; passage: KeyedPassage };
 
-export const getItemKey = (item: ListItem): number => (item.type === 'question' ? item.question._key : item.section._key);
+export const getItemKey = (item: ListItem): number => {
+    if (item.type === 'question') return item.question._key;
+    if (item.type === 'passage') return item.passage._key;
+    return item.section._key;
+};
 
 // Module-level (not a ref/state) so key generation never touches React's render/hook rules
 let itemKeySeed = 0;
@@ -119,6 +131,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
     const [wrongAnswersPerDeduction, setWrongAnswersPerDeduction] = useState('');
     const [quizToViewError, setQuizToViewError] = useState('');
     const [questionErrors, setQuestionErrors] = useState<QuestionErrors>({});
+    const [passageErrors, setPassageErrors] = useState<Record<number, string>>({});
     const [isSaving, setIsSaving] = useState(false);
     // On by default: the first question's mark is used for every question until the admin unchecks it
     const [applyMarkToAll, setApplyMarkToAll] = useState(true);
@@ -203,15 +216,42 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
                 dispatch(getBatches({ courseId: quizDetail.courseId, pageSize: 100 }) as any);
             }
 
-            const keyedQuestions = quizDetail.questions && quizDetail.questions.length > 0
-                ? quizDetail.questions.map((q) => makeKeyedQuestion(q))
-                : [makeKeyedQuestion()];
+            // The quiz lists regular questions and passage groups ({ passageQuiz, questions: [...] }) in order; a group becomes
+            // a passage block with its questions. A question that carries a passage on its own (not inside a group) is
+            // grouped with the questions right after it that have the same passage text.
+            const loadedItems: ListItem[] = [];
+            let currentPassage: KeyedPassage | null = null;
+            const addLoadedQuestion = (saved: QuizQuestion, passage: KeyedPassage | null) => {
+                const question = makeKeyedQuestion(saved);
+                if (passage) question.passageKey = passage._key;
+                loadedItems.push({ type: 'question', question });
+            };
+            (quizDetail.questions || []).forEach((entry) => {
+                if (isPassageGroup(entry)) {
+                    const passage: KeyedPassage = { _key: nextItemKey(), text: entry.passageQuiz || '' };
+                    loadedItems.push({ type: 'passage', passage });
+                    entry.questions.forEach((saved) => addLoadedQuestion({ ...saved, passageQuiz: saved.passageQuiz || entry.passageQuiz }, passage));
+                    currentPassage = null;
+                    return;
+                }
+                const passageText = entry.passageQuiz || '';
+                if (!passageText.trim()) {
+                    currentPassage = null;
+                } else if (!currentPassage || currentPassage.text !== passageText) {
+                    currentPassage = { _key: nextItemKey(), text: passageText };
+                    loadedItems.push({ type: 'passage', passage: currentPassage });
+                }
+                addLoadedQuestion(entry, currentPassage);
+            });
+            if (loadedItems.length === 0) loadedItems.push({ type: 'question', question: makeKeyedQuestion() });
 
+            const keyedQuestions = loadedItems.flatMap((it) => (it.type === 'question' ? [it.question] : []));
             const originalValues = new Map<number, QuizQuestion>();
             keyedQuestions.forEach((kq) => originalValues.set(kq._key, { ...kq }));
             originalQuestionValuesRef.current = originalValues;
 
-            setItems(keyedQuestions.map((question) => ({ type: 'question' as const, question })));
+            setPassageErrors({});
+            setItems(loadedItems);
             // A saved quiz whose questions carry different marks must not be flattened (or have its marks locked)
             setApplyMarkToAll(keyedQuestions.every((q) => q.mark === keyedQuestions[0].mark));
 
@@ -382,7 +422,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
             importedKeysRef.current = new Set(imported.map(getItemKey));
 
             setItems((prev) => [
-                ...prev.filter((it) => !previousKeys.has(getItemKey(it)) && (it.type === 'section' || !isBlankQuestion(it.question))),
+                ...prev.filter((it) => !previousKeys.has(getItemKey(it)) && (it.type !== 'question' || !isBlankQuestion(it.question))),
                 ...imported,
             ]);
             setQuestionErrors((prev) => {
@@ -467,13 +507,52 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         return first?.question.mark || '';
     };
 
-    const addQuestionAfter = (afterKey: number) =>
-        insertItemAfter(afterKey, { type: 'question', question: makeKeyedQuestion({ ...emptyQuestion(), mark: sharedMark() }) });
+    // Added from a passage (or from one of its questions) the new question belongs to that passage too
+    const addQuestionAfter = (afterKey: number) => {
+        const after = items.find((it) => getItemKey(it) === afterKey);
+        const passageKey = after?.type === 'passage' ? after.passage._key : after?.type === 'question' ? after.question.passageKey : undefined;
+        const question = makeKeyedQuestion({ ...emptyQuestion(), mark: sharedMark() });
+        insertItemAfter(afterKey, { type: 'question', question: passageKey === undefined ? question : { ...question, passageKey } });
+    };
+
+    // "Passage Quiz": a passage block with its first question, added after everything that is already there
+    const addPassage = () => {
+        const passage: KeyedPassage = { _key: nextItemKey(), text: '' };
+        const question = { ...makeKeyedQuestion({ ...emptyQuestion(), mark: sharedMark() }), passageKey: passage._key };
+        setItems((prev) => [...prev, { type: 'passage', passage }, { type: 'question', question }]);
+    };
+
+    // A regular question after everything that is already there (even after a passage section)
+    const addQuestionAtEnd = () => {
+        setItems((prev) => [...prev, { type: 'question', question: makeKeyedQuestion({ ...emptyQuestion(), mark: sharedMark() }) }]);
+    };
+
+    const handlePassageChange = (key: number, text: string) => {
+        setItems((prev) => prev.map((it) => (it.type === 'passage' && it.passage._key === key ? { ...it, passage: { ...it.passage, text } } : it)));
+        setPassageErrors((prev) => {
+            if (!prev[key]) return prev;
+            const next = { ...prev };
+            delete next[key];
+            return next;
+        });
+    };
 
     const addSectionAfter = (afterKey: number) => insertItemAfter(afterKey, { type: 'section', section: makeKeyedSection() });
 
+    // Removing a passage keeps its questions (they become ordinary questions); a passage left without questions goes too
     const removeItem = (key: number) => {
-        setItems((prev) => prev.filter((it) => getItemKey(it) !== key));
+        setItems((prev) => {
+            const removed = prev.find((it) => getItemKey(it) === key);
+            const rest = prev
+                .filter((it) => getItemKey(it) !== key)
+                .map((it) => (
+                    removed?.type === 'passage' && it.type === 'question' && it.question.passageKey === key
+                        ? { ...it, question: { ...it.question, passageKey: undefined } }
+                        : it
+                ));
+            const usedPassageKeys = new Set(rest.flatMap((it) => (it.type === 'question' && it.question.passageKey !== undefined ? [it.question.passageKey] : [])));
+            return rest.filter((it) => it.type !== 'passage' || usedPassageKeys.has(it.passage._key));
+        });
         setQuestionErrors((prev) => {
             if (!(key in prev)) return prev;
             const next = { ...prev };
@@ -694,6 +773,17 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         });
         setQuestionErrors(newQuestionErrors);
 
+        // A passage that has questions needs its text
+        const linkedPassageKeys = new Set(questions.flatMap((q) => (q.passageKey !== undefined ? [q.passageKey] : [])));
+        const newPassageErrors: Record<number, string> = {};
+        items.forEach((it) => {
+            if (it.type === 'passage' && linkedPassageKeys.has(it.passage._key) && !it.passage.text.trim()) {
+                newPassageErrors[it.passage._key] = 'Passage is required';
+                isValid = false;
+            }
+        });
+        setPassageErrors(newPassageErrors);
+
         return isValid;
     };
 
@@ -706,6 +796,11 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
     };
 
     const appendQuestionsToFormData = (formData: FormData) => {
+        const passageTexts = new Map<number, string>();
+        items.forEach((it) => {
+            if (it.type === 'passage') passageTexts.set(it.passage._key, it.passage.text);
+        });
+
         questions.forEach((q, index) => {
             formData.append(`questions[${index}].questionText`, q.questionText);
             formData.append(`questions[${index}].optionA`, q.optionA);
@@ -714,6 +809,13 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
             formData.append(`questions[${index}].optionD`, q.optionD);
             formData.append(`questions[${index}].correctOption`, q.correctOption);
             formData.append(`questions[${index}].mark`, q.mark);
+            // Every question of a passage carries the passage text; one taken out of its passage clears the saved one
+            const passageText = q.passageKey !== undefined ? passageTexts.get(q.passageKey) : undefined;
+            if (passageText?.trim()) {
+                formData.append(`questions[${index}].passageQuiz`, passageText);
+            } else if (isEditMode && originalQuestionValuesRef.current.get(q._key)?.passageQuiz) {
+                formData.append(`questions[${index}].passageQuiz`, '');
+            }
 
             (Object.keys(IMAGE_FIELD_NAMES) as (keyof QuizQuestionImages)[]).forEach((imageKey) => {
                 const fieldName = `questions[${index}].${IMAGE_FIELD_NAMES[imageKey]}`;
@@ -852,6 +954,7 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         isCourseLess,
         quizToViewError,
         questionErrors,
+        passageErrors,
         applyMarkToAll,
         quizFileList,
         isImporting,
@@ -870,6 +973,9 @@ export const useQuestionDetailManagement = (onSaved?: () => void) => {
         handleBatchChange,
         handleQuizToViewChange,
         addQuestionAfter,
+        addPassage,
+        addQuestionAtEnd,
+        handlePassageChange,
         addSectionAfter,
         removeItem,
         handleQuestionFieldChange,

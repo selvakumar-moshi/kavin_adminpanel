@@ -86,6 +86,13 @@
       }
     }
 
+    &__actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-right: 8px;
+    }
+
     &__list {
       flex: 1;
       min-height: 0;
@@ -98,6 +105,68 @@
       &::-webkit-scrollbar {
         width: 8px;
         height: 8px;
+      }
+    }
+  }
+
+  // A passage section: the passage on top, its questions inside
+  .question-detail-passage {
+    background: #f7f9ff;
+    border: 1px solid #c9d3f5;
+    border-left: 4px solid var(--btn-primary-bg, #2f54eb);
+    border-radius: 10px;
+    padding: 14px 14px 6px;
+    margin-bottom: 16px;
+
+    &__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    &__title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #000;
+      font-family: var(--font-family);
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    &__range {
+      background: #e4e9fb;
+      border-radius: 10px;
+      color: var(--btn-primary-bg, #2f54eb);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 10px;
+    }
+
+    &__questions {
+      margin-top: 12px;
+    }
+
+    &__add {
+      width: 100%;
+      margin: 0 0 12px;
+      padding: 8px;
+      border: 1px dashed var(--btn-primary-bg, #2f54eb);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--btn-primary-bg, #2f54eb);
+      font-family: var(--font-family);
+      font-weight: 600;
+      cursor: pointer;
+
+      &:hover:not(:disabled) {
+        background: #eef1fd;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
       }
     }
   }
@@ -387,6 +456,35 @@
   &__error {
     color: #d13f3f;
     font-size: 13px;
+  }
+
+  // A passage with the questions about it
+  &__passage {
+    padding: 12px 14px;
+    border: 1px solid #c9d3f5;
+    border-left: 4px solid var(--btn-primary-bg, #2f54eb);
+    border-radius: 10px;
+    background: #f7f9ff;
+  }
+
+  &__passage-label {
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--btn-primary-bg, #2f54eb);
+  }
+
+  &__passage-text {
+    font-size: 14px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  &__passage-questions {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 12px;
   }
 
   &__question {
