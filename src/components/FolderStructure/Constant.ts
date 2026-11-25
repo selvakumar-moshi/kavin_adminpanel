@@ -3,12 +3,15 @@
 export interface FolderRecord {
     id: string;
     name: string;
+    // The saved image, when there is one
+    imageUrl?: string | null;
 }
 
 // A nested sub folder (level 3 and deeper); it can hold further nested sub folders
 export interface FolderNode {
     id: string;
     name: string;
+    imageUrl?: string | null;
     subFolders: FolderNode[];
 }
 
@@ -44,6 +47,7 @@ export const FOLDER_NAME_FIELD = {
 export const normalizeNode = (raw: any): FolderNode => ({
     id: typeof raw === 'object' ? raw?.id ?? '' : '',
     name: typeof raw === 'string' ? raw : raw?.name ?? '',
+    imageUrl: typeof raw === 'object' ? raw?.imageUrl ?? null : null,
     subFolders: (Array.isArray(raw?.subFolders) ? raw.subFolders : []).map(normalizeNode).filter((node: FolderNode) => node.name),
 });
 

@@ -3,8 +3,10 @@ import type { ReactNode } from 'react';
 import { Spin, Tooltip } from 'antd';
 import PopupModal from '../PopupModal/PopupModal';
 import InputFields from '../InputFields/InputFields';
+import FileUploadSection from '../FileUploadSection/FileUploadSection';
 import ToastMessages from '../ToastMessages';
 import { useFolderStructureManagement } from './useFolderStructureHooks';
+import { CloseCircleFilled } from '@ant-design/icons';
 import { FOLDER_NAME_FIELD, MAX_FOLDER_DEPTH, canHaveChildren, getNodeAt, type FolderNode, type FolderRecord, type SubFolderRecord } from './Constant';
 import { toTitleCase } from '../../utils/textUtils';
 
@@ -28,6 +30,11 @@ const FolderStructure = () => {
         name,
         nameError,
         isSaving,
+        existingImageUrl,
+        imageFileList,
+        setImageFileList,
+        removingImage,
+        setRemovingImage,
         openAddModal,
         openAddNestedModal,
         openEditModal,
@@ -75,6 +82,12 @@ const FolderStructure = () => {
         </span>
     );
 
+    // The row's picture when it has an image (imageUrl), otherwise the folder icon
+    const renderRowIcon = (imageUrl: string | null | undefined, name: string, isOpen: boolean) =>
+        imageUrl ? (
+            <img className="folder-structure__thumb" src={imageUrl} alt={name} />
+        ) : isOpen ? <FolderOpenOutlined /> : <FolderOutlined />;
+
     const renderFolder = (folder: FolderRecord) => {
         const isActive = folder.id === selectedFolder?.id;
         return (
@@ -88,7 +101,7 @@ const FolderStructure = () => {
                     if (event.key === 'Enter') setSelectedFolderId(folder.id);
                 }}
             >
-                {isActive ? <FolderOpenOutlined /> : <FolderOutlined />}
+                {renderRowIcon(folder.imageUrl, folder.name, isActive)}
                 <span className="folder-structure__item-name">{folder.name}</span>
                 {renderRowActions(folder.name, () => openEditModal('folder', folder), () => openDeleteModal('folder', folder))}
             </div>
@@ -112,7 +125,7 @@ const FolderStructure = () => {
                     }}
                 >
                     <span className="folder-structure__chevron">{isExpanded ? <DownOutlined /> : <RightOutlined />}</span>
-                    {isExpanded ? <FolderOpenOutlined /> : <FolderOutlined />}
+                    {renderRowIcon(node.imageUrl, node.name, isExpanded)}
                     <span className="folder-structure__item-name">{node.name}</span>
                     {node.subFolders.length > 0 && <span className="folder-structure__count">{node.subFolders.length}</span>}
                     {renderRowActions(node.name, () => openEditNestedModal(root, path), () => openDeleteNestedModal(root, path))}
@@ -156,7 +169,7 @@ const FolderStructure = () => {
                     }}
                 >
                     <span className="folder-structure__chevron">{isExpanded ? <DownOutlined /> : <RightOutlined />}</span>
-                    {isExpanded ? <FolderOpenOutlined /> : <FolderOutlined />}
+                    {renderRowIcon(subFolder.imageUrl, subFolder.name, isExpanded)}
                     <span className="folder-structure__item-name">{subFolder.name}</span>
                     {subFolder.subFolders.length > 0 && <span className="folder-structure__count">{subFolder.subFolders.length}</span>}
                     {renderRowActions(subFolder.name, () => openEditModal('subfolder', subFolder), () => openDeleteModal('subfolder', subFolder))}
@@ -231,6 +244,7 @@ const FolderStructure = () => {
                 primaryButtonDisabled={isSaving}
                 contentHeight="auto"
                 minHeight={150}
+                maxHeight="calc(100vh - 200px)"
             >
                 <div style={{ padding: '0 8px' }}>
                     <InputFields
@@ -240,6 +254,32 @@ const FolderStructure = () => {
                         onChange={handleNameChange}
                         disabled={isSaving}
                     />
+                    {/* Optional image; when editing, the saved one is shown until it is removed */}
+                    {existingImageUrl && imageFileList.length === 0 && !removingImage ? (
+                        <div className="folder-image-preview">
+                            <label className="folder-image-preview__label">Image</label>
+                            <div className="folder-image-preview__box">
+                                <img className="folder-image-preview__img" src={existingImageUrl} alt={name || 'Saved image'} />
+                                <button
+                                    type="button"
+                                    className="folder-image-preview__remove"
+                                    onClick={() => setRemovingImage(true)}
+                                    aria-label="Remove image"
+                                    disabled={isSaving}
+                                >
+                                    <CloseCircleFilled />
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <FileUploadSection
+                            label="Image"
+                            acceptedFormats="JPG, PNG"
+                            allowedExtensions={['.jpg', '.jpeg', '.png']}
+                            fileList={imageFileList}
+                            onFileChange={setImageFileList}
+                        />
+                    )}
                 </div>
             </PopupModal>
 

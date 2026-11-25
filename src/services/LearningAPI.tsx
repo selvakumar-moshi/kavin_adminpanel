@@ -22,6 +22,38 @@ export interface LiveClassPayload {
     batchId?: string;
 }
 
+const MULTIPART = { headers: { 'Content-Type': 'multipart/form-data' } };
+
+// Optional image of a folder / sub folder: a new `file`, or `removeImage` to take the saved one away
+export interface FolderImageOptions {
+    file?: File;
+    removeImage?: boolean;
+}
+
+// A nested sub folder goes as `<prefix>[i]` (a plain name) or `<prefix>[i].name` + its own `.subFolders[j]` (one with something inside)
+const appendFolderTree = (formData: FormData, prefix: string, nodes: unknown[]) => {
+    nodes.forEach((node, index) => {
+        const key = `${prefix}[${index}]`;
+        if (typeof node === 'string') {
+            formData.append(key, node);
+            return;
+        }
+        const tree = node as { name: string; subFolders?: unknown[] };
+        formData.append(`${key}.name`, tree.name);
+        appendFolderTree(formData, `${key}.subFolders`, tree.subFolders || []);
+    });
+};
+
+const buildFolderFormData = (fields: Record<string, string>, subFolders: unknown[], image?: FolderImageOptions) => {
+    const formData = new FormData();
+    Object.entries(fields).forEach(([name, value]) => formData.append(name, value));
+    appendFolderTree(formData, 'subFolders', subFolders);
+    // Both are optional: only what was chosen is sent
+    if (image?.file) formData.append('file', image.file);
+    if (image?.removeImage) formData.append('removeImage', 'true');
+    return formData;
+};
+
 class LearningAPI {
     getSSLogin(email: string, password: string) {
         return Super_Sales.post(`/Auth/login`, { email, password });
@@ -263,12 +295,14 @@ class LearningAPI {
         return Super_Sales.get('/Folder');
     }
 
-    createFolder(name: string, subFolders: { name: string; subFolders: unknown[] }[] = []) {
-        return Super_Sales.post('/Folder', { name, subFolders });
+    // Folder / Sub Folder create and update are sent as multipart form data: name (and folderId), the nested sub folders as
+    // subFolders[i].name / subFolders[i].subFolders[j] ..., and optionally `file` (the image) and `removeImage`
+    createFolder(name: string, subFolders: unknown[] = [], image?: FolderImageOptions) {
+        return Super_Sales.post('/Folder', buildFolderFormData({ name }, subFolders, image), MULTIPART);
     }
 
-    updateFolder(id: string, name: string, subFolders: { name: string; subFolders: unknown[] }[] = []) {
-        return Super_Sales.put(`/Folder/${id}`, { name, subFolders });
+    updateFolder(id: string, name: string, subFolders: unknown[] = [], image?: FolderImageOptions) {
+        return Super_Sales.put(`/Folder/${id}`, buildFolderFormData({ name }, subFolders, image), MULTIPART);
     }
 
     deleteFolder(id: string) {
@@ -279,12 +313,12 @@ class LearningAPI {
         return Super_Sales.get('/SubFolder', { params: { folderId } });
     }
 
-    createSubFolder(name: string, folderId: string, subFolders: { name: string; subFolders: unknown[] }[] = []) {
-        return Super_Sales.post('/SubFolder', { name, folderId, subFolders });
+    createSubFolder(name: string, folderId: string, subFolders: unknown[] = [], image?: FolderImageOptions) {
+        return Super_Sales.post('/SubFolder', buildFolderFormData({ name, folderId }, subFolders, image), MULTIPART);
     }
 
-    updateSubFolder(id: string, name: string, folderId: string, subFolders: { name: string; subFolders: unknown[] }[] = []) {
-        return Super_Sales.put(`/SubFolder/${id}`, { name, folderId, subFolders });
+    updateSubFolder(id: string, name: string, folderId: string, subFolders: unknown[] = [], image?: FolderImageOptions) {
+        return Super_Sales.put(`/SubFolder/${id}`, buildFolderFormData({ name, folderId }, subFolders, image), MULTIPART);
     }
 
     deleteSubFolder(id: string) {

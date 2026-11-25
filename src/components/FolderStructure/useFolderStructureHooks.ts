@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { UploadFile } from 'antd';
 import superSalesAPI from '../../services/LearningAPI';
 import { useToastMessages } from '../ToastMessages/useToastMessages';
 import { toTitleCase } from '../../utils/textUtils';
@@ -54,6 +55,9 @@ export const useFolderStructureManagement = () => {
     const [name, setName] = useState('');
     const [nameError, setNameError] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    // The optional image: a newly picked file, or the saved one taken away (removeImage)
+    const [imageFileList, setImageFileList] = useState<UploadFile[]>([]);
+    const [removingImage, setRemovingImage] = useState(false);
 
     // Keeps the current folder selected when it still exists, otherwise falls back to the first one
     const loadFolders = useCallback(async () => {
@@ -111,10 +115,16 @@ export const useFolderStructureManagement = () => {
 
     // --- Add / Edit modal ---------------------------------------------------------------------------------------
 
+    const resetImage = () => {
+        setImageFileList([]);
+        setRemovingImage(false);
+    };
+
     const openAddModal = (kind: 'folder' | 'subfolder') => {
         setFormTarget({ kind, record: null });
         setName('');
         setNameError('');
+        resetImage();
     };
 
     // Adds a nested sub folder under the node at `path` of `parent`'s tree ([] = directly under the sub folder)
@@ -123,24 +133,28 @@ export const useFolderStructureManagement = () => {
         setExpandedKeys((prev) => new Set(prev).add(expandKey));
         setName('');
         setNameError('');
+        resetImage();
     };
 
     const openEditModal = (kind: 'folder' | 'subfolder', record: FolderRecord | SubFolderRecord) => {
         setFormTarget({ kind, record });
         setName(record.name);
         setNameError('');
+        resetImage();
     };
 
     const openEditNestedModal = (parent: SubFolderRecord, path: number[]) => {
         setFormTarget({ kind: 'nested', record: null, parent, path });
         setName(getNodeAt(parent.subFolders, path)?.name ?? '');
         setNameError('');
+        resetImage();
     };
 
     const closeModal = () => {
         setFormTarget(null);
         setName('');
         setNameError('');
+        resetImage();
     };
 
     const handleNameChange = (_field: string, value: string) => {
@@ -183,6 +197,9 @@ export const useFolderStructureManagement = () => {
         const { kind, record, parent, path = [], isAdd } = formTarget;
         const label = FOLDER_LABELS[kind];
         const isEditing = kind === 'nested' ? !isAdd : Boolean(record);
+        // Only what was chosen is sent: a new image, or (when no new one is picked) the saved one removed
+        const file = imageFileList[0]?.originFileObj as File | undefined;
+        const image = { file, removeImage: removingImage && !file };
 
         setIsSaving(true);
         try {
@@ -190,9 +207,9 @@ export const useFolderStructureManagement = () => {
                 if (record) {
                     // The update body carries the folder's sub folders, so send the current ones back unchanged
                     const current = toList(await superSalesAPI.getSubFolders(record.id)).map(normalizeSubFolder);
-                    await superSalesAPI.updateFolder(record.id, trimmed, toFolderChildrenPayload(current));
+                    await superSalesAPI.updateFolder(record.id, trimmed, toFolderChildrenPayload(current), image);
                 } else {
-                    const res = await superSalesAPI.createFolder(trimmed, []);
+                    const res = await superSalesAPI.createFolder(trimmed, [], image);
                     // Jump to the folder that was just created so its sub folders can be added straight away
                     const createdId = res?.data?.data?.id;
                     if (createdId) setSelectedFolderId(createdId);
@@ -201,22 +218,22 @@ export const useFolderStructureManagement = () => {
             } else if (kind === 'subfolder') {
                 if (record) {
                     const subFolder = record as SubFolderRecord;
-                    await superSalesAPI.updateSubFolder(subFolder.id, trimmed, subFolder.folderId, toSubFolderChildrenPayload(subFolder.subFolders));
+                    await superSalesAPI.updateSubFolder(subFolder.id, trimmed, subFolder.folderId, toSubFolderChildrenPayload(subFolder.subFolders), image);
                 } else {
-                    await superSalesAPI.createSubFolder(trimmed, selectedFolderId, []);
+                    await superSalesAPI.createSubFolder(trimmed, selectedFolderId, [], image);
                 }
                 setSubFoldersVersion((version) => version + 1);
             } else if (parent) {
                 if (isAdd) {
                     // POST /SubFolder with the id of the folder it goes under as `folderId`: only this one is created
                     const holderId = path.length === 0 ? parent.id : getNodeAt(parent.subFolders, path)?.id;
-                    if (holderId) await superSalesAPI.createSubFolder(trimmed, holderId, []);
+                    if (holderId) await superSalesAPI.createSubFolder(trimmed, holderId, [], image);
                     else await saveTree(parent, addNode(parent.subFolders, path, trimmed));
                 } else {
                     // PUT /SubFolder/{id}, `folderId` being the folder it sits under
                     const node = getNodeAt(parent.subFolders, path);
                     const holderId = path.length === 1 ? parent.id : getNodeAt(parent.subFolders, path.slice(0, -1))?.id;
-                    if (node?.id && holderId) await superSalesAPI.updateSubFolder(node.id, trimmed, holderId, toSubFolderChildrenPayload(node.subFolders));
+                    if (node?.id && holderId) await superSalesAPI.updateSubFolder(node.id, trimmed, holderId, toSubFolderChildrenPayload(node.subFolders), image);
                     else await saveTree(parent, renameNode(parent.subFolders, path, trimmed));
                 }
                 setSubFoldersVersion((version) => version + 1);
@@ -271,6 +288,13 @@ export const useFolderStructureManagement = () => {
     // Texts for the two modals; a nested sub folder says which sub folder it belongs to
     const isEdit = formTarget ? (formTarget.kind === 'nested' ? !formTarget.isAdd : Boolean(formTarget.record)) : false;
 
+    // The image saved for the item being edited (none while adding)
+    const existingImageUrl: string | null = !formTarget
+        ? null
+        : formTarget.kind === 'nested'
+            ? (formTarget.isAdd ? null : getNodeAt(formTarget.parent?.subFolders ?? [], formTarget.path ?? [])?.imageUrl ?? null)
+            : formTarget.record?.imageUrl ?? null;
+
     const modalTitle = formTarget
         ? formTarget.kind === 'nested'
             ? `${isEdit ? 'Edit' : 'Add'} Nested Sub Folder in "${toTitleCase(
@@ -311,6 +335,11 @@ export const useFolderStructureManagement = () => {
         name,
         nameError,
         isSaving,
+        existingImageUrl,
+        imageFileList,
+        setImageFileList,
+        removingImage,
+        setRemovingImage,
         openAddModal,
         openAddNestedModal,
         openEditModal,
