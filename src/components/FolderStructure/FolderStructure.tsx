@@ -275,6 +275,7 @@ const FolderStructure = () => {
                         <FileUploadSection
                             label="Image"
                             acceptedFormats="JPG, PNG"
+                            allowPasteImage
                             allowedExtensions={['.jpg', '.jpeg', '.png']}
                             fileList={imageFileList}
                             onFileChange={setImageFileList}

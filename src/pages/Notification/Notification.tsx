@@ -18,7 +18,7 @@ import PageTitle from '../../components/PageTitle';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 import { useNotificationManagement } from './useNotification';
 import { RichTextEditor } from '../../components/RichTextEditor';
-import { getNotificationTableColumns, NOTIFICATION_TYPE_FIELD, NOTIFICATION_INPUT_FIELDS, NOTIFICATION_DESCRIPTION_FIELD, NOTIFICATION_LINK_FIELDS, NOTIFICATION_DATE_FIELD, NOTIFICATION_COURSE_TYPE_FIELD, NOTIFICATION_COURSE_FIELD, NOTIFICATION_BATCH_FIELD, NOTIFICATION_USER_FIELD, NOTIFICATION_PUSH_SCHEDULED_FIELD, SEND_PUSH_LABEL, FLASH_NOTIFICATION_TYPE, type NotificationRecord } from './Constant';
+import { getNotificationTableColumns, NOTIFICATION_TYPE_FIELD, NOTIFICATION_INPUT_FIELDS, NOTIFICATION_DESCRIPTION_FIELD, NOTIFICATION_LINK_FIELDS, NOTIFICATION_DATE_FIELD, NOTIFICATION_COURSE_TYPE_FIELD, NOTIFICATION_COURSE_FIELD, NOTIFICATION_BATCH_FIELD, NOTIFICATION_USER_FIELD, NOTIFICATION_PUSH_DATE_FIELD, NOTIFICATION_PUSH_SCHEDULED_FIELD, SEND_PUSH_LABEL, FLASH_NOTIFICATION_TYPE, JOB_NOTIFICATION_TYPE, type NotificationRecord } from './Constant';
 import add_Icon from '../../assets/add_Icon.svg';
 import filter_Icon from '../../assets/filter_Icon.svg';
 
@@ -80,8 +80,9 @@ const Notification = ({ pageTitle = 'Notifications', tabs }: NotificationProps) 
         hideToast,
     } = useNotificationManagement();
 
-    // The date picker only asks for a time on Push Notifications
-    const isPushNotification = formValues.notificationType === FLASH_NOTIFICATION_TYPE;
+    // Flash Notification: no start / end date. Job Notification: no course type, course, batch or users.
+    const showDates = formValues.notificationType !== FLASH_NOTIFICATION_TYPE;
+    const showTargeting = formValues.notificationType !== JOB_NOTIFICATION_TYPE;
 
     const baseColumns = withSortAndSearch(getNotificationTableColumns(), {
         sortState,
@@ -185,12 +186,26 @@ const Notification = ({ pageTitle = 'Notifications', tabs }: NotificationProps) 
                 maxHeight="calc(100vh - 200px)"
             >
                 <div style={{ padding: '0 8px' }}>
-                    <DropdownField
-                        fields={NOTIFICATION_TYPE_FIELD.map(field => ({ ...field, disabled: loading }))}
-                        values={{ notificationType: formValues.notificationType || '' }}
-                        errors={formErrors.notificationType ? { notificationType: formErrors.notificationType } : {}}
-                        onChange={(_, value) => handleInputChange('notificationType', Array.isArray(value) ? value[0] || '' : value)}
-                    />
+                    {/* Type and Send Push share a row */}
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <DropdownField
+                                fields={NOTIFICATION_TYPE_FIELD.map(field => ({ ...field, disabled: loading }))}
+                                values={{ notificationType: formValues.notificationType || '' }}
+                                errors={formErrors.notificationType ? { notificationType: formErrors.notificationType } : {}}
+                                onChange={(_, value) => handleInputChange('notificationType', Array.isArray(value) ? value[0] || '' : value)}
+                            />
+                        </div>
+                        {/* As tall as the dropdown, with the dropdown's bottom margin, so the box lines up with it */}
+                        <div style={{ height: 40, marginBottom: 12, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                            <Checkbox
+                                label={SEND_PUSH_LABEL}
+                                checked={Boolean(formValues.sendPush)}
+                                onChange={(checked) => handleInputChange('sendPush', checked)}
+                                disabled={loading}
+                            />
+                        </div>
+                    </div>
                     <InputFields
                         fields={NOTIFICATION_INPUT_FIELDS}
                         values={formValues}
@@ -212,72 +227,75 @@ const Notification = ({ pageTitle = 'Notifications', tabs }: NotificationProps) 
                         onChange={handleInputChange}
                         disabled={loading}
                     />
-                    <DateFieldsSection
-                        className="date-fields-section--row"
-                        fields={NOTIFICATION_DATE_FIELD}
-                        // Only a Push Notification goes out at a set time; a Job Notification just has a date
-                        showTime={isPushNotification}
-                        format={isPushNotification ? 'YYYY-MM-DD HH:mm' : 'YYYY-MM-DD'}
-                        values={formValues}
-                        errors={formErrors}
-                        onChange={handleInputChange}
-                        disabled={loading}
-                    />
-                    {/* Targeting: all optional */}
-                    <DropdownField
-                        fields={[
-                            { ...NOTIFICATION_COURSE_TYPE_FIELD, disabled: loading },
-                            {
-                                ...NOTIFICATION_COURSE_FIELD,
-                                options: courses.map((course) => ({ value: course.id, label: course.courseName })),
-                                disabled: loading,
-                            },
-                            {
-                                ...NOTIFICATION_BATCH_FIELD,
-                                options: batches.map((batch) => ({ value: batch.id, label: batch.title })),
-                                loading: batchesLoading,
-                                disabled: loading || !formValues.courseId,
-                            },
-                        ]}
-                        values={{
-                            courseType: formValues.courseType || '',
-                            courseId: formValues.courseId || '',
-                            batchId: formValues.batchId || '',
-                        }}
-                        onChange={(name, value) => handleInputChange(name, Array.isArray(value) ? value[0] || '' : value)}
-                    />
-                    <div style={{ margin: '4px 0 16px' }}>
-                        <Checkbox
-                            label={SEND_PUSH_LABEL}
-                            checked={Boolean(formValues.sendPush)}
-                            onChange={(checked) => handleInputChange('sendPush', checked)}
-                            disabled={loading}
-                        />
-                    </div>
-                    {/* Users are listed by name; their ids are what is sent */}
-                    <DropdownField
-                        fields={[{
-                            ...NOTIFICATION_USER_FIELD,
-                            mode: 'multiple',
-                            options: users.map((user) => ({ value: user.id, label: user.name })),
-                            loading: usersLoading,
-                            disabled: loading,
-                        }]}
-                        values={{ userId: formValues.userIds || [] }}
-                        onChange={(_, value) => handleInputChange('userIds', Array.isArray(value) ? value : value ? [value] : [])}
-                    />
-                    {/* A schedule only applies to a push */}
-                    {formValues.sendPush && (
+                    {showDates && (
                         <DateFieldsSection
-                            fields={NOTIFICATION_PUSH_SCHEDULED_FIELD}
-                            showTime
-                            format="YYYY-MM-DD HH:mm"
+                            className="date-fields-section--row"
+                            fields={NOTIFICATION_DATE_FIELD}
+                            format="YYYY-MM-DD"
                             values={formValues}
                             errors={formErrors}
                             onChange={handleInputChange}
                             disabled={loading}
                         />
                     )}
+                    {/* Targeting: all optional */}
+                    {showTargeting && (
+                        <>
+                            <DropdownField
+                                fields={[
+                                    { ...NOTIFICATION_COURSE_TYPE_FIELD, disabled: loading },
+                                    {
+                                        ...NOTIFICATION_COURSE_FIELD,
+                                        options: courses.map((course) => ({ value: course.id, label: course.courseName })),
+                                        disabled: loading,
+                                    },
+                                    {
+                                        ...NOTIFICATION_BATCH_FIELD,
+                                        options: batches.map((batch) => ({ value: batch.id, label: batch.title })),
+                                        loading: batchesLoading,
+                                        disabled: loading || !formValues.courseId,
+                                    },
+                                ]}
+                                values={{
+                                    courseType: formValues.courseType || '',
+                                    courseId: formValues.courseId || '',
+                                    batchId: formValues.batchId || '',
+                                }}
+                                onChange={(name, value) => handleInputChange(name, Array.isArray(value) ? value[0] || '' : value)}
+                            />
+                            {/* Users are listed by name (the chosen batch's users); their ids are what is sent */}
+                            <DropdownField
+                                fields={[{
+                                    ...NOTIFICATION_USER_FIELD,
+                                    mode: 'multiple',
+                                    options: users.map((user) => ({ value: user.id, label: user.name })),
+                                    loading: usersLoading,
+                                    disabled: loading,
+                                }]}
+                                values={{ userId: formValues.userIds || [] }}
+                                onChange={(_, value) => handleInputChange('userIds', Array.isArray(value) ? value : value ? [value] : [])}
+                            />
+                        </>
+                    )}
+                    <DateFieldsSection
+                        className="date-fields-section--row"
+                        fields={NOTIFICATION_PUSH_DATE_FIELD}
+                        showTime
+                        format="YYYY-MM-DD HH:mm"
+                        values={formValues}
+                        errors={formErrors}
+                        onChange={handleInputChange}
+                        disabled={loading}
+                    />
+                    <DateFieldsSection
+                        fields={NOTIFICATION_PUSH_SCHEDULED_FIELD}
+                        showTime
+                        format="YYYY-MM-DD HH:mm"
+                        values={formValues}
+                        errors={formErrors}
+                        onChange={handleInputChange}
+                        disabled={loading}
+                    />
                     {/* Optional file; when editing, the saved one is shown until it is removed */}
                     {selectedNotification?.attachmentName && fileList.length === 0 && !replacingFile ? (
                         <FileUploadDisplay

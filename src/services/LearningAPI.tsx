@@ -75,6 +75,10 @@ class LearningAPI {
         return Super_Sales.get('/User/download', { responseType: 'blob' });
     }
 
+    getNotificationRecipients(batchId: string) {
+        return Super_Sales.get('/Notification/recipients', { params: { batchId } });
+    }
+
     getUsers(searchTerm?: string, globalFilter?: Record<string, string>, pageNumber?: number, pageSize?: number) {
         return Super_Sales.post('/User', {
             searchTerm: searchTerm || '',

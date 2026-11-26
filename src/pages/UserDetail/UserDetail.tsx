@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Dropdown } from 'antd';
+import { Dropdown, Image } from 'antd';
 import { FilePdfOutlined, FileImageOutlined, EditOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import TabsComponent from '../../components/Tabs/Tabs';
@@ -17,15 +17,15 @@ import { useUserDetailManagement, ALLOWED_BATCH_SEPARATOR } from './useUserDetai
 import { usePageBodyClass } from '../../utils/pageBodyClass';
 import { useResetPassword } from '../Users/useResetPassword';
 import ResetPasswordModals from '../Users/ResetPasswordModals';
-import { EDIT_USER_FIELDS, EDIT_USER_MODE_OPTIONS, EDIT_USER_PAYMENT_REQUIRED_OPTIONS, EDIT_USER_REASON_FIELDS, TRANSFER_MODE, PENDING_ENROLLMENT_STATUS_OPTIONS, UserDetailtabs, DISTRICT_OPTIONS, UserDetailMainTabs, SYLLABUS_PAYMENT_STATUS_OPTIONS, COURSE_DETAILS_TAB_KEY, SYLLABUS_WISE_TAB_KEY, SYLLABUS_MATERIAL_TAB_KEY } from './Constants';
+import { EDIT_USER_FIELDS, EDIT_USER_MODE_OPTIONS, EDIT_USER_PAYMENT_REQUIRED_OPTIONS, EDIT_USER_REASON_FIELDS, TRANSFER_MODE, PENDING_ENROLLMENT_STATUS_OPTIONS, DISTRICT_OPTIONS, UserDetailMainTabs, SYLLABUS_PAYMENT_STATUS_OPTIONS, COURSE_DETAILS_TAB_KEY, SYLLABUS_WISE_TAB_KEY, SYLLABUS_MATERIAL_TAB_KEY } from './Constants';
 import { formatDate } from '../../utils/dateUtils';
 import dot_Icon from '../../assets/dot_Icon.svg';
 import person_add_Icon from '../../assets/person_add_Icon.svg'
 import calendar_Icon from '../../assets/calendar_Icon.svg';
 import email_Icon from '../../assets/email_Icon.svg';
+import manage_acc_Icon from "../../assets/manage_acc_Icon.svg";
 import arrow_drop_down_Icon from "../../assets/arrow_drop_down_Icon.svg";
 import arrow_drop_right_Icon from "../../assets/arrow_drop_right_Icon.svg";
-import manage_acc_Icon from "../../assets/manage_acc_Icon.svg";
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 import { richValueToHtml, sanitizeRichText } from '../../utils/richText';
 
@@ -50,25 +50,27 @@ const SYLLABUS_MATERIAL_COLUMNS: ITableColumn[] = [
     { title: 'Created At', dataIndex: 'createdAt', key: 'createdAt', render: (value: string) => (value ? formatDate(value) : '-') },
 ];
 
-const SYLLABUS_PAYMENT_COLUMNS: ITableColumn[] = [
-    { title: 'Plan', dataIndex: 'planTitle', key: 'planTitle' },
-    { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (amount: number) => `₹${Number(amount).toLocaleString()}` },
-    { title: 'Payment Method', dataIndex: 'paymentMethod', key: 'paymentMethod', render: (value: string | null) => value || '-' },
-    { title: 'Transaction Reference', dataIndex: 'transactionReference', key: 'transactionReference', render: (value: string | null) => value || '-' },
-    {
-        title: 'Transaction File',
-        dataIndex: 'paymentScreenshot',
-        key: 'paymentScreenshot',
-        // The payment screenshot opens in a new tab
-        render: (url: string | null) => (url ? (
-            <a href={url} target="_blank" rel="noopener noreferrer">
-                <FileImageOutlined /> View
-            </a>
-        ) : '-'),
-    },
-    { title: 'Verified At', dataIndex: 'verifiedAt', key: 'verifiedAt', render: (value: string | null) => (value ? formatDate(value) : '-') },
-    { title: 'Paid On', dataIndex: 'createdAt', key: 'createdAt', render: (value: string) => (value ? formatDate(value) : '-') },
-];
+// The payment screenshot is shown right in the page; clicking it opens a larger view (no new tab)
+const renderPaymentProof = (url?: string | null) => (
+    <div className="payment-card__proof">
+        {url ? (
+            <Image src={url} alt="Payment screenshot" className="payment-card__proof-img" preview={{ mask: 'View' }} />
+        ) : (
+            <div className="payment-card__proof-empty">
+                <FileImageOutlined />
+                <span>No screenshot uploaded</span>
+            </div>
+        )}
+    </div>
+);
+
+// One label / value pair of a payment card (`keepCase` for values like a transaction reference)
+const renderDetail = (label: string, value?: string | null, keepCase = false) => (
+    <div className="payment-card__detail">
+        <dt>{label}</dt>
+        <dd className={keepCase ? 'payment-card__value--keep-case' : undefined}>{value || '-'}</dd>
+    </div>
+);
 
 const UserDetail = () => {
     usePageBodyClass(USER_DETAIL_PAGE_BODY_CLASS);
@@ -106,7 +108,16 @@ const UserDetail = () => {
     const resetPassword = useResetPassword(showError);
 
     const [activeMainTab, setActiveMainTab] = useState(COURSE_DETAILS_TAB_KEY);
-    const [expandedCourseIds, setExpandedCourseIds] = useState<Set<string>>(new Set());
+    // The course / payment cards that are open (all start collapsed); enrollment and payment ids don't clash
+    const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
+    const toggleCard = (id: string) => {
+        setExpandedCardIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
     const [activeMaterialTabs, setActiveMaterialTabs] = useState<Record<string, string>>({});
     // Syllabus Wise payments: the one whose status change is being confirmed, and the verified ones that were then opened
     // for a change (a payment that is not verified always shows the dropdown)
@@ -138,22 +149,10 @@ const UserDetail = () => {
         handleStatusChange(courseToDrop.enrollmentId, 'Dropped');
     };
 
-    const getActiveMaterialTab = (enrollmentId: string) => activeMaterialTabs[enrollmentId] || 'purchased';
+    const getActiveMaterialTab = (enrollmentId: string) => activeMaterialTabs[enrollmentId] || 'study';
 
     const setActiveMaterialTab = (enrollmentId: string, key: string) => {
         setActiveMaterialTabs(prev => ({ ...prev, [enrollmentId]: key }));
-    };
-
-    const toggleCourseExpand = (enrollmentId: string) => {
-        setExpandedCourseIds(prev => {
-            const next = new Set(prev);
-            if (next.has(enrollmentId)) {
-                next.delete(enrollmentId);
-            } else {
-                next.add(enrollmentId);
-            }
-            return next;
-        });
     };
 
     // Shown pre-checked in the "Add Courses" multiselect below so already-purchased courses are
@@ -190,61 +189,54 @@ const UserDetail = () => {
         setPaymentToEdit(null);
     };
 
-    // Payment Status is the last column. A verified payment shows its badge with an edit icon (the dropdown opens once the
-    // change is confirmed); any other payment shows the dropdown straight away. Picking a status saves it.
-    const syllabusPaymentColumns: ITableColumn[] = [
-        ...SYLLABUS_PAYMENT_COLUMNS,
-        {
-            title: 'Payment Status',
-            dataIndex: 'paymentStatus',
-            key: 'paymentStatus',
-            render: (status: string, record: { paymentId: string; planTitle: string }) => {
-                const isVerified = status === 'Verified';
-                if (isVerified && !editingPaymentIds.has(record.paymentId)) {
-                    return (
-                        <span className="user-course__status-with-edit">
-                            <StatusBadge status={status} />
-                            <button
-                                type="button"
-                                className="user-course__status-edit-btn"
-                                onClick={() => setPaymentToEdit({ paymentId: record.paymentId, planTitle: record.planTitle })}
-                                aria-label={`Change payment status for ${record.planTitle}`}
-                            >
-                                <EditOutlined />
-                            </button>
-                        </span>
-                    );
-                }
-                const saving = updatingPaymentId === record.paymentId;
-                return (
-                    <DropdownField
-                        className="user-course__status-dropdown"
-                        fields={[{
-                            name: 'paymentStatus',
-                            label: '',
-                            placeholder: 'Select status',
-                            options: SYLLABUS_PAYMENT_STATUS_OPTIONS,
-                            loading: saving,
-                            disabled: saving,
-                            allowClear: false,
-                        }]}
-                        values={{ paymentStatus: status }}
-                        onChange={async (_, value) => {
-                            const next = Array.isArray(value) ? value[0] || '' : value;
-                            if (!next || next === status) {
-                                // Same status picked again: nothing to save, a verified payment goes back to its badge
-                                setEditingPaymentIds((prev) => { const n = new Set(prev); n.delete(record.paymentId); return n; });
-                                return;
-                            }
-                            if (await handlePaymentStatusChange(record.paymentId, next)) {
-                                setEditingPaymentIds((prev) => { const n = new Set(prev); n.delete(record.paymentId); return n; });
-                            }
-                        }}
-                    />
-                );
-            },
-        },
-    ];
+    // A verified payment shows its badge with an edit icon (the dropdown opens once the change is confirmed); any other
+    // payment shows the dropdown straight away. Picking a status saves it.
+    const renderPaymentStatus = (status: string, record: { paymentId: string; planTitle: string }) => {
+        const isVerified = status === 'Verified';
+        if (isVerified && !editingPaymentIds.has(record.paymentId)) {
+            return (
+                <span className="user-course__status-with-edit">
+                    <StatusBadge status={status} />
+                    <button
+                        type="button"
+                        className="user-course__status-edit-btn"
+                        onClick={() => setPaymentToEdit({ paymentId: record.paymentId, planTitle: record.planTitle })}
+                        aria-label={`Change payment status for ${record.planTitle}`}
+                    >
+                        <EditOutlined />
+                    </button>
+                </span>
+            );
+        }
+        const saving = updatingPaymentId === record.paymentId;
+        return (
+            <DropdownField
+                className="user-course__status-dropdown"
+                fields={[{
+                    name: 'paymentStatus',
+                    label: '',
+                    placeholder: 'Select status',
+                    options: SYLLABUS_PAYMENT_STATUS_OPTIONS,
+                    loading: saving,
+                    disabled: saving,
+                    allowClear: false,
+                }]}
+                values={{ paymentStatus: status }}
+                onChange={async (_, value) => {
+                    const next = Array.isArray(value) ? value[0] || '' : value;
+                    if (!next || next === status) {
+                        // Same status picked again: nothing to save, a verified payment goes back to its badge
+                        setEditingPaymentIds((prev) => { const n = new Set(prev); n.delete(record.paymentId); return n; });
+                        return;
+                    }
+                    if (await handlePaymentStatusChange(record.paymentId, next)) {
+                        setEditingPaymentIds((prev) => { const n = new Set(prev); n.delete(record.paymentId); return n; });
+                    }
+                }}
+            />
+        );
+    };
+
     const syllabusMaterials = userDetail.syllabusMaterials || [];
 
     const menuItems: MenuProps['items'] = [
@@ -307,178 +299,142 @@ const UserDetail = () => {
                 ) : (
                     <>
                         {enrollments.map((course) => {
-                            const isExpanded = expandedCourseIds.has(course.enrollmentId);
+                            const isExpanded = expandedCardIds.has(course.enrollmentId);
+                            const activeTab = getActiveMaterialTab(course.enrollmentId);
+                            const studyMaterials = course.studyMaterials || [];
+                            const questionPapers = course.questionPapers || [];
+                            const videoMaterials = course.videoMaterials || [];
+                            const materialTabs = [
+                                { key: 'study', label: `Study Materials (${studyMaterials.length})` },
+                                { key: 'questionPaper', label: `Question Papers (${questionPapers.length})` },
+                                { key: 'video', label: `Videos (${videoMaterials.length})` },
+                            ];
                             return (
-                                <div className='user-course__module-div' key={course.enrollmentId}>
-                                    <div className='user-course__module-header' onClick={() => toggleCourseExpand(course.enrollmentId)}>
-                                        <div className={`user-course__module-section${isExpanded ? ' user-course__module-section--expanded' : ''}`}>
-                                            <span className="user-course__module-arrow">
-                                            {isExpanded ? (
-                                                <img src={arrow_drop_down_Icon} alt="arrow-down" />
+                                <div className="payment-card" key={course.enrollmentId}>
+                                    <div
+                                        className={`payment-card__header payment-card__header--toggle${isExpanded ? '' : ' payment-card__header--collapsed'}`}
+                                        onClick={() => toggleCard(course.enrollmentId)}
+                                        aria-expanded={isExpanded}
+                                    >
+                                        <img className="payment-card__arrow" src={isExpanded ? arrow_drop_down_Icon : arrow_drop_right_Icon} alt={isExpanded ? 'Collapse' : 'Expand'} />
+                                        <img src={manage_acc_Icon} alt="" />
+                                        <span className="payment-card__title">{course.batchTitle ? `${course.courseName} - ${course.batchTitle}` : course.courseName}</span>
+                                        <span className="payment-card__amount">₹{Number(course.amount ?? 0).toLocaleString()}</span>
+                                        <div className="user-course__payment-status" onClick={(e) => e.stopPropagation()}>
+                                            <span className="user-detail__info-item-label2">Payment Status:</span>
+                                            {course.enrollmentStatus === 'Pending' ? (
+                                                <DropdownField
+                                                    className="user-course__status-dropdown"
+                                                    fields={[
+                                                        {
+                                                            name: 'enrollmentStatus',
+                                                            label: '',
+                                                            placeholder: 'Select status',
+                                                            options: PENDING_ENROLLMENT_STATUS_OPTIONS,
+                                                            loading: updatingEnrollmentId === course.enrollmentId,
+                                                            disabled: updatingEnrollmentId === course.enrollmentId,
+                                                            allowClear: false,
+                                                        },
+                                                    ]}
+                                                    values={{ enrollmentStatus: course.enrollmentStatus }}
+                                                    onChange={(_, value) => handleStatusChange(course.enrollmentId, Array.isArray(value) ? value[0] || '' : value)}
+                                                />
                                             ) : (
-                                                <img src={arrow_drop_right_Icon} alt="arrow-right" />
-                                            )}
-                                            </span>
-                                            <img src={manage_acc_Icon} alt="manage-acc-icon" />
-                                            <span className="user-course__module-title">{course.batchTitle ? `${course.courseName} - ${course.batchTitle}` : course.courseName}</span>
-                                            <div className="user-course__payment-status" style={{ marginLeft: 'auto' }} onClick={(e) => e.stopPropagation()}>
-                                                <span className="user-detail__info-item-label2">Payment Status:</span>
-                                                {course.enrollmentStatus === 'Pending' ? (
-                                                    <DropdownField
-                                                        className="user-course__status-dropdown"
-                                                        fields={[
-                                                            {
-                                                                name: 'enrollmentStatus',
-                                                                label: '',
-                                                                placeholder: 'Select status',
-                                                                options: PENDING_ENROLLMENT_STATUS_OPTIONS,
-                                                                loading: updatingEnrollmentId === course.enrollmentId,
-                                                                disabled: updatingEnrollmentId === course.enrollmentId,
-                                                                allowClear: false,
-                                                            },
-                                                        ]}
-                                                        values={{ enrollmentStatus: course.enrollmentStatus }}
-                                                        onChange={(_, value) => handleStatusChange(course.enrollmentId, Array.isArray(value) ? value[0] || '' : value)}
-                                                    />
-                                                ) : (
-                                                    <span className="user-course__status-with-edit">
-                                                        <StatusBadge status={course.enrollmentStatus} />
-                                                        {course.enrollmentStatus !== 'Dropped' && (
-                                                            <button
-                                                                type="button"
-                                                                className="user-course__status-edit-btn"
-                                                                onClick={() => openDropConfirm(course)}
-                                                                aria-label={`Change status for ${course.courseName}`}
-                                                            >
-                                                                <EditOutlined />
-                                                            </button>
-                                                        )}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {isExpanded && (
-                                            <div className="user-detail-course">
-                                                <div onClick={(e) => e.stopPropagation()}>
-                                                    <TabsComponent
-                                                        items={UserDetailtabs}
-                                                        activeKey={getActiveMaterialTab(course.enrollmentId)}
-                                                        onChange={(key) => setActiveMaterialTab(course.enrollmentId, key)}
-                                                    />
-
-                                                    {getActiveMaterialTab(course.enrollmentId) === 'purchased' ? (
-                                                        <ul className="user-detail-course__amounts">
-                                                            <li className='user-detail__info-item-label2'>Amount:
-                                                                <span className='user-detail__info-item-value2'> ₹{Number(course.amount ?? 0).toLocaleString()}</span>
-                                                            </li>
-                                                            {course.enrolledAt && (
-                                                                <li className='user-detail__info-item-label2'>Enrolled At:
-                                                                    <span className='user-detail__info-item-value2'> {formatDate(course.enrolledAt)}</span>
-                                                                </li>
-                                                            )}
-                                                            {course.verifiedAt && (
-                                                                <li className='user-detail__info-item-label2'>Verified At:
-                                                                    <span className='user-detail__info-item-value2'> {formatDate(course.verifiedAt)}</span>
-                                                                </li>
-                                                            )}
-                                                        </ul>
-                                                    ) : getActiveMaterialTab(course.enrollmentId) === 'study' ? (
-                                                        course.studyMaterials && course.studyMaterials.length > 0 ? (
-                                                            <ul className="user-detail-course__materials">
-                                                                {course.studyMaterials.map((material) => (
-                                                                    <div key={material.id} className="user-detail-course__materials-main">
-                                                                        <FilePdfOutlined /> {' '}
-                                                                        <a href={material.pdfUrl} target="_blank" rel="noopener noreferrer">
-                                                                            {material.title}
-                                                                        </a>
-                                                                        {material.description && (
-                                                                            <div className='user-detail-course__materials-desc rich-text-content' dangerouslySetInnerHTML={{ __html: `— ${sanitizeRichText(richValueToHtml(material.description))}` }} />
-                                                                        )}
-                                                                    </div>
-                                                                ))}
-                                                            </ul>
-                                                        ) : (
-                                                            <NoDataFound type="nodata" description="No study material" />
-                                                        )
-                                                    ) : getActiveMaterialTab(course.enrollmentId) === 'questionPaper' ? (
-                                                        course.questionPapers && course.questionPapers.length > 0 ? (
-                                                            <ul className="user-detail-course__materials">
-                                                                {course.questionPapers.map((paper) => (
-                                                                    <div key={paper.id} className="user-detail-course__materials-main">
-                                                                        <FilePdfOutlined /> {' '}
-                                                                        <a href={paper.pdfUrl} target="_blank" rel="noopener noreferrer">
-                                                                            {paper.title}
-                                                                        </a>
-                                                                        {paper.description && (
-                                                                            <div className='user-detail-course__materials-desc rich-text-content' dangerouslySetInnerHTML={{ __html: `— ${sanitizeRichText(richValueToHtml(paper.description))}` }} />
-                                                                        )}
-                                                                    </div>
-                                                                ))}
-                                                            </ul>
-                                                        ) : (
-                                                            <NoDataFound type="nodata" description="No question papers" />
-                                                        )
-                                                    ) : getActiveMaterialTab(course.enrollmentId) === 'video' ? (
-                                                        course.videoMaterials && course.videoMaterials.length > 0 ? (
-                                                            <ul className="user-detail-course__materials">
-                                                                {course.videoMaterials.map((video) => (
-                                                                    <li key={video.id}>
-                                                                        <a href={video.videoUrl} target="_blank" rel="noopener noreferrer">
-                                                                            {video.title}
-                                                                        </a>
-                                                                    </li>
-                                                                ))}
-                                                            </ul>
-                                                        ) : (
-                                                            <NoDataFound type="nodata" description="No video material" />
-                                                        )
-                                                    ) : getActiveMaterialTab(course.enrollmentId) === 'Batch' ? (
-                                                        course.batchTitle ? (
-                                                            <ul className="user-detail-course__amounts">
-                                                                <li className='user-detail__info-item-label2'>Batch:
-                                                                    <span className='user-detail__info-item-value2'> {course.batchTitle}</span>
-                                                                </li>
-                                                                {course.transferredFromBatchTitle && (
-                                                                    <li className='user-detail__info-item-label2'>Transferred From:
-                                                                        <span className='user-detail__info-item-value2'> {course.transferredFromBatchTitle}{course.transferredAt ? ` (${formatDate(course.transferredAt)})` : ''}</span>
-                                                                    </li>
-                                                                )}
-                                                                {course.transferReason && (
-                                                                    <li className='user-detail__info-item-label2'>Transfer Reason:
-                                                                        <span className='user-detail__info-item-value2'> {course.transferReason}</span>
-                                                                    </li>
-                                                                )}
-                                                            </ul>
-                                                        ) : (
-                                                            <NoDataFound type="nodata" description="No batch assigned" />
-                                                        )
-                                                    ) : (
-                                                        course.paymentScreenshot || course.transactionReference ? (
-                                                            <>
-                                                                {course.transactionReference && (
-                                                                    <ul className="user-detail-course__amounts">
-                                                                        <li className='user-detail__info-item-label2'>Transaction Reference:
-                                                                            <span className='user-detail__info-item-value2'> {course.transactionReference}</span>
-                                                                        </li>
-                                                                    </ul>
-                                                                )}
-                                                                {course.paymentScreenshot && (
-                                                                    <div className="user-detail-course__payment-screenshot">
-                                                                        <a href={course.paymentScreenshot} target="_blank" rel="noopener noreferrer">
-                                                                            <img src={course.paymentScreenshot} alt="Payment Screenshot" />
-                                                                        </a>
-                                                                    </div>
-                                                                )}
-                                                            </>
-                                                        ) : (
-                                                            <NoDataFound type="nodata" description="No payment details" />
-                                                        )
+                                                <span className="user-course__status-with-edit">
+                                                    <StatusBadge status={course.enrollmentStatus} />
+                                                    {course.enrollmentStatus !== 'Dropped' && (
+                                                        <button
+                                                            type="button"
+                                                            className="user-course__status-edit-btn"
+                                                            onClick={() => openDropConfirm(course)}
+                                                            aria-label={`Change status for ${course.courseName}`}
+                                                        >
+                                                            <EditOutlined />
+                                                        </button>
                                                     )}
-                                                </div>
-                                            </div>
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {isExpanded && (<>
+                                    {/* Payment and batch details */}
+                                    <div className="payment-card__body">
+                                        {renderPaymentProof(course.paymentScreenshot)}
+                                        {/* Details, then the materials, beside the screenshot */}
+                                        <div className="payment-card__main">
+                                        <dl className="payment-card__details">
+                                            {renderDetail('Batch', course.batchTitle)}
+                                            {renderDetail('Payment Method', course.paymentMethod)}
+                                            {renderDetail('Transaction Reference', course.transactionReference, true)}
+                                            {renderDetail('Enrolled At', course.enrolledAt ? formatDate(course.enrolledAt) : null)}
+                                            {renderDetail('Verified At', course.verifiedAt ? formatDate(course.verifiedAt) : null)}
+                                            {course.transferredFromBatchTitle && renderDetail('Transferred From', `${course.transferredFromBatchTitle}${course.transferredAt ? ` (${formatDate(course.transferredAt)})` : ''}`)}
+                                            {course.transferReason && renderDetail('Transfer Reason', course.transferReason)}
+                                        </dl>
+
+                                    {/* The course's materials */}
+                                    <div className="payment-card__materials">
+                                        <TabsComponent
+                                            items={materialTabs}
+                                            activeKey={activeTab}
+                                            onChange={(key) => setActiveMaterialTab(course.enrollmentId, key)}
+                                        />
+                                        {activeTab === 'questionPaper' ? (
+                                            questionPapers.length > 0 ? (
+                                                <ul className="user-detail-course__materials">
+                                                    {questionPapers.map((paper) => (
+                                                        <div key={paper.id} className="user-detail-course__materials-main">
+                                                            <FilePdfOutlined /> {' '}
+                                                            <a href={paper.pdfUrl} target="_blank" rel="noopener noreferrer">
+                                                                {paper.title}
+                                                            </a>
+                                                            {paper.description && (
+                                                                <div className='user-detail-course__materials-desc rich-text-content' dangerouslySetInnerHTML={{ __html: `— ${sanitizeRichText(richValueToHtml(paper.description))}` }} />
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <NoDataFound type="nodata" description="No question papers" />
+                                            )
+                                        ) : activeTab === 'video' ? (
+                                            videoMaterials.length > 0 ? (
+                                                <ul className="user-detail-course__materials">
+                                                    {videoMaterials.map((video) => (
+                                                        <li key={video.id}>
+                                                            <a href={video.videoUrl} target="_blank" rel="noopener noreferrer">
+                                                                {video.title}
+                                                            </a>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <NoDataFound type="nodata" description="No video material" />
+                                            )
+                                        ) : (
+                                            studyMaterials.length > 0 ? (
+                                                <ul className="user-detail-course__materials">
+                                                    {studyMaterials.map((material) => (
+                                                        <div key={material.id} className="user-detail-course__materials-main">
+                                                            <FilePdfOutlined /> {' '}
+                                                            <a href={material.pdfUrl} target="_blank" rel="noopener noreferrer">
+                                                                {material.title}
+                                                            </a>
+                                                            {material.description && (
+                                                                <div className='user-detail-course__materials-desc rich-text-content' dangerouslySetInnerHTML={{ __html: `— ${sanitizeRichText(richValueToHtml(material.description))}` }} />
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <NoDataFound type="nodata" description="No study material" />
+                                            )
                                         )}
                                     </div>
+                                        </div>
+                                    </div>
+                                    </>)}
                                 </div>
                             );
                         })}
@@ -492,10 +448,39 @@ const UserDetail = () => {
                         {syllabusPayments.length === 0 ? (
                             <NoDataFound type="nodata" description="No syllabus wise payments" />
                         ) : (
-                            <TableWithPagination
-                                columns={syllabusPaymentColumns}
-                                dataSource={syllabusPayments.map((payment) => ({ ...payment, key: payment.paymentId }))}
-                            />
+                            <div className="payment-cards">
+                                {syllabusPayments.map((payment) => {
+                                    const isExpanded = expandedCardIds.has(payment.paymentId);
+                                    return (
+                                    <div className="payment-card" key={payment.paymentId}>
+                                        <div
+                                            className={`payment-card__header payment-card__header--toggle${isExpanded ? '' : ' payment-card__header--collapsed'}`}
+                                            onClick={() => toggleCard(payment.paymentId)}
+                                            aria-expanded={isExpanded}
+                                        >
+                                            <img className="payment-card__arrow" src={isExpanded ? arrow_drop_down_Icon : arrow_drop_right_Icon} alt={isExpanded ? 'Collapse' : 'Expand'} />
+                                            <span className="payment-card__title">{payment.planTitle}</span>
+                                            <span className="payment-card__amount">₹{Number(payment.amount).toLocaleString()}</span>
+                                            <div className="user-course__payment-status" onClick={(e) => e.stopPropagation()}>
+                                                <span className="user-detail__info-item-label2">Payment Status:</span>
+                                                {renderPaymentStatus(payment.paymentStatus, payment)}
+                                            </div>
+                                        </div>
+                                        {isExpanded && (
+                                        <div className="payment-card__body">
+                                            {renderPaymentProof(payment.paymentScreenshot)}
+                                            <dl className="payment-card__details">
+                                                {renderDetail('Payment Method', payment.paymentMethod)}
+                                                {renderDetail('Transaction Reference', payment.transactionReference, true)}
+                                                {renderDetail('Verified At', payment.verifiedAt ? formatDate(payment.verifiedAt) : null)}
+                                                {renderDetail('Paid On', payment.createdAt ? formatDate(payment.createdAt) : null)}
+                                            </dl>
+                                        </div>
+                                        )}
+                                    </div>
+                                    );
+                                })}
+                            </div>
                         )}
                     </div>
                 )}

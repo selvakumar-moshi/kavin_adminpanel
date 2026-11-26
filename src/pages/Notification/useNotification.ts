@@ -6,7 +6,7 @@ import type { RootState } from '../../services/Store';
 import { getNotifications, createNotification, updateNotification, deleteNotification } from '../../services/LearningAction';
 import type { NotificationRecord } from './Constant';
 import dayjs from 'dayjs';
-import { getNotificationTableColumns, dayjsToISOString, NOTIFICATION_SEARCH_INPUT_FIELDS, FLASH_NOTIFICATION_TYPE } from './Constant';
+import { getNotificationTableColumns, dayjsToISOString, NOTIFICATION_SEARCH_INPUT_FIELDS, FLASH_NOTIFICATION_TYPE, JOB_NOTIFICATION_TYPE } from './Constant';
 import { NOTIFICATION_FILTER_FIELDS } from '../../utils/filterUtils';
 import { useClientSideTableSortSearch } from '../../components/Table/useColumnSortSearch';
 import { NOTIFICATION_VALIDATION_RULES } from '../../utils/validationUtils';
@@ -37,6 +37,9 @@ export const useNotificationManagement = () => {
     const { courses, batches, batchesLoading, loadBatches } = useCourseBatchOptions(showError);
     const [users, setUsers] = useState<{ id: string; name: string }[]>([]);
     const [usersLoading, setUsersLoading] = useState(false);
+    // Once a batch is chosen, only its users are listed
+    const [batchRecipients, setBatchRecipients] = useState<{ id: string; name: string }[]>([]);
+    const [recipientsLoading, setRecipientsLoading] = useState(false);
 
     const { NotificationsData, apiStatus } = useSelector(
         (state: RootState) => state.learning
@@ -154,8 +157,31 @@ export const useNotificationManagement = () => {
         }
     };
 
+    // The users of the chosen batch (GET /Notification/recipients), listed by name
+    const loadRecipients = async (batchId: string) => {
+        if (!batchId) {
+            setBatchRecipients([]);
+            return;
+        }
+        setRecipientsLoading(true);
+        try {
+            const res = await superSalesAPI.getNotificationRecipients(batchId);
+            const items: any[] = Array.isArray(res?.data?.data) ? res.data.data : [];
+            setBatchRecipients(items.map((user) => ({
+                id: user.userId,
+                name: `${user.name || ''}${user.applicationNo ? ` (${user.applicationNo})` : ''}`.trim(),
+            })));
+        } catch (error: any) {
+            setBatchRecipients([]);
+            showError(error?.response?.data?.message || error?.message || 'Failed to load batch users');
+        } finally {
+            setRecipientsLoading(false);
+        }
+    };
+
     const openCreateModal = () => {
         loadBatches('');
+        setBatchRecipients([]);
         loadUsers();
         setSelectedNotification(null);
         setFormValues({});
@@ -168,6 +194,7 @@ export const useNotificationManagement = () => {
     const openEditModal = (notification: NotificationRecord) => {
         loadBatches(notification.courseId || '');
         loadUsers();
+        loadRecipients(notification.batchId || '');
         setSelectedNotification(notification);
         setFormValues({
             notificationType: notification.notificationType || '',
@@ -182,6 +209,8 @@ export const useNotificationManagement = () => {
             sendPush: typeof notification.sendPush === 'boolean' ? notification.sendPush : undefined,
             userIds: notification.userIds ?? (notification.userId ? [notification.userId] : []),
             pushScheduledAt: notification.pushScheduledAt || null,
+            pushStartDate: notification.pushStartDate || null,
+            pushEndDate: notification.pushEndDate || null,
         });
         setFormErrors({});
         setFileList([]);
@@ -236,11 +265,15 @@ export const useNotificationManagement = () => {
             const next = { ...prev, [name]: value };
             // Another course means another set of batches; the chosen batch no longer applies
             if (name === 'courseId') next.batchId = '';
-            // A schedule only applies to a push
-            if (name === 'sendPush' && !value) next.pushScheduledAt = null;
+            // Another batch means another set of users
+            if (name === 'courseId' || name === 'batchId') next.userIds = [];
             return next;
         });
-        if (name === 'courseId') loadBatches(value || '');
+        if (name === 'courseId') {
+            loadBatches(value || '');
+            loadRecipients('');
+        }
+        if (name === 'batchId') loadRecipients(value || '');
 
         const error = validateSingleField(name, value);
         setFormErrors(prev => {
@@ -265,8 +298,11 @@ export const useNotificationManagement = () => {
         });
 
         // Both dates are optional; when both are given the end can't be before the start
-        if (formValues.startDate && formValues.endDate && dayjs(formValues.endDate).isBefore(dayjs(formValues.startDate))) {
+        if (formValues.notificationType !== FLASH_NOTIFICATION_TYPE && formValues.startDate && formValues.endDate && dayjs(formValues.endDate).isBefore(dayjs(formValues.startDate))) {
             newErrors.endDate = 'End Date must not be before Start Date';
+        }
+        if (formValues.pushStartDate && formValues.pushEndDate && dayjs(formValues.pushEndDate).isBefore(dayjs(formValues.pushStartDate))) {
+            newErrors.pushEndDate = 'Push End Date must not be before Push Start Date';
         }
 
         setFormErrors(newErrors);
@@ -278,11 +314,13 @@ export const useNotificationManagement = () => {
             return;
         }
 
-        // A Job Notification is only dated, so any time left over from before the type was switched is dropped
-        const isPush = formValues.notificationType === FLASH_NOTIFICATION_TYPE;
-        const toPayloadDate = (value: unknown) => (value ? dayjsToISOString(isPush ? value : dayjs(value as string).startOf('day')) : '');
-        const startDate = toPayloadDate(formValues.startDate);
-        const endDate = toPayloadDate(formValues.endDate);
+        // Fields hidden for the chosen type are not sent (a Flash Notification has no dates; a Job Notification has no targeting)
+        const isFlash = formValues.notificationType === FLASH_NOTIFICATION_TYPE;
+        const isJob = formValues.notificationType === JOB_NOTIFICATION_TYPE;
+        // The dates are just days
+        const toPayloadDate = (value: unknown) => (value ? dayjsToISOString(dayjs(value as string).startOf('day')) : '');
+        const startDate = isFlash ? '' : toPayloadDate(formValues.startDate);
+        const endDate = isFlash ? '' : toPayloadDate(formValues.endDate);
 
         const formData = new FormData();
         formData.append('title', formValues.title || '');
@@ -293,14 +331,20 @@ export const useNotificationManagement = () => {
         if (endDate) formData.append('endDate', endDate);
         formData.append('notificationType', formValues.notificationType || '');
         // Targeting is optional: only what was chosen is sent
-        if (formValues.courseType) formData.append('courseType', formValues.courseType);
-        if (formValues.courseId) formData.append('courseId', formValues.courseId);
-        if (formValues.batchId) formData.append('batchId', formValues.batchId);
+        if (!isJob) {
+            if (formValues.courseType) formData.append('courseType', formValues.courseType);
+            if (formValues.courseId) formData.append('courseId', formValues.courseId);
+            if (formValues.batchId) formData.append('batchId', formValues.batchId);
+            // One `userId` entry per chosen user
+            ((formValues.userIds as string[] | undefined) || []).forEach((userId) => formData.append('userId', userId));
+        }
         if (typeof formValues.sendPush === 'boolean') formData.append('sendPush', String(formValues.sendPush));
-        // One `userId` entry per chosen user
-        ((formValues.userIds as string[] | undefined) || []).forEach((userId) => formData.append('userId', userId));
         const pushScheduledAt = dayjsToISOString(formValues.pushScheduledAt);
-        if (formValues.sendPush && pushScheduledAt) formData.append('pushScheduledAt', pushScheduledAt);
+        const pushStartDate = dayjsToISOString(formValues.pushStartDate);
+        const pushEndDate = dayjsToISOString(formValues.pushEndDate);
+        if (pushStartDate) formData.append('pushStartDate', pushStartDate);
+        if (pushEndDate) formData.append('pushEndDate', pushEndDate);
+        if (pushScheduledAt) formData.append('pushScheduledAt', pushScheduledAt);
 
         const file = fileList[0]?.originFileObj;
         if (file) {
@@ -337,7 +381,9 @@ export const useNotificationManagement = () => {
             String(formValues.batchId || '') !== (selectedNotification.batchId || '') ||
             Boolean(formValues.sendPush) !== Boolean(selectedNotification.sendPush) ||
             [...(formValues.userIds || [])].sort().join(',') !== [...(selectedNotification.userIds ?? (selectedNotification.userId ? [selectedNotification.userId] : []))].sort().join(',') ||
-            dayjsToISOString(formValues.pushScheduledAt) !== dayjsToISOString(selectedNotification.pushScheduledAt)
+            dayjsToISOString(formValues.pushScheduledAt) !== dayjsToISOString(selectedNotification.pushScheduledAt) ||
+            dayjsToISOString(formValues.pushStartDate) !== dayjsToISOString(selectedNotification.pushStartDate) ||
+            dayjsToISOString(formValues.pushEndDate) !== dayjsToISOString(selectedNotification.pushEndDate)
         )
         : (
             Boolean(formValues.notificationType) ||
@@ -352,7 +398,9 @@ export const useNotificationManagement = () => {
             Boolean(formValues.batchId) ||
             Boolean(formValues.sendPush) ||
             (formValues.userIds || []).length > 0 ||
-            Boolean(formValues.pushScheduledAt)
+            Boolean(formValues.pushScheduledAt) ||
+            Boolean(formValues.pushStartDate) ||
+            Boolean(formValues.pushEndDate)
         );
 
     return {
@@ -394,8 +442,9 @@ export const useNotificationManagement = () => {
         courses,
         batches,
         batchesLoading,
-        users,
-        usersLoading,
+        // The batch's users once a batch is chosen, otherwise everyone
+        users: formValues.batchId ? batchRecipients : users,
+        usersLoading: usersLoading || recipientsLoading,
         fileList,
         replacingFile,
         setReplacingFile,

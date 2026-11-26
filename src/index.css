@@ -144,6 +144,11 @@ body {
   --text-color: var(--theme-text-color);
 }
 
+a{
+  font-family: var(--font-family);
+  font-weight: 500;
+}
+
 .light-theme {
   --theme-primary-color: #007bff;
   --theme-background-color: #f8f9fa;
@@ -189,7 +194,8 @@ textarea:focus-visible:not(.dynamic-form-field__control--highlighted) {
 .ant-picker-dropdown .ant-picker-panel-container .ant-picker-panel table,
 .ant-picker-dropdown .ant-picker-header-view >button,
 .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input,
-.ant-picker-dropdown .ant-picker-header-view
+.ant-picker-dropdown .ant-picker-header-view,
+.ant-image .ant-image-mask
 {
   font-family: var(--font-family);
 }

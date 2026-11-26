@@ -23,6 +23,8 @@ export interface NotificationRecord {
     userIds?: string[] | null;
     userId?: string | null;
     pushScheduledAt?: string | null;
+    pushStartDate?: string | null;
+    pushEndDate?: string | null;
     createdAt?: string;
     updatedAt?: string | null;
 }
@@ -47,12 +49,13 @@ export const NOTIFICATION_SEARCH_INPUT_FIELDS = [
     },
 ];
 
-// Only this type is scheduled for a time of day; the others (Job Notification) are just dated
+// A Flash Notification goes out at once (no start / end date); a Job Notification is not aimed at a course, batch or users
 export const FLASH_NOTIFICATION_TYPE = 'Flash Notification';
+export const JOB_NOTIFICATION_TYPE = 'Job Notification';
 
 export const NOTIFICATION_TYPE_OPTIONS = [
     { value: FLASH_NOTIFICATION_TYPE, label: 'Flash Notification' },
-    { value: 'Job Notification', label: 'Job Notification' },
+    { value: JOB_NOTIFICATION_TYPE, label: 'Job Notification' },
 ];
 
 export const NOTIFICATION_TYPE_FIELD = [
@@ -133,6 +136,19 @@ export const NOTIFICATION_USER_FIELD = {
     label: 'Users',
     placeholder: 'Select users',
 };
+
+export const NOTIFICATION_PUSH_DATE_FIELD = [
+    {
+        name: 'pushStartDate',
+        label: 'Push Start Date',
+        placeholder: 'Select push start date',
+    },
+    {
+        name: 'pushEndDate',
+        label: 'Push End Date',
+        placeholder: 'Select push end date',
+    },
+];
 
 export const NOTIFICATION_PUSH_SCHEDULED_FIELD = [
     {
