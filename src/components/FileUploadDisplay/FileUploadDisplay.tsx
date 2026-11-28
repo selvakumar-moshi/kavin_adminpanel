@@ -5,6 +5,8 @@ import Delete_icon from "../../assets/DeleteIcon.svg";
 export interface FileUploadDisplayProps {
   label: string;
   fileName: string;
+  /** When given, the file name opens it in a new tab */
+  fileUrl?: string;
   onDelete: () => void;
   className?: string;
   required?: boolean;
@@ -13,6 +15,7 @@ export interface FileUploadDisplayProps {
 const FileUploadDisplay: React.FC<FileUploadDisplayProps> = ({
   label,
   fileName,
+  fileUrl,
   onDelete,
   className,
   required = false,
@@ -30,7 +33,9 @@ const FileUploadDisplay: React.FC<FileUploadDisplayProps> = ({
       )}
       <div className="file-upload-display__container">
         <div className="file-upload-display__file-info">
-          <div className="file-upload-display__file-name">{fileName}</div>
+          <div className="file-upload-display__file-name">
+            {fileUrl ? <a href={fileUrl} target="_blank" rel="noopener noreferrer">{fileName}</a> : fileName}
+          </div>
           <div className="file-upload-display__dropdown-icon">
             <button
               type="button"

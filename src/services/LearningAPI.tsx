@@ -147,12 +147,13 @@ class LearningAPI {
         });
     }
 
-    createBatch(title: string, courseId: string, batchFrom: string, batchTo: string, whatsAppLink: string, telegramLink: string, description: string) {
-        return Super_Sales.post('/Batch', { title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink, description });
+    // Batch create / update are multipart form data: the fields, an optional `file` (PDF) and, on update, `removeFile`
+    createBatch(formData: FormData) {
+        return Super_Sales.post('/Batch', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
     }
 
-    updateBatch(id: string, title: string, courseId: string, batchFrom: string, batchTo: string, whatsAppLink: string, telegramLink: string, description: string) {
-        return Super_Sales.put(`/Batch/${id}`, { title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink, description });
+    updateBatch(id: string, formData: FormData) {
+        return Super_Sales.put(`/Batch/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
     }
 
     deleteBatch(id: string) {
@@ -452,6 +453,15 @@ class LearningAPI {
 
     deleteLiveClass(id: string) {
         return Super_Sales.delete(`/LiveClasses/${id}`);
+    }
+
+    // Send the notification as a push now / cancel its push
+    sendNotificationPush(id: string) {
+        return Super_Sales.post(`/Notification/${id}/push`);
+    }
+
+    cancelNotificationPush(id: string) {
+        return Super_Sales.post(`/Notification/${id}/push/cancel`);
     }
 
     deleteNotification(id: string) {

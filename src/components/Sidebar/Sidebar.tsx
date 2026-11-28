@@ -50,7 +50,7 @@ const MENU_ITEMS: MenuItem[] = [
   },
   {
     id: "studymaterial",
-    label: "Study Material",
+    label: "Materials",
     icon: yearIcon,
     route: "/studymaterial",
   },
@@ -129,6 +129,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <div className="sidebar__icon-container">
                     {renderIcon(item.icon)}
                   </div>
+                  <span className="sidebar__menu-label">{item.label}</span>
                 </button>
               );
 

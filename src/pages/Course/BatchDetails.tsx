@@ -5,6 +5,8 @@ import PopupModal from '../../components/PopupModal/PopupModal';
 import InputFields from '../../components/InputFields/InputFields';
 import DateFieldsSection from '../../components/DateFieldsSection/DateFieldsSection';
 import ActionIcons from '../../components/Table/ActionIcons';
+import FileUploadSection from '../../components/FileUploadSection/FileUploadSection';
+import FileUploadDisplay from '../../components/FileUploadDisplay/FileUploadDisplay';
 import StatusBadge from '../../components/Table/StatusBadge';
 import ToastMessages from '../../components/ToastMessages';
 import PageTitle from '../../components/PageTitle';
@@ -36,6 +38,10 @@ const BatchDetails: React.FC<BatchDetailsProps> = ({ courseId }) => {
         batchFormValues,
         batchFormErrors,
         hasBatchFormChanges,
+        fileList,
+        setFileList,
+        replacingFile,
+        setReplacingFile,
         openCreateBatchModal,
         openEditBatchModal,
         closeBatchModal,
@@ -179,6 +185,23 @@ const BatchDetails: React.FC<BatchDetailsProps> = ({ courseId }) => {
                         onChange={handleBatchInputChange}
                         disabled={batchLoading}
                     />
+                    {/* Optional PDF; when editing, the saved one is shown until it is removed */}
+                    {selectedBatch?.pdfUrl && fileList.length === 0 && !replacingFile ? (
+                        <FileUploadDisplay
+                            label="PDF File"
+                            fileName={selectedBatch.pdfName || decodeURIComponent(selectedBatch.pdfUrl.split('?')[0].split('/').pop() || 'PDF')}
+                            fileUrl={selectedBatch.pdfUrl}
+                            onDelete={() => setReplacingFile(true)}
+                        />
+                    ) : (
+                        <FileUploadSection
+                            label="PDF File"
+                            acceptedFormats="PDF"
+                            allowedExtensions={['.pdf']}
+                            fileList={fileList}
+                            onFileChange={setFileList}
+                        />
+                    )}
                 </div>
             </PopupModal>
 

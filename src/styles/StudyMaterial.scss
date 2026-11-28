@@ -58,3 +58,68 @@
     }
   }
 }
+
+// Material type switcher: icon + label pills, the open one highlighted
+.material-type-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 2px 0;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid #e3e6ef;
+    border-radius: 18px;
+    background: #fff;
+    color: #4a5568;
+    font-family: var(--font-family);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+
+    &:hover {
+      border-color: var(--btn-primary-bg, #eb6c2a);
+      color: var(--btn-primary-bg, #eb6c2a);
+    }
+
+    &--active,
+    &--active:hover {
+      border-color: var(--btn-primary-bg, #eb6c2a);
+      background: #fdf1ea;
+      color: var(--btn-primary-bg, #eb6c2a);
+      font-weight: 600;
+    }
+  }
+
+  &__icon {
+    display: inline-flex;
+    font-size: 16px;
+  }
+}
+
+// First-load spinner of a material list: centred in the table's area (same box as .custom-table)
+.material-loader {
+  position: fixed;
+  top: 172px;
+  left: 90px;
+  right: 18px;
+  bottom: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

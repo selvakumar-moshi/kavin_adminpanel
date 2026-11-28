@@ -495,3 +495,58 @@ body.user-detail-page {
     }
   }
 }
+
+// Each menu item is its icon with its name under it (small screens keep the icon alone)
+.sidebar__menu-label {
+  font-family: var(--font-family);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.15;
+  text-align: center;
+  color: #3b4a63;
+  overflow-wrap: anywhere;
+}
+
+.sidebar__menu-button--active .sidebar__menu-label {
+  color: #EC6B29;
+}
+
+.dark-theme .sidebar__menu-label {
+  color: #e5e7eb;
+}
+
+@media (min-width: 769px) {
+  .sidebar,
+  body.user-detail-page .sidebar {
+    width: 82px;
+    padding: 28px 7px;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .sidebar__menu-list,
+  body.user-detail-page .sidebar__menu-list {
+    gap: 12px;
+  }
+
+  .sidebar__menu-button,
+  body.user-detail-page .sidebar__menu-button {
+    width: 68px;
+    height: auto;
+    min-height: 54px;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 2px;
+  }
+
+  .sidebar__menu-button--active,
+  body.user-detail-page .sidebar__menu-button--active {
+    padding: 6px 2px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar__menu-label {
+    display: none;
+  }
+}

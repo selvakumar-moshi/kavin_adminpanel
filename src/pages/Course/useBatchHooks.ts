@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type { UploadFile } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import type { RootState } from '../../services/Store';
@@ -17,6 +18,9 @@ export const useBatchManagement = (courseId: string | undefined) => {
     const [selectedBatch, setSelectedBatch] = useState<BatchRecord | null>(null);
     const [batchFormValues, setBatchFormValues] = useState<Record<string, any>>({});
     const [batchFormErrors, setBatchFormErrors] = useState<Record<string, string>>({});
+    // The optional PDF; when editing, the saved one is shown until it is removed (replacingFile)
+    const [fileList, setFileList] = useState<UploadFile[]>([]);
+    const [replacingFile, setReplacingFile] = useState(false);
     const [operationType, setOperationType] = useState<'create' | 'edit' | 'delete' | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
@@ -86,6 +90,8 @@ export const useBatchManagement = (courseId: string | undefined) => {
             }
             setBatchFormValues({});
             setBatchFormErrors({});
+            setFileList([]);
+            setReplacingFile(false);
             setSelectedBatch(null);
             setOperationType(null);
             if (courseId) {
@@ -103,6 +109,8 @@ export const useBatchManagement = (courseId: string | undefined) => {
         setSelectedBatch(null);
         setBatchFormValues({});
         setBatchFormErrors({});
+        setFileList([]);
+        setReplacingFile(false);
         setIsBatchModalVisible(true);
     };
 
@@ -117,6 +125,8 @@ export const useBatchManagement = (courseId: string | undefined) => {
             description: batch.description || '',
         });
         setBatchFormErrors({});
+        setFileList([]);
+        setReplacingFile(false);
         setIsBatchModalVisible(true);
     };
 
@@ -125,6 +135,8 @@ export const useBatchManagement = (courseId: string | undefined) => {
         setSelectedBatch(null);
         setBatchFormValues({});
         setBatchFormErrors({});
+        setFileList([]);
+        setReplacingFile(false);
     };
 
     const openDeleteBatchModal = (batch: BatchRecord) => {
@@ -214,29 +226,26 @@ export const useBatchManagement = (courseId: string | undefined) => {
         const telegramLink = String(batchFormValues.telegramLink || '').trim();
         const description = String(batchFormValues.description || '').trim();
 
+        const formData = new FormData();
+        formData.append('title', batchFormValues.title || '');
+        formData.append('courseId', courseId);
+        formData.append('batchFrom', batchFrom);
+        formData.append('batchTo', batchTo);
+        formData.append('whatsAppLink', whatsAppLink);
+        formData.append('telegramLink', telegramLink);
+        formData.append('description', description);
+
+        // Optional PDF: a newly picked file, or (when no new one is picked) the saved one removed
+        const file = fileList[0]?.originFileObj;
+        if (file) formData.append('file', file);
+
         if (selectedBatch) {
+            if (replacingFile && !file) formData.append('removeFile', 'true');
             setOperationType('edit');
-            dispatch(updateBatch({
-                id: selectedBatch.id,
-                title: batchFormValues.title,
-                courseId,
-                batchFrom,
-                batchTo,
-                whatsAppLink,
-                telegramLink,
-                description,
-            }) as any);
+            dispatch(updateBatch({ id: selectedBatch.id, formData }) as any);
         } else {
             setOperationType('create');
-            dispatch(createBatch({
-                title: batchFormValues.title,
-                courseId,
-                batchFrom,
-                batchTo,
-                whatsAppLink,
-                telegramLink,
-                description,
-            }) as any);
+            dispatch(createBatch(formData) as any);
         }
     };
 
@@ -254,7 +263,9 @@ export const useBatchManagement = (courseId: string | undefined) => {
             dayjsToISOString(batchFormValues.batchTo) !== dayjsToISOString(selectedBatch.batchTo) ||
             String(batchFormValues.whatsAppLink || '') !== (selectedBatch.whatsAppLink || '') ||
             String(batchFormValues.telegramLink || '') !== (selectedBatch.telegramLink || '') ||
-            String(batchFormValues.description || '') !== (selectedBatch.description || '')
+            String(batchFormValues.description || '') !== (selectedBatch.description || '') ||
+            fileList.length > 0 ||
+            (replacingFile && Boolean(selectedBatch.pdfUrl))
         )
         : (
             Boolean(String(batchFormValues.title || '').trim()) ||
@@ -262,7 +273,8 @@ export const useBatchManagement = (courseId: string | undefined) => {
             Boolean(batchFormValues.batchTo) ||
             Boolean(String(batchFormValues.whatsAppLink || '').trim()) ||
             Boolean(String(batchFormValues.telegramLink || '').trim()) ||
-            Boolean(String(batchFormValues.description || '').trim())
+            Boolean(String(batchFormValues.description || '').trim()) ||
+            fileList.length > 0
         );
 
     return {
@@ -281,6 +293,10 @@ export const useBatchManagement = (courseId: string | undefined) => {
         batchFormValues,
         batchFormErrors,
         hasBatchFormChanges,
+        fileList,
+        setFileList,
+        replacingFile,
+        setReplacingFile,
         openCreateBatchModal,
         openEditBatchModal,
         closeBatchModal,

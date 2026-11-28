@@ -101,9 +101,8 @@ const StudyMaterial: React.FC<StudyMaterialProps> = ({ searchTerm = '', appliedF
     const courseOptions = coursesArray.map(course => ({ value: course.id, label: course.courseName }));
     const batchOptions = batchesArray.map(batch => ({ value: batch.id, label: batch.title }));
 
-    if (loading && studyMaterialsArray.length === 0) {
-        return <Loader size="large" spinning={true} fullScreen={false} />;
-    }
+    // The first load shows its loader where the table will be (not instead of the whole page)
+    const showLoader = loading && studyMaterialsArray.length === 0;
 
     return (
         <div className="study-material-container">
@@ -115,6 +114,11 @@ const StudyMaterial: React.FC<StudyMaterialProps> = ({ searchTerm = '', appliedF
                 </Button>
             </div>
 
+            {showLoader ? (
+                <div className="material-loader">
+                    <Loader size="large" spinning={true} fullScreen={false} />
+                </div>
+            ) : (
             <TableWithPagination
                 columns={columns}
                 dataSource={studyMaterialsArray.map(material => ({ ...material, key: material.id }))}
@@ -127,6 +131,7 @@ const StudyMaterial: React.FC<StudyMaterialProps> = ({ searchTerm = '', appliedF
                     emptyText: <NoDataFound type="nodata" description="No study material found" style={{ height: 'unset' }} />
                 }}
             />
+            )}
 
             {/* Create/Edit Modal */}
             <PopupModal

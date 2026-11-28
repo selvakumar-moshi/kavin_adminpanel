@@ -10,14 +10,13 @@ import Loader from '../../components/Loader/Loader';
 import ToastMessages from '../../components/ToastMessages';
 import Breadcrumbs from '../../components/Breadcrumb/Breadcrumbs';
 import StatusBadge from '../../components/Table/StatusBadge';
-import TableWithPagination from '../../components/Table/TableWithPagination';
-import type { ITableColumn } from '../../components/Table/ITable';
 import InfoItem from '../../components/InfoItem/InfoItem';
 import { useUserDetailManagement, ALLOWED_BATCH_SEPARATOR } from './useUserDetailHooks';
 import { usePageBodyClass } from '../../utils/pageBodyClass';
 import { useResetPassword } from '../Users/useResetPassword';
 import ResetPasswordModals from '../Users/ResetPasswordModals';
-import { EDIT_USER_FIELDS, EDIT_USER_MODE_OPTIONS, EDIT_USER_PAYMENT_REQUIRED_OPTIONS, EDIT_USER_REASON_FIELDS, TRANSFER_MODE, PENDING_ENROLLMENT_STATUS_OPTIONS, DISTRICT_OPTIONS, UserDetailMainTabs, SYLLABUS_PAYMENT_STATUS_OPTIONS, COURSE_DETAILS_TAB_KEY, SYLLABUS_WISE_TAB_KEY, SYLLABUS_MATERIAL_TAB_KEY } from './Constants';
+import type { UserSyllabusMaterial } from './Constants';
+import { EDIT_USER_FIELDS, EDIT_USER_MODE_OPTIONS, EDIT_USER_PAYMENT_REQUIRED_OPTIONS, EDIT_USER_REASON_FIELDS, TRANSFER_MODE, PENDING_ENROLLMENT_STATUS_OPTIONS, DISTRICT_OPTIONS, UserDetailMainTabs, SYLLABUS_PAYMENT_STATUS_OPTIONS, COURSE_DETAILS_TAB_KEY, SYLLABUS_DETAILS_TAB_KEY } from './Constants';
 import { formatDate } from '../../utils/dateUtils';
 import dot_Icon from '../../assets/dot_Icon.svg';
 import person_add_Icon from '../../assets/person_add_Icon.svg'
@@ -27,28 +26,10 @@ import manage_acc_Icon from "../../assets/manage_acc_Icon.svg";
 import arrow_drop_down_Icon from "../../assets/arrow_drop_down_Icon.svg";
 import arrow_drop_right_Icon from "../../assets/arrow_drop_right_Icon.svg";
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
-import { richValueToHtml, sanitizeRichText } from '../../utils/richText';
+import { richValueToHtml, sanitizeRichText, richTextToPlain } from '../../utils/richText';
 
 /** Applied to document.body while this page is shown; user.scss targets this. */
 const USER_DETAIL_PAGE_BODY_CLASS = 'user-detail-page';
-
-const SYLLABUS_MATERIAL_COLUMNS: ITableColumn[] = [
-    { title: 'Title', dataIndex: 'title', key: 'title' },
-    { title: 'Description', dataIndex: 'description', key: 'description', render: (value: string) => value || '-' },
-    { title: 'Folder', dataIndex: 'folderName', key: 'folderName', render: (value: string | null) => value || '-' },
-    { title: 'Sub Folder', dataIndex: 'subFolderPath', key: 'subFolderPath', render: (_: string | null, record: { subFolderPath?: string | null; subFolderName?: string | null }) => record.subFolderPath || record.subFolderName || '-' },
-    {
-        title: 'PDF',
-        dataIndex: 'pdfUrl',
-        key: 'pdfUrl',
-        render: (pdfUrl: string) => (
-            <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
-                <FilePdfOutlined /> View
-            </a>
-        ),
-    },
-    { title: 'Created At', dataIndex: 'createdAt', key: 'createdAt', render: (value: string) => (value ? formatDate(value) : '-') },
-];
 
 // The payment screenshot is shown right in the page; clicking it opens a larger view (no new tab)
 const renderPaymentProof = (url?: string | null) => (
@@ -69,6 +50,43 @@ const renderDetail = (label: string, value?: string | null, keepCase = false) =>
     <div className="payment-card__detail">
         <dt>{label}</dt>
         <dd className={keepCase ? 'payment-card__value--keep-case' : undefined}>{value || '-'}</dd>
+    </div>
+);
+
+// The syllabus materials of a payment's folder, shown inside its card
+const renderPaymentMaterials = (materials: UserSyllabusMaterial[]) => (
+    <div className="payment-card__materials">
+        <div className="payment-card__materials-title">Syllabus Material ({materials.length})</div>
+        {materials.length === 0 ? (
+            <div className="payment-card__materials-empty">No syllabus material</div>
+        ) : (
+            <table className="payment-card__materials-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Sub Folder</th>
+                        <th>PDF</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {materials.map((material) => (
+                        <tr key={material.id}>
+                            <td>{material.title}</td>
+                            <td>{richTextToPlain(material.description || '') || '-'}</td>
+                            <td>{material.subFolderPath || material.subFolderName || '-'}</td>
+                            <td>
+                                <a href={material.pdfUrl} target="_blank" rel="noopener noreferrer">
+                                    <FilePdfOutlined /> View
+                                </a>
+                            </td>
+                            <td>{material.createdAt ? formatDate(material.createdAt) : '-'}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        )}
     </div>
 );
 
@@ -238,6 +256,15 @@ const UserDetail = () => {
     };
 
     const syllabusMaterials = userDetail.syllabusMaterials || [];
+    // A payment shows the materials of its own folder; the materials no payment's folder covers go on the payments whose
+    // folder has none (so nothing the user has access to is left out)
+    const otherMaterials = syllabusMaterials.filter(
+        (material) => !syllabusPayments.some((payment) => payment.folderId && payment.folderId === material.folderId)
+    );
+    const materialsOfPayment = (folderId: string | null) => {
+        const own = folderId ? syllabusMaterials.filter((material) => material.folderId === folderId) : [];
+        return own.length > 0 ? own : otherMaterials;
+    };
 
     const menuItems: MenuProps['items'] = [
         {
@@ -443,12 +470,13 @@ const UserDetail = () => {
                 </div>
                 )}
 
-                {activeMainTab === SYLLABUS_WISE_TAB_KEY && (
-                    <div className="user-syllabus-list">
-                        {syllabusPayments.length === 0 ? (
-                            <NoDataFound type="nodata" description="No syllabus wise payments" />
-                        ) : (
-                            <div className="payment-cards">
+                {activeMainTab === SYLLABUS_DETAILS_TAB_KEY && (
+                    <div className="user-syllabus-details">
+                        <div className="user-syllabus-section">
+                            {syllabusPayments.length === 0 ? (
+                                <NoDataFound type="nodata" description={syllabusMaterials.length === 0 ? 'No syllabus details' : 'No syllabus wise payments'} />
+                            ) : (
+                                <div className="payment-cards">
                                 {syllabusPayments.map((payment) => {
                                     const isExpanded = expandedCardIds.has(payment.paymentId);
                                     return (
@@ -469,31 +497,29 @@ const UserDetail = () => {
                                         {isExpanded && (
                                         <div className="payment-card__body">
                                             {renderPaymentProof(payment.paymentScreenshot)}
-                                            <dl className="payment-card__details">
-                                                {renderDetail('Payment Method', payment.paymentMethod)}
-                                                {renderDetail('Transaction Reference', payment.transactionReference, true)}
-                                                {renderDetail('Verified At', payment.verifiedAt ? formatDate(payment.verifiedAt) : null)}
-                                                {renderDetail('Paid On', payment.createdAt ? formatDate(payment.createdAt) : null)}
-                                            </dl>
+                                            {/* Details, then this plan's materials, beside the screenshot */}
+                                            <div className="payment-card__main">
+                                                <dl className="payment-card__details">
+                                                    {renderDetail('Payment Method', payment.paymentMethod)}
+                                                    {renderDetail('Transaction Reference', payment.transactionReference, true)}
+                                                    {renderDetail('Verified At', payment.verifiedAt ? formatDate(payment.verifiedAt) : null)}
+                                                    {renderDetail('Paid On', payment.createdAt ? formatDate(payment.createdAt) : null)}
+                                                </dl>
+                                                {renderPaymentMaterials(materialsOfPayment(payment.folderId))}
+                                            </div>
                                         </div>
                                         )}
                                     </div>
                                     );
                                 })}
                             </div>
-                        )}
-                    </div>
-                )}
-
-                {activeMainTab === SYLLABUS_MATERIAL_TAB_KEY && (
-                    <div className="user-syllabus-list">
-                        {syllabusMaterials.length === 0 ? (
-                            <NoDataFound type="nodata" description="No syllabus materials" />
-                        ) : (
-                            <TableWithPagination
-                                columns={SYLLABUS_MATERIAL_COLUMNS}
-                                dataSource={syllabusMaterials.map((material) => ({ ...material, key: material.id }))}
-                            />
+                            )}
+                        </div>
+                        {/* Materials with no payment to sit under */}
+                        {syllabusPayments.length === 0 && syllabusMaterials.length > 0 && (
+                            <div className="user-syllabus-section">
+                                {renderPaymentMaterials(syllabusMaterials)}
+                            </div>
                         )}
                     </div>
                 )}

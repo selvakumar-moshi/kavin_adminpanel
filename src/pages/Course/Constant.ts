@@ -49,6 +49,14 @@ export const COURSE_AMOUNT_FIELDS = [
 
 export type CourseDetailRecord = CourseRecord;
 
+export const COURSE_TAB_KEY = 'course';
+export const SYLLABUS_WISE_TAB_KEY = 'syllabusWise';
+
+export const COURSE_PAGE_TABS = [
+    { key: COURSE_TAB_KEY, label: 'Course', title: 'Courses' },
+    { key: SYLLABUS_WISE_TAB_KEY, label: 'Syllabus Wise', title: 'Syllabus Wise' },
+];
+
 export interface BatchRecord {
     id: string;
     title: string;
@@ -59,6 +67,9 @@ export interface BatchRecord {
     whatsAppLink?: string | null;
     telegramLink?: string | null;
     description?: string | null;
+    // The attached PDF (the batch time table), when there is one
+    pdfUrl?: string | null;
+    pdfName?: string | null;
     createdAt?: string;
     updatedAt?: string | null;
     isExpired: boolean;

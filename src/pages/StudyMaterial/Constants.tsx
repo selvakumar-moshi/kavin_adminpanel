@@ -1,4 +1,4 @@
-import { FilePdfOutlined, YoutubeOutlined } from '@ant-design/icons';
+import { FilePdfOutlined, YoutubeOutlined, BookOutlined, PlayCircleOutlined, FileTextOutlined, VideoCameraOutlined, FolderOpenOutlined } from '@ant-design/icons';
 import type { ITableColumn } from '../../components/Table/ITable';
 import { formatDate } from '../../utils/dateUtils';
 import { renderTruncatedCellWithTooltip } from '../../utils/tableCellRender';
@@ -226,11 +226,14 @@ export const getVideoMaterialTableColumns = (getCourseName: (courseId: string) =
 export const SYLLABUS_MATERIAL_TAB_KEY = 'syllabus';
 export const QUESTION_PAPER_TAB_KEY = 'questionPaper';
 
+export const LIVE_CLASSES_TAB_KEY = 'liveClasses';
+
 export const MATERIAL_TAB_ITEMS = [
-    { key: 'study', label: 'Study Material' },
-    { key: 'video', label: 'Video Material' },
-    { key: SYLLABUS_MATERIAL_TAB_KEY, label: 'Syllabus Material' },
-    { key: QUESTION_PAPER_TAB_KEY, label: 'Question Paper' },
+    { key: 'study', label: 'Study Material', icon: <BookOutlined /> },
+    { key: 'video', label: 'Video Material', icon: <PlayCircleOutlined /> },
+    { key: QUESTION_PAPER_TAB_KEY, label: 'Question Papers', icon: <FileTextOutlined /> },
+    { key: LIVE_CLASSES_TAB_KEY, label: 'Live Classes', icon: <VideoCameraOutlined /> },
+    { key: SYLLABUS_MATERIAL_TAB_KEY, label: 'Syllabus Material', icon: <FolderOpenOutlined /> },
 ];
 
 export interface StudyMaterialProps {

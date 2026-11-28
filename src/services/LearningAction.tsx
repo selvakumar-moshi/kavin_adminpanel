@@ -180,11 +180,11 @@ export const getBatches = createAsyncThunk<any, { courseId: string; searchTerm?:
   }
 );
 
-export const createBatch = createAsyncThunk<any, { title: string; courseId: string; batchFrom: string; batchTo: string; whatsAppLink: string; telegramLink: string; description: string }>(
+export const createBatch = createAsyncThunk<any, FormData>(
     "courseManagement/createBatch",
-    async ({ title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink, description }, { rejectWithValue }) => {
+    async (formData, { rejectWithValue }) => {
       try {
-        const res = await learningAPI.createBatch(title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink, description);
+        const res = await learningAPI.createBatch(formData);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to create Batch";
@@ -193,11 +193,11 @@ export const createBatch = createAsyncThunk<any, { title: string; courseId: stri
   }
 );
 
-export const updateBatch = createAsyncThunk<any, { id: string; title: string; courseId: string; batchFrom: string; batchTo: string; whatsAppLink: string; telegramLink: string; description: string }>(
+export const updateBatch = createAsyncThunk<any, { id: string; formData: FormData }>(
     "courseManagement/updateBatch",
-    async ({ id, title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink, description }, { rejectWithValue }) => {
+    async ({ id, formData }, { rejectWithValue }) => {
       try {
-        const res = await learningAPI.updateBatch(id, title, courseId, batchFrom, batchTo, whatsAppLink, telegramLink, description);
+        const res = await learningAPI.updateBatch(id, formData);
         return res?.data?.data || res?.data;
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || "Failed to update Batch";

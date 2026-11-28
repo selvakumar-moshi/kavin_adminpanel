@@ -88,9 +88,8 @@ const VideoMaterial: React.FC<VideoMaterialProps> = ({ searchTerm = '', appliedF
     const courseOptions = coursesArray.map(course => ({ value: course.id, label: course.courseName }));
     const batchOptions = batchesArray.map(batch => ({ value: batch.id, label: batch.title }));
 
-    if (loading && videoMaterialsArray.length === 0) {
-        return <Loader size="large" spinning={true} fullScreen={false} />;
-    }
+    // The first load shows its loader where the table will be (not instead of the whole page)
+    const showLoader = loading && videoMaterialsArray.length === 0;
 
     return (
         <div className="video-material-container">
@@ -102,6 +101,11 @@ const VideoMaterial: React.FC<VideoMaterialProps> = ({ searchTerm = '', appliedF
                 </Button>
             </div>
 
+            {showLoader ? (
+                <div className="material-loader">
+                    <Loader size="large" spinning={true} fullScreen={false} />
+                </div>
+            ) : (
             <TableWithPagination
                 columns={columns}
                 dataSource={videoMaterialsArray.map(video => ({ ...video, key: video.id }))}
@@ -114,6 +118,7 @@ const VideoMaterial: React.FC<VideoMaterialProps> = ({ searchTerm = '', appliedF
                     emptyText: <NoDataFound type="nodata" description="No video material found" style={{ height: 'unset' }} />
                 }}
             />
+            )}
 
             {/* Create/Edit Modal */}
             <PopupModal

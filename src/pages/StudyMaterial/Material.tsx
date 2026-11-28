@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Badge } from 'antd';
-import TabsComponent from '../../components/Tabs/Tabs';
+import MaterialTypeTabs from './MaterialTypeTabs';
+import LiveClasses from '../../components/LiveClasses/LiveClasses';
 import PageTitle from '../../components/PageTitle';
 import InputFields from '../../components/InputFields/InputFields';
 import DropdownField from '../../components/DropdownField/DropdownField';
@@ -11,7 +12,7 @@ import SyllabusMaterial from './SyllabusMaterial';
 import QuestionPaper from './QuestionPaper';
 import { useMaterialManagement, ALL_COURSES_VALUE } from './useMaterialHooks';
 import filter_Icon from '../../assets/filter_Icon.svg';
-import { MATERIAL_TAB_ITEMS, SYLLABUS_MATERIAL_TAB_KEY, QUESTION_PAPER_TAB_KEY } from './Constants';
+import { MATERIAL_TAB_ITEMS, SYLLABUS_MATERIAL_TAB_KEY, QUESTION_PAPER_TAB_KEY, LIVE_CLASSES_TAB_KEY } from './Constants';
 
 const Material = () => {
     const [activeTab, setActiveTab] = useState('study');
@@ -37,6 +38,11 @@ const Material = () => {
     const courseIdFilter = selectedCourseId === ALL_COURSES_VALUE ? '' : selectedCourseId;
     const isSyllabusTab = activeTab === SYLLABUS_MATERIAL_TAB_KEY;
 
+    const typeTabs = <MaterialTypeTabs items={MATERIAL_TAB_ITEMS} activeKey={activeTab} onChange={setActiveTab} />;
+
+    // Live Classes has its own list, search and form; it takes the same type switcher
+    if (activeTab === LIVE_CLASSES_TAB_KEY) return <LiveClasses pageTitle="Materials" tabs={typeTabs} />;
+
     return (
         <div className="material-container">
             <div className="report_main">
@@ -50,7 +56,7 @@ const Material = () => {
             </div>
 
             <div className='report_main'>
-                <TabsComponent items={MATERIAL_TAB_ITEMS} activeKey={activeTab} onChange={setActiveTab} />
+                {typeTabs}
                 <div className="dl_filter_main">
                     {/* Syllabus material belongs to a folder, not a course, and its search has no filter fields */}
                     {!isSyllabusTab && (

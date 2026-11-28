@@ -24,7 +24,7 @@ import add_Icon from '../../assets/add_Icon.svg';
 
 interface SyllabusWiseProps {
     pageTitle: string;
-    /** The Notification / Syllabus Wise tab switcher, shown on the search row */
+    /** The Course / Syllabus Wise tab switcher, shown on the search row */
     tabs: ReactNode;
 }
 

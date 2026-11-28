@@ -219,11 +219,9 @@ export const SYLLABUS_PAYMENT_STATUS_OPTIONS = [
 ];
 
 export const COURSE_DETAILS_TAB_KEY = 'courseDetails';
-export const SYLLABUS_WISE_TAB_KEY = 'syllabusWise';
-export const SYLLABUS_MATERIAL_TAB_KEY = 'syllabusMaterial';
+export const SYLLABUS_DETAILS_TAB_KEY = 'syllabusDetails';
 
 export const UserDetailMainTabs = [
     { key: COURSE_DETAILS_TAB_KEY, label: 'Course Details' },
-    { key: SYLLABUS_WISE_TAB_KEY, label: 'Syllabus Wise' },
-    { key: SYLLABUS_MATERIAL_TAB_KEY, label: 'Syllabus Material' },
+    { key: SYLLABUS_DETAILS_TAB_KEY, label: 'Syllabus Details' },
 ];

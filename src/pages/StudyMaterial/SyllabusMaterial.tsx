@@ -96,9 +96,8 @@ const SyllabusMaterial: React.FC<SyllabusMaterialProps> = ({ searchTerm = '' }) 
         },
     ];
 
-    if (loading && materials.length === 0) {
-        return <Loader size="large" spinning={true} fullScreen={false} />;
-    }
+    // The first load shows its loader where the table will be (not instead of the whole page)
+    const showLoader = loading && materials.length === 0;
 
     return (
         <div className="study-material-container">
@@ -110,6 +109,11 @@ const SyllabusMaterial: React.FC<SyllabusMaterialProps> = ({ searchTerm = '' }) 
                 </Button>
             </div>
 
+            {showLoader ? (
+                <div className="material-loader">
+                    <Loader size="large" spinning={true} fullScreen={false} />
+                </div>
+            ) : (
             <TableWithPagination
                 columns={columns}
                 dataSource={materials.map((material) => ({ ...material, key: material.id }))}
@@ -122,6 +126,7 @@ const SyllabusMaterial: React.FC<SyllabusMaterialProps> = ({ searchTerm = '' }) 
                     emptyText: <NoDataFound type="nodata" description="No syllabus material found" style={{ height: 'unset' }} />
                 }}
             />
+            )}
 
             {/* Create/Edit Modal */}
             <PopupModal

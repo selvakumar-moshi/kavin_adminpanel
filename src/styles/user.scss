@@ -729,3 +729,80 @@ body.user-detail-page {
     padding: 8px 0 0;
   }
 }
+
+// Syllabus Details tab: the syllabus payments, then the syllabus materials
+.user-syllabus-details {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 12px;
+
+  .user-syllabus-list {
+    flex: none;
+    overflow: visible;
+  }
+}
+
+.user-syllabus-section {
+  &__title {
+    margin-bottom: 10px;
+    font-family: var(--font-family);
+    font-size: 16px;
+    font-weight: 600;
+    color: #000;
+  }
+
+  .no-data-found__container {
+    height: unset;
+    margin: 16px 0;
+  }
+}
+
+// A payment card's syllabus materials, under its details
+.payment-card__main .payment-card__materials {
+  padding: 12px 0 0;
+  border-top: 1px solid #eee;
+}
+
+.payment-card__materials-title {
+  margin-bottom: 8px;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 600;
+  color: #000;
+}
+
+.payment-card__materials-empty {
+  font-family: var(--font-family);
+  font-size: 13px;
+  color: #8e8e8e;
+}
+
+.payment-card__materials-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-family);
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 8px 12px;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  thead th {
+    background: #eef0f9;
+    font-weight: 600;
+    color: #000;
+  }
+
+  tbody tr + tr td {
+    border-top: 1px solid #f0f0f0;
+  }
+}

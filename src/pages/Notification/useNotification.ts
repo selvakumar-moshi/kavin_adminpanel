@@ -25,6 +25,9 @@ export const useNotificationManagement = () => {
     // The optional file; when editing, the saved one is shown until it is removed (replacingFile)
     const [fileList, setFileList] = useState<UploadFile[]>([]);
     const [replacingFile, setReplacingFile] = useState(false);
+    // Send push / cancel push: the notification being confirmed, and whether the call is running
+    const [pushTarget, setPushTarget] = useState<{ type: 'send' | 'cancel'; notification: NotificationRecord } | null>(null);
+    const [isPushing, setIsPushing] = useState(false);
     const [operationType, setOperationType] = useState<'create' | 'edit' | 'delete' | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
@@ -335,8 +338,10 @@ export const useNotificationManagement = () => {
             if (formValues.courseType) formData.append('courseType', formValues.courseType);
             if (formValues.courseId) formData.append('courseId', formValues.courseId);
             if (formValues.batchId) formData.append('batchId', formValues.batchId);
-            // One `userId` entry per chosen user
-            ((formValues.userIds as string[] | undefined) || []).forEach((userId) => formData.append('userId', userId));
+            // One user goes as `userId`; several go as `userIds` (one entry each)
+            const userIds = (formValues.userIds as string[] | undefined) || [];
+            if (userIds.length === 1) formData.append('userId', userIds[0]);
+            else userIds.forEach((userId) => formData.append('userIds', userId));
         }
         if (typeof formValues.sendPush === 'boolean') formData.append('sendPush', String(formValues.sendPush));
         const pushScheduledAt = dayjsToISOString(formValues.pushScheduledAt);
@@ -346,7 +351,8 @@ export const useNotificationManagement = () => {
         if (pushEndDate) formData.append('pushEndDate', pushEndDate);
         if (pushScheduledAt) formData.append('pushScheduledAt', pushScheduledAt);
 
-        const file = fileList[0]?.originFileObj;
+        // A Flash Notification has no file
+        const file = isFlash ? undefined : fileList[0]?.originFileObj;
         if (file) {
             formData.append('file', file);
         }
@@ -357,6 +363,33 @@ export const useNotificationManagement = () => {
         } else {
             setOperationType('create');
             dispatch(createNotification(formData) as any);
+        }
+    };
+
+    const openPushModal = (type: 'send' | 'cancel', notification: NotificationRecord) => setPushTarget({ type, notification });
+    const closePushModal = () => {
+        if (!isPushing) setPushTarget(null);
+    };
+
+    const handlePushConfirm = async () => {
+        if (!pushTarget) return;
+        const { type, notification } = pushTarget;
+        setIsPushing(true);
+        try {
+            if (type === 'send') await superSalesAPI.sendNotificationPush(notification.id);
+            else await superSalesAPI.cancelNotificationPush(notification.id);
+            showSuccess(type === 'send' ? 'Push sent successfully!' : 'Push cancelled successfully!');
+            setPushTarget(null);
+            dispatch(getNotifications({
+                searchTerm: searchValue.trim() || undefined,
+                globalFilter: appliedFilters,
+                pageNumber: currentPage,
+                pageSize,
+            }) as any);
+        } catch (error: any) {
+            showError(error?.response?.data?.message || error?.message || (type === 'send' ? 'Failed to send push' : 'Failed to cancel push'));
+        } finally {
+            setIsPushing(false);
         }
     };
 
@@ -454,6 +487,11 @@ export const useNotificationManagement = () => {
         closeModal,
         openDeleteModal,
         closeDeleteModal,
+        pushTarget,
+        isPushing,
+        openPushModal,
+        closePushModal,
+        handlePushConfirm,
         handleInputChange,
         handleSubmit,
         handleDeleteConfirm,

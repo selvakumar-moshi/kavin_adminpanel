@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Tooltip } from 'antd';
 import { ArrowRightOutlined } from '@ant-design/icons';
 import Button from '../../components/Button/Button';
@@ -14,7 +15,12 @@ import add_Icon from '../../assets/add_Icon.svg';
 import PageTitle from '../../components/PageTitle';
 import NoDataFound from '../../components/NoDataFound/NoDataFound';
 
-const Course = () => {
+interface CourseProps {
+    /** The Course / Syllabus Wise tab switcher */
+    tabs?: ReactNode;
+}
+
+const Course = ({ tabs }: CourseProps) => {
     const {
         coursesArray,
         loading,
@@ -67,6 +73,7 @@ const Course = () => {
                     </Button>
                 </div>
             </div>
+            {tabs && <div className="report_main" style={{ marginBottom: 12 }}>{tabs}</div>}
 
             {loading && coursesArray.length === 0 ? (
                 <Loader size="large" spinning={true} fullScreen={false} />

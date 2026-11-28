@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { Badge } from 'antd';
 import Button from '../../components/Button/Button';
 import TableWithPagination from '../../components/Table/TableWithPagination';
@@ -24,10 +23,9 @@ import filter_Icon from '../../assets/filter_Icon.svg';
 
 interface NotificationProps {
     pageTitle?: string;
-    tabs?: ReactNode;
 }
 
-const Notification = ({ pageTitle = 'Notifications', tabs }: NotificationProps) => {
+const Notification = ({ pageTitle = 'Notifications' }: NotificationProps) => {
     const {
         notificationsArray,
         loading,
@@ -73,6 +71,11 @@ const Notification = ({ pageTitle = 'Notifications', tabs }: NotificationProps) 
         closeModal,
         openDeleteModal,
         closeDeleteModal,
+        pushTarget,
+        isPushing,
+        openPushModal,
+        closePushModal,
+        handlePushConfirm,
         handleInputChange,
         handleSubmit,
         handleDeleteConfirm,
@@ -83,6 +86,8 @@ const Notification = ({ pageTitle = 'Notifications', tabs }: NotificationProps) 
     // Flash Notification: no start / end date. Job Notification: no course type, course, batch or users.
     const showDates = formValues.notificationType !== FLASH_NOTIFICATION_TYPE;
     const showTargeting = formValues.notificationType !== JOB_NOTIFICATION_TYPE;
+    // A Flash Notification has no file
+    const showFile = formValues.notificationType !== FLASH_NOTIFICATION_TYPE;
 
     const baseColumns = withSortAndSearch(getNotificationTableColumns(), {
         sortState,
@@ -101,12 +106,16 @@ const Notification = ({ pageTitle = 'Notifications', tabs }: NotificationProps) 
             key: 'actions',
             render: (_: unknown, record: NotificationRecord) => (
                 <ActionIcons
-                    actions={['edit', 'delete']}
+                    actions={['send-push', 'cancel-push', 'edit', 'delete']}
                     onActionClick={(action) => {
                         if (action.toLowerCase() === 'edit') {
                             openEditModal(record);
                         } else if (action.toLowerCase() === 'delete') {
                             openDeleteModal(record);
+                        } else if (action === 'send-push') {
+                            openPushModal('send', record);
+                        } else if (action === 'cancel-push') {
+                            openPushModal('cancel', record);
                         }
                     }}
                     record={record}
@@ -128,7 +137,6 @@ const Notification = ({ pageTitle = 'Notifications', tabs }: NotificationProps) 
         return (
             <div className="notification-container">
                 {header}
-                {tabs && <div className="report_main">{tabs}</div>}
                 <Loader size="large" spinning={true} fullScreen={false} />
             </div>
         );
@@ -140,8 +148,7 @@ const Notification = ({ pageTitle = 'Notifications', tabs }: NotificationProps) 
             {header}
 
             <div className="report_main">
-                {tabs}
-                <div className="dl_filter_main2">
+                <div className="dl_filter_main2" style={{ marginLeft: 'auto' }}>
                     <InputFields
                         fields={searchField.map(field => ({ ...field }))}
                         onChange={handleSearchChange}
@@ -297,7 +304,7 @@ const Notification = ({ pageTitle = 'Notifications', tabs }: NotificationProps) 
                         disabled={loading}
                     />
                     {/* Optional file; when editing, the saved one is shown until it is removed */}
-                    {selectedNotification?.attachmentName && fileList.length === 0 && !replacingFile ? (
+                    {showFile && (selectedNotification?.attachmentName && fileList.length === 0 && !replacingFile ? (
                         <FileUploadDisplay
                             label="File"
                             fileName={selectedNotification.attachmentName}
@@ -309,7 +316,7 @@ const Notification = ({ pageTitle = 'Notifications', tabs }: NotificationProps) 
                             fileList={fileList}
                             onFileChange={handleFileChange}
                         />
-                    )}
+                    ))}
                 </div>
             </PopupModal>
 
@@ -330,6 +337,27 @@ const Notification = ({ pageTitle = 'Notifications', tabs }: NotificationProps) 
             >
                 <div className="popup-modal__content-content-text">
                     Are you sure you want to delete the notification <b>"{selectedNotification?.title}"</b>?
+                </div>
+            </PopupModal>
+
+            {/* Confirm sending / cancelling a push */}
+            <PopupModal
+                open={Boolean(pushTarget)}
+                onClose={closePushModal}
+                onSubmit={handlePushConfirm}
+                title={pushTarget?.type === 'cancel' ? 'Confirm Cancel Push' : 'Confirm Send Push'}
+                subtitle=""
+                primaryButtonText={pushTarget?.type === 'cancel' ? 'Cancel Push' : 'Send Push'}
+                secondaryButtonText="Close"
+                showFooter={true}
+                primaryButtonLoading={isPushing}
+                primaryButtonDisabled={isPushing}
+                contentHeight="auto"
+                minHeight={100}
+            >
+                <div className="popup-modal__content-content-text">
+                    {pushTarget?.type === 'cancel' ? 'Are you sure you want to cancel the push of the notification ' : 'Are you sure you want to send the push of the notification '}
+                    <b>"{pushTarget?.notification.title}"</b>?
                 </div>
             </PopupModal>
 

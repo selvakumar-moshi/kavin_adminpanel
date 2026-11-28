@@ -5,7 +5,7 @@ import LayoutContainter from '../layouts/LayoutContainter';
 import Users from '../../pages/Users/Users';
 import UserDetail from '../../pages/UserDetail/UserDetail';
 import Material from '../../pages/StudyMaterial/Material';
-import Course from '../../pages/Course/Course';
+import CoursePage from '../../pages/Course/CoursePage';
 import CourseDetail from '../../pages/Course/CourseDetail';
 import Quiz from '../../pages/Quiz/Quiz';
 import QuestionDetail from '../../pages/Quiz/QuestionDetail';
@@ -46,7 +46,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/course",
-        element: <Course />,
+        element: <CoursePage />,
       },
       {
         path: "/course/:id",

@@ -101,9 +101,8 @@ const QuestionPaper: React.FC<QuestionPaperProps> = ({ searchTerm = '', appliedF
     const courseOptions = coursesArray.map(course => ({ value: course.id, label: course.courseName }));
     const batchOptions = batchesArray.map(batch => ({ value: batch.id, label: batch.title }));
 
-    if (loading && questionPapersArray.length === 0) {
-        return <Loader size="large" spinning={true} fullScreen={false} />;
-    }
+    // The first load shows its loader where the table will be (not instead of the whole page)
+    const showLoader = loading && questionPapersArray.length === 0;
 
     return (
         <div className="study-material-container">
@@ -115,6 +114,11 @@ const QuestionPaper: React.FC<QuestionPaperProps> = ({ searchTerm = '', appliedF
                 </Button>
             </div>
 
+            {showLoader ? (
+                <div className="material-loader">
+                    <Loader size="large" spinning={true} fullScreen={false} />
+                </div>
+            ) : (
             <TableWithPagination
                 columns={columns}
                 dataSource={questionPapersArray.map(material => ({ ...material, key: material.id }))}
@@ -127,6 +131,7 @@ const QuestionPaper: React.FC<QuestionPaperProps> = ({ searchTerm = '', appliedF
                     emptyText: <NoDataFound type="nodata" description="No question paper found" style={{ height: 'unset' }} />
                 }}
             />
+            )}
 
             {/* Create/Edit Modal */}
             <PopupModal
