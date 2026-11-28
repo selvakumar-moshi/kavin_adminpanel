@@ -806,3 +806,11 @@ body.user-detail-page {
     border-top: 1px solid #f0f0f0;
   }
 }
+
+// PDF and Created At keep to one line ("View", "26-11-2026"); the text columns are the ones that are trimmed
+.payment-card__materials-table {
+  th:nth-child(n + 4),
+  td:nth-child(n + 4) {
+    white-space: nowrap;
+  }
+}

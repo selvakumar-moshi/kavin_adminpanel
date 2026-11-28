@@ -18,6 +18,7 @@ import ResetPasswordModals from '../Users/ResetPasswordModals';
 import type { UserSyllabusMaterial } from './Constants';
 import { EDIT_USER_FIELDS, EDIT_USER_MODE_OPTIONS, EDIT_USER_PAYMENT_REQUIRED_OPTIONS, EDIT_USER_REASON_FIELDS, TRANSFER_MODE, PENDING_ENROLLMENT_STATUS_OPTIONS, DISTRICT_OPTIONS, UserDetailMainTabs, SYLLABUS_PAYMENT_STATUS_OPTIONS, COURSE_DETAILS_TAB_KEY, SYLLABUS_DETAILS_TAB_KEY } from './Constants';
 import { formatDate } from '../../utils/dateUtils';
+import { renderTruncatedCellWithTooltip } from '../../utils/tableCellRender';
 import dot_Icon from '../../assets/dot_Icon.svg';
 import person_add_Icon from '../../assets/person_add_Icon.svg'
 import calendar_Icon from '../../assets/calendar_Icon.svg';
@@ -73,9 +74,9 @@ const renderPaymentMaterials = (materials: UserSyllabusMaterial[]) => (
                 <tbody>
                     {materials.map((material) => (
                         <tr key={material.id}>
-                            <td>{material.title}</td>
-                            <td>{richTextToPlain(material.description || '') || '-'}</td>
-                            <td>{material.subFolderPath || material.subFolderName || '-'}</td>
+                            <td>{renderTruncatedCellWithTooltip(material.title)}</td>
+                            <td>{renderTruncatedCellWithTooltip(richTextToPlain(material.description || ''))}</td>
+                            <td>{renderTruncatedCellWithTooltip(material.subFolderPath || material.subFolderName || '')}</td>
                             <td>
                                 <a href={material.pdfUrl} target="_blank" rel="noopener noreferrer">
                                     <FilePdfOutlined /> View

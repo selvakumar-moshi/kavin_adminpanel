@@ -104,6 +104,10 @@ class LearningAPI {
         return Super_Sales.put(`/Enrollment/${enrollmentId}/status`, { status, paymentMethod, transactionReference });
     }
 
+    getSyllabusWisePaymentsDownload() {
+        return Super_Sales.get('/SyllabusWise/payments/download', { responseType: 'blob' });
+    }
+
     updateSyllabusWisePaymentStatus(paymentId: string, paymentStatus: string) {
         return Super_Sales.put(`/SyllabusWise/payments/${paymentId}/status`, { paymentStatus });
     }

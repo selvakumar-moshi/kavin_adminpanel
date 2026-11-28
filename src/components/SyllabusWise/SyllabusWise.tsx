@@ -21,6 +21,7 @@ import {
     type SyllabusRecord,
 } from './Constant';
 import add_Icon from '../../assets/add_Icon.svg';
+import download_Icon from '../../assets/pngDownload.svg';
 
 interface SyllabusWiseProps {
     pageTitle: string;
@@ -30,6 +31,8 @@ interface SyllabusWiseProps {
 
 const SyllabusWise = ({ pageTitle, tabs }: SyllabusWiseProps) => {
     const {
+        isDownloading,
+        handleDownload,
         records,
         loading,
         isSaving,
@@ -125,6 +128,15 @@ const SyllabusWise = ({ pageTitle, tabs }: SyllabusWiseProps) => {
             <div className="report_main">
                 {tabs}
                 <div className="dl_filter_main2">
+                    <div
+                        className={`quiz-rank-list__download${isDownloading ? ' quiz-rank-list__download--disabled' : ''}`}
+                        onClick={isDownloading ? undefined : handleDownload}
+                        aria-disabled={isDownloading}
+                        data-testid="download-syllabus-wise"
+                    >
+                        <img src={download_Icon} alt="Download" />
+                        {isDownloading ? 'Downloading...' : 'Download'}
+                    </div>
                     <InputFields
                         fields={searchField.map(field => ({ ...field }))}
                         onChange={handleSearchChange}

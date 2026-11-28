@@ -10,17 +10,11 @@ import { SEARCH_INPUT_FIELDS, getUserTableColumns, CREATE_USER_VALIDATION_RULES,
 import { useResetPassword } from './useResetPassword';
 import { USER_FILTER_FIELDS } from '../../utils/filterUtils';
 import { useColumnSortSearch, getSortedTableData } from '../../components/Table/useColumnSortSearch';
+import { saveBlobResponse } from '../../utils/downloadFile';
 
 // Column keys that don't map 1:1 to a backend filter field name
 const COLUMN_FILTER_FIELD_MAP: Record<string, string> = {
     userName: 'firstName',
-};
-
-// Pulls a filename out of a Content-Disposition header (e.g. attachment; filename="users.xlsx")
-const parseFileNameFromContentDisposition = (contentDisposition: string | undefined): string | null => {
-    if (!contentDisposition) return null;
-    const match = contentDisposition.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
-    return match?.[1] ? decodeURIComponent(match[1]) : null;
 };
 
 export const useUserManagement = () => {
@@ -250,16 +244,7 @@ export const useUserManagement = () => {
         setIsDownloading(true);
         try {
             const res = await superSalesAPI.getUsersDownload();
-            const fileName = parseFileNameFromContentDisposition(res.headers?.['content-disposition']) || 'Users.xlsx';
-
-            const url = URL.createObjectURL(res.data as Blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            URL.revokeObjectURL(url);
+            saveBlobResponse(res, 'Users.xlsx');
         } catch (error: any) {
             showError(error?.response?.data?.message || error?.message || 'Failed to download users');
         } finally {

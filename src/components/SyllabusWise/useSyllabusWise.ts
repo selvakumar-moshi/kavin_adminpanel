@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToastMessages } from '../../components/ToastMessages/useToastMessages';
 import { useClientSideTableSortSearch, searchAcrossFields } from '../../components/Table/useColumnSortSearch';
 import superSalesAPI from '../../services/LearningAPI';
+import { saveBlobResponse } from '../../utils/downloadFile';
 import { richTextToPlain } from '../../utils/richText';
 import { getSyllabusTableColumns, SYLLABUS_SEARCH_FIELDS, SYLLABUS_SEARCH_INPUT_FIELDS, SYLLABUS_VALIDATION_RULES, type SyllabusRecord } from './Constant';
 
@@ -15,6 +16,22 @@ const errorText = (error: any, fallback: string) => error?.response?.data?.messa
 
 export const useSyllabusWise = () => {
     const { messages: toastMessages, showSuccess, showError, hideToast } = useToastMessages();
+
+    // Download: GET /SyllabusWise/payments/download, saved as a file
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    const handleDownload = async () => {
+        if (isDownloading) return;
+        setIsDownloading(true);
+        try {
+            const res = await superSalesAPI.getSyllabusWisePaymentsDownload();
+            saveBlobResponse(res, 'SyllabusWisePayments.xlsx');
+        } catch (error: any) {
+            showError(errorText(error, 'Failed to download syllabus wise payments'));
+        } finally {
+            setIsDownloading(false);
+        }
+    };
 
     const [records, setRecords] = useState<SyllabusRecord[]>([]);
     const [loading, setLoading] = useState(false);
@@ -239,6 +256,8 @@ export const useSyllabusWise = () => {
         : Object.values(formValues).some((value) => Boolean((value || '').trim()));
 
     return {
+        isDownloading,
+        handleDownload,
         records: pagedRecords,
         loading,
         isSaving,
